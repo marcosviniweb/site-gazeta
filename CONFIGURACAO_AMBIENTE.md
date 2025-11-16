@@ -350,15 +350,92 @@ curl https://gazetadopara.com/api/analytics/kpis
 
 ---
 
+## 🎨 Build e Deploy do Painel (Frontend)
+
+### **Build de Produção**
+
+```powershell
+# Na sua máquina local
+cd C:\workspace\site-gazeta
+
+# Build do painel com configuração de produção
+npx nx build painel-gazeta --configuration=production
+
+# Verificar se usou environment correto (não deve ter localhost)
+grep -r "localhost" dist/apps/painel-gazeta/*.js
+
+# Deve retornar vazio (sem resultados)
+```
+
+---
+
+### **Arquivos de Environment do Painel**
+
+**Desenvolvimento (local):**
+```typescript
+// apps/painel-gazeta/src/environments/environment.ts
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:3002/api'
+};
+```
+
+**Produção:**
+```typescript
+// apps/painel-gazeta/src/environments/environment.prod.ts
+export const environment = {
+  production: true,
+  apiUrl: 'https://gazetadopara.com/api'
+};
+```
+
+---
+
+### **Upload do Painel**
+
+```
+LOCAL → REMOTO
+──────────────────────────────────────────────────────────────────
+C:\workspace\site-gazeta\dist\apps\painel-gazeta\
+  → /home/gazetadopara.com/public_html/painel/
+```
+
+**Arquivos a enviar:**
+- ✅ `index.html`
+- ✅ `*.js` (todos os arquivos JavaScript)
+- ✅ `*.css` (todos os arquivos CSS)
+- ✅ `assets/` (pasta completa)
+- ✅ Qualquer outro arquivo na pasta
+
+---
+
+### **Verificação Pós-Deploy**
+
+1. **Acessar o painel:**
+```
+https://gazetadopara.com/painel
+```
+
+2. **Abrir DevTools (F12):**
+   - Aba **Console**: Não deve ter erros
+   - Aba **Network**: Requisições devem ir para `https://gazetadopara.com/api`
+
+3. **Se ainda mostrar localhost:**
+   - Limpar cache do navegador (`Ctrl + Shift + Delete`)
+   - Forçar reload (`Ctrl + F5`)
+
+---
+
 ## 🔗 Links Úteis
 
 - [Prisma Binary Targets](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#binarytargets-options)
 - [URL Encoding Reference](https://www.urlencoder.org/)
 - [PM2 Documentation](https://pm2.keymetrics.io/docs/usage/quick-start/)
+- [Angular Environments](https://angular.io/guide/build#configuring-application-environments)
 
 ---
 
 **Criado em:** 16/11/2025  
 **Última atualização:** 16/11/2025  
-**Versão:** 1.0
+**Versão:** 1.1
 
