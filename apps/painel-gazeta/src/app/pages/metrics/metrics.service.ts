@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DateRange, Granularity, KpiMetric, LogEvent, TopNewsItem } from './models';
 import type { ChartData } from 'chart.js';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../core/env/env';
 
 interface KpiResponse {
   kpis: KpiMetric[];
