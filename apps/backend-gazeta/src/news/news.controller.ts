@@ -212,7 +212,7 @@ export class NewsController {
   @Get('featured')
   @ApiOperation({ 
     summary: 'Listar notícias em destaque', 
-    description: 'Endpoint para obter todas as notícias que estão marcadas como destaque (isEmphasis = true). Retorna apenas notícias ativas, ordenadas por visualizações e data de criação.' 
+    description: 'Endpoint para obter todas as notícias que estão marcadas como destaque (isEmphasis = true). Retorna apenas notícias ativas, ordenadas por data de criação (mais recente primeiro) e visualizações como critério de desempate.' 
   })
   @ApiResponse({ 
     status: 200, 

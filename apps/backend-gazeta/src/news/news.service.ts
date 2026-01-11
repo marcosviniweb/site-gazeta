@@ -462,8 +462,8 @@ export class NewsService {
         videoNews: true
       },
       orderBy: [
-        { views: 'desc' },      // Por views
-        { createdAt: 'desc' }   // E por data
+        { createdAt: 'desc' },  // Por data de criação (mais recente primeiro)
+        { views: 'desc' }        // E por views como critério de desempate
       ]
     });
 

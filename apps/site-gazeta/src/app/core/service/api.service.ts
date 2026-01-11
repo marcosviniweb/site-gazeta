@@ -1,13 +1,12 @@
 import { inject, Injectable } from '@angular/core';
 import { Category, News, Video, Menu, Ads, DestaqueConfig, TopGazetaConfig, SectionOrderConfig, SectionOrderConfigMap } from '@site-gazeta/models';
-import { BehaviorSubject, firstValueFrom, forkJoin, map, Observable } from 'rxjs';
+import { forkJoin, map, Observable } from 'rxjs';
 import { environment } from '../env/env';
 import { HttpClient } from '@angular/common/http';
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-  $newsFeatured = new BehaviorSubject<News[]>([]);
   private apiUrl = environment.apiUrl;
   private http = inject(HttpClient);
   constructor() { }
@@ -206,13 +205,8 @@ export class ApiService {
   };
 
   getNewsFeatured() {
-    if(this.$newsFeatured.getValue().length <= 0) {
-      firstValueFrom(this.http.get<News[]>(`${this.apiUrl}/news/featured`))
-      .then(news => {
-        this.$newsFeatured.next(news)
-      });
-    } 
-    return this.$newsFeatured.asObservable();
+    // Sempre busca as notícias em destaque atualizadas do servidor
+    return this.http.get<News[]>(`${this.apiUrl}/news/featured`);
   }
 
   getNewsForCategory(categoryId: number): Observable<News[]> {
