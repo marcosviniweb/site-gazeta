@@ -243,7 +243,7 @@ export class NewsService {
           data: mediaNews.map(media => ({
             newsId: id,
             emphasis: media.emphasis ?? false,
-            imgSize: media.imgSize,
+            imgSize: media.imgSize ? media.imgSize as any : null,
             author: media.author,
             date: media.date
           }))

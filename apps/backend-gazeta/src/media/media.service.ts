@@ -20,7 +20,7 @@ export class MediaService {
       data: {
         newsId: createMediaDto.postId,
         emphasis: createMediaDto.emphasis,
-        imgSize: createMediaDto.imgSize || null,
+        imgSize: createMediaDto.imgSize ? createMediaDto.imgSize as any : null,
         author: createMediaDto.author,
         date: createMediaDto.date,
       },
@@ -141,7 +141,7 @@ export class MediaService {
       data: {
         newsId: updateMediaDto.postId || existingMedia.newsId,
         emphasis: updateMediaDto.emphasis ?? existingMedia.emphasis,
-        imgSize: updateMediaDto.imgSize || existingMedia.imgSize,
+        imgSize: updateMediaDto.imgSize ? updateMediaDto.imgSize as any : (existingMedia.imgSize as any),
         author: updateMediaDto.author ?? existingMedia.author,
         date: updateMediaDto.date ?? existingMedia.date,
       },
