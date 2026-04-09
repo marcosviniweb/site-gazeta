@@ -3,7 +3,7 @@ import { RouterModule } from '@angular/router';
 import { Component, input, signal, OnInit, computed, inject, effect } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Category, News } from '@site-gazeta/models';
-import { ApiConfigService } from '@site-gazeta/api';
+import { ApiConfigService, HomeNewsOrchestratorService } from '@site-gazeta/api';
 import { PLATFORM_ID } from '@angular/core';
 
 @Component({
@@ -30,9 +30,10 @@ export class MoreNewsComponent implements OnInit{
       }
     });
   }
-  private apiService = inject(ApiConfigService);
+  private apiConfigService = inject(ApiConfigService);
+  private homeOrchestrator = inject(HomeNewsOrchestratorService);
   private readonly platformId = inject(PLATFORM_ID);
-  $moreNews = toSignal(this.apiService.getNews(), { initialValue: [] as News[] });
+  $moreNews = toSignal(this.homeOrchestrator.getFilteredMoreNews(), { initialValue: [] as News[] });
   moreNews = input<News[] | undefined>(undefined);
   category = input<Category>();
   slice = input<number>(0);

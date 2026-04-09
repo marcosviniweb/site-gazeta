@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { News } from '@site-gazeta/models';
 import { CarouselComponent } from '../carousel/carousel.component';
 import { CarouselSwipeComponent } from '../carousel-swipe/carousel-swipe.component';
-import { ApiConfigService } from '@site-gazeta/api';
+import { ApiConfigService, HomeNewsOrchestratorService } from '@site-gazeta/api';
 import { combineLatest, map } from 'rxjs';
 
 @Component({
@@ -15,8 +15,10 @@ import { combineLatest, map } from 'rxjs';
 })
 export class CarouselManagerComponent {
   private apiConfigService = inject(ApiConfigService);
+  private homeOrchestrator = inject(HomeNewsOrchestratorService);
 
-  $news = this.apiConfigService.getNewsFeatured();
+  // Busca do Store central para aplicar a regra Exclude Id global
+  $news = this.homeOrchestrator.getCarouselNews();
   $carouselLimit = this.apiConfigService.getCarouselConfig();
 
   $limitedNews = combineLatest([this.$news, this.$carouselLimit]).pipe(

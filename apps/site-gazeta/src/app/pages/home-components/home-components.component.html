@@ -19,14 +19,12 @@
     <lib-news-category-grid></lib-news-category-grid>
   </section>
 
-  @defer (on viewport) {
+  @defer (on viewport(highPh)) {
     <section class="home-block" appScrollReveal="right">
       <lib-news-highligths></lib-news-highligths>
     </section>
   } @placeholder {
-    <div class="loading-container">
-      <div class="loading-spinner"></div>
-    </div>
+    <div #highPh class="loading-container loading-container--highlights"></div>
   }
 
   @if (centerAd()['728x90']) {
@@ -41,14 +39,12 @@
     </section>
   }
 
-  @defer (on viewport) {
+  @defer (on viewport(latestPh)) {
     <section class="home-block" appScrollReveal="left">
       <lib-latest-news></lib-latest-news>
     </section>
   } @placeholder {
-    <div class="loading-container">
-      <div class="loading-spinner"></div>
-    </div>
+    <div #latestPh class="loading-container loading-container--latest"></div>
   }
 
   @if (centerAd()['200x200']) {
@@ -57,24 +53,20 @@
     </section>
   }
 
-  @defer (on viewport) {
+  @defer (on viewport(videoPh)) {
     <section class="home-block" appScrollReveal="right">
       <lib-video-manager></lib-video-manager>
     </section>
   } @placeholder {
-    <div class="loading-container">
-      <div class="loading-spinner"></div>
-    </div>
+    <div #videoPh class="loading-container loading-container--video"></div>
   }
 
-  @defer (on viewport) {
+  @defer (on viewport(mostViewedPh)) {
     <section class="home-block" appScrollReveal="left">
       <lib-most-viewed></lib-most-viewed>
     </section>
   } @placeholder {
-    <div class="loading-container">
-      <div class="loading-spinner"></div>
-    </div>
+    <div #mostViewedPh class="loading-container loading-container--most-viewed"></div>
   }
 
   <!-- @defer (on viewport) {
@@ -85,7 +77,7 @@
     </div>
   } -->
 
-  @defer (on viewport) {
+  @defer (on viewport(moreNewsPh)) {
     <section class="home-block home-block--more-news" appScrollReveal="right">
       <div class="container-more-news">
         <lib-more-news [slice]="3"></lib-more-news>
@@ -99,8 +91,6 @@
       }
     </section>
   } @placeholder {
-    <div class="loading-container">
-      <div class="loading-spinner"></div>
-    </div>
+    <div #moreNewsPh class="loading-container loading-container--more-news"></div>
   }
 </main>

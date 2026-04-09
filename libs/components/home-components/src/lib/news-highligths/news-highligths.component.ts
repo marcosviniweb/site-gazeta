@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { ApiConfigService, HomeHighlightItem } from '@site-gazeta/api';
+import { HomeHighlightItem, HomeNewsOrchestratorService } from '@site-gazeta/api';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
@@ -11,9 +11,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
   styleUrl: './news-highligths.component.scss',
 })
 export class NewsHighligthsComponent {
-  private apiService = inject(ApiConfigService);
+  private homeOrchestrator = inject(HomeNewsOrchestratorService);
 
-  $news = toSignal(this.apiService.gethighlights(), {
+  $news = toSignal(this.homeOrchestrator.getHighlights(), {
     initialValue: [] as HomeHighlightItem[],
   });
 }

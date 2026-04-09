@@ -12,6 +12,7 @@ import { LatestNewsComponent, MostViewedComponent } from '@site-gazeta/home-comp
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ScrollRevealDirective } from '../../core/directives/scroll-reveal.directive';
 import { MetaTagsService } from '../../core/service/meta-tags.service';
+import { HomeNewsOrchestratorService } from '@site-gazeta/api';
 
 @Component({
   selector: 'app-home-components',
@@ -33,6 +34,7 @@ import { MetaTagsService } from '../../core/service/meta-tags.service';
 export class HomeComponentsComponent implements OnInit{
   private apiService = inject(ApiService);
   private metaService = inject(MetaTagsService);
+  private homeOrchestrator = inject(HomeNewsOrchestratorService);
 
   protected newsItems = this.apiService.getNews();
   protected categories = signal<Category[]>([]);
@@ -51,6 +53,7 @@ export class HomeComponentsComponent implements OnInit{
     initialValue: {} as Record<string, Ads>,
   });
   ngOnInit(): void {
+    this.homeOrchestrator.resetStore();
     this.setTags();
   }
   setTags(){

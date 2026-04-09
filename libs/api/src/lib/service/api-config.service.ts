@@ -163,7 +163,7 @@ export class ApiConfigService {
     return this.httpClient.get<News[]>(`${this.apiUrl}/news/related-news/${newsId}`);
   }
 
-  getSocialMedia(): Observable<any> {
-    return this.httpClient.get<any>(`${this.apiUrl}/config/social-media`);
+  getSocialMedia(): Observable<Record<string, string>> {
+    return this.httpClient.get<Record<string, string>>(`${this.apiUrl}/config/social-media`);
   }
 }

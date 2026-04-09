@@ -2,7 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { News, Category } from '@site-gazeta/models';
 import { RouterModule } from '@angular/router';
-import { ApiConfigService, HomeCategoryGridItem } from '@site-gazeta/api';
+import { HomeCategoryGridItem, HomeNewsOrchestratorService } from '@site-gazeta/api';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
@@ -12,10 +12,11 @@ import { toSignal } from '@angular/core/rxjs-interop';
   styleUrl: './news-category-grid.component.scss',
 })
 export class NewsCategoryGridComponent {
-  private apiService = inject(ApiConfigService);
+  private homeOrchestrator = inject(HomeNewsOrchestratorService);
 
-  $news = toSignal(this.apiService.getCategoryGrid(), {
+  $news = toSignal(this.homeOrchestrator.getCategoryGrid(), {
     initialValue: [] as HomeCategoryGridItem[],
+
   });
 
   newsInColumns = computed(() => {
