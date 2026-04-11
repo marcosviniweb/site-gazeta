@@ -48,26 +48,27 @@ export class VideoRelatedNewsComponent implements OnDestroy {
       switchMap((searchTerm: string) => {
         if (searchTerm.trim().length >= 2) {
           this.isSearching.set(true);
-          return this.newsService.search(searchTerm.trim(), 20).pipe(
+          return this.newsService.search(searchTerm.trim(), { limit: 20 }).pipe(
             catchError((err) => {
               console.error('Erro ao buscar notícias:', err);
               this.isSearching.set(false);
-              return of([]);
+              return of({ data: [], meta: { total: 0, page: 1, limit: 20, lastPage: 1 } });
             })
           );
         }
         this.isSearching.set(false);
-        return of([]);
+        return of({ data: [], meta: { total: 0, page: 1, limit: 20, lastPage: 1 } });
       })
     ).subscribe({
-      next: (news) => {
-        this.searchResults.set(news);
+      next: (response) => {
+        const newsItems = response.data || [];
+        this.searchResults.set(newsItems);
         this.isSearching.set(false);
         
         // Se temos um slug selecionado e encontramos a notícia, selecioná-la automaticamente
         const slug = this.selectedNewsSlug();
         if (slug && !this.selectedNews()) {
-          const found = news.find(n => n.slug === slug);
+          const found = newsItems.find(n => n.slug === slug);
           if (found) {
             this.selectedNews.set(found);
           }

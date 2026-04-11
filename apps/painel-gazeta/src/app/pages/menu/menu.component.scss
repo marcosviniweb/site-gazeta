@@ -1,170 +1,55 @@
 @use '../../../styles/variables' as vars;
 
-.menu-container {
-  height: 100%;
+.menu-crud-layout {
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  background: linear-gradient(136deg, var(--accent-red) 0%, var(--accent-blue) 100%);
-  padding: 1rem;
+  height: 100%; // Ocupa todo o g-page-content
+  min-height: 0; // Importante para o flex container não crescer além do pai
+  gap: 0; // Removido gap global para controle fino nos filhos
+  align-items: stretch;
+
+  @include vars.mobile {
+    flex-direction: column;
+    height: auto;
+    overflow-y: initial;
+  }
 }
 
-.menu-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.363);
-  padding: 2rem;
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  animation: slideUp 0.6s ease-out;
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.page-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.page-title {
-  color: var(--accent-blue);
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.page-subtitle {
-  color: var(--text-muted);
-  font-size: 1rem;
-  margin: 0.5rem 0 0 0;
-}
-
-// Layout: Lista à esquerda, Formulário à direita
-.menu-layout {
-  display: flex;
-  gap: 2rem;
-  align-items: flex-start;
-}
-
-.menu-list-section {
+.menu-list-column {
   flex: 1;
   min-width: 0;
-}
+  background: white;
+  padding: 2rem;
 
-.menu-form-section {
-  flex: 0 0 400px;
-  background: var(--light);
-  border-radius: 8px;
-  padding: 1.5rem;
-  position: sticky;
-  top: 2rem;
-  max-height: calc(100vh - 4rem);
-  overflow-y: auto;
-}
-
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 1rem;
-  color: var(--text-muted);
-
-  .material-icons {
-    font-size: 48px;
-    color: var(--accent-blue);
-    margin-bottom: 1rem;
-    animation: spinning 1s linear infinite;
-  }
-
-  p {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 500;
+  .list-inner-wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
   }
 }
 
-@keyframes spinning {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.submenu-modal-content {
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  width: 100%;
-
-  .submenu-modal-header {
-    padding: 1.5rem;
-    border-bottom: 2px solid var(--border);
-    background: rgb(236, 236, 236);
-    h2 {
-      color: var(--accent-blue);
-      font-size: 1.5rem;
-      margin: 0 0 0.75rem 0;
-      font-weight: 700;
-    }
-
-    .submenu-info {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: var(--text-muted);
-      font-size: 0.875rem;
-      margin: 0;
-
-      .material-icons {
-        font-size: 18px;
-        color: var(--accent-blue);
-      }
-    }
-  }
-
-  .submenu-form-wrapper {
-    padding: 1.5rem;
-    max-height: calc(100vh - 200px);
-    width: 100%;
-    overflow-y: auto;
-  }
-}
-
-// Responsive adjustments
-@include vars.mobile {
-  .menu-container {
-    padding: 0.5rem;
-  }
-
-  .menu-card {
-    padding: 1rem;
-    border-radius: 8px;
-  }
-
-  .page-title {
-    font-size: 1.5rem;
-  }
-
-  .page-subtitle {
-    font-size: 0.875rem;
-  }
-
-  .menu-layout {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .menu-form-section {
+.menu-form-sidebar {
+  flex: 0 0 420px;
+  background: #fcfcfc;
+  padding: 2rem;
+  border-left: 1px solid var(--border);
+  overflow-y: auto; // Formulário também pode ter scroll se for longo
+  
+  @include vars.mobile {
     flex: 1;
-    position: relative;
-    max-height: none;
+    width: 100%;
+    order: -1;
+    border-left: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-sticky {
+    // Não é mais estritamente necessário se o pai tem overflow, 
+    // mas mantido para layouts maiores
+    position: sticky;
+    top: 0;
   }
 }
 
+.position-relative {
+  position: relative;
+  min-height: 200px;
+}

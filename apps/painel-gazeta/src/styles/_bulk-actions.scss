@@ -1,0 +1,86 @@
+// ─── Bulk Actions Toolbar ────────────────────────────
+// Centraliza a barra flutuante de ações em massa.
+
+@mixin bulk-actions-container {
+  position: sticky;
+  top: 1rem;
+  z-index: 100;
+  background: var(--accent-blue);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1rem auto;
+  width: fit-content;
+  min-width: 300px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  transform: translateY(-100px);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+
+  &.active {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: all;
+  }
+}
+
+@mixin btn-bulk-action {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+
+  .material-icons, i { font-size: 20px; }
+
+  &:hover {
+    background: white;
+    color: var(--accent-blue);
+    transform: scale(1.1);
+  }
+
+  &.danger:hover {
+    background: var(--danger);
+    color: white;
+  }
+}
+
+// ─── Classes Globais ─────────────────────────────────
+.g-bulk-actions {
+  @include bulk-actions-container;
+  
+  .selection-info {
+    font-weight: 600;
+    margin-right: 1.5rem;
+    .count {
+      background: white;
+      color: var(--accent-blue);
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      margin-right: 0.5rem;
+    }
+  }
+
+  .actions-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    
+    button { @include btn-bulk-action; }
+    
+    .btn-clear {
+      margin-left: 0.5rem;
+      background: rgba(0, 0, 0, 0.2);
+    }
+  }
+}

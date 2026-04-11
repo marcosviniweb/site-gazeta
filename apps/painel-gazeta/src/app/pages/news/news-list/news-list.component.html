@@ -1,105 +1,179 @@
-<div class="news-list-container">
-  <app-news-list-filters
-    [filterDate]="filterDate()"
-    [filterOrder]="filterOrder()"
-    [filterViews]="filterViews()"
-    [filterCategory]="filterCategory()"
-    [filterSearch]="filterSearch()"
-    [filterEmphasis]="filterEmphasis()"
-    (filterDateChange)="setFilterDate($event)"
-    (filterOrderChange)="setFilterOrder($event)"
-    (filterViewsChange)="setFilterViews($event)"
-    (filterCategoryChange)="setFilterCategory($event)"
-    (filterSearchChange)="setFilterSearch($event)"
-    (filterEmphasisChange)="setFilterEmphasis($event)">
-  </app-news-list-filters>
-
-  <div class="news-list-info">
-    <div class="news-count">
-      <span class="count-label">Total de notícias:</span>
-      <span class="count-value">{{ filteredNews().length }}</span>
+<div class="g-page-container">
+  <div class="g-page-card">
+    <div class="g-page-header">
+      <div class="header-left">
+        <div class="header-text">
+          <h2>Lista de Notícias</h2>
+          <p>Gerencie todas as notícias cadastradas</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a class="btn-primary" [routerLink]="['/news']">
+          <span class="material-icons">add</span>
+          Criar Notícia
+        </a>
+      </div>
     </div>
-    <div class="emphasis-count" [class.limit-reached]="hasReachedEmphasisLimit()">
-      <span class="count-label">Destaques ativos:</span>
-      <span class="count-value">{{ getActiveEmphasisCount() }}/6</span>
-      @if(hasReachedEmphasisLimit()) {
-        <span class="limit-warning" title="Limite de 6 destaques atingido">⚠️</span>
+
+    <div class="g-page-content">
+      <!-- Barra de Carregamento e Progresso -->
+      @if (isProcessing()) {
+        <div class="g-processing-overlay">
+          <div class="g-progress-container">
+            <p>Processando {{ processingProgress().current }} de {{ processingProgress().total }} notícias...</p>
+            <div class="g-progress-bar">
+              <div class="fill" [style.width.%]="(processingProgress().current / processingProgress().total) * 100"></div>
+            </div>
+          </div>
+        </div>
       }
-    </div>
-  </div>
 
-  <div class="news-list">
-    <div class="news-list-header">
-      <div class="header-cell header-featured"></div>
-      <div class="header-cell header-image"></div>
-      <div class="header-cell header-content">Conteúdo</div>
-      <div class="header-cell header-meta">Metadados</div>
-      <div class="header-cell header-actions">Ações</div>
-    </div>
-
-    @for(news of filteredNews(); track news.id){
-      <div class="news-row">
-        <div class="news-cell news-featured-cell">
-          @if(news.isEmphasis) {
-            <span class="emphasis-star material-icons" title="Notícia em destaque">star</span>
-          }
+      @if (isLoading()) {
+        <div class="g-loading-overlay">
+          <div class="spinner"></div>
         </div>
+      }
 
-        <div class="news-cell news-image-cell">
-          <div class="news-card-img">
-            @for(media of news.mediaNews; track media.id){
-              @if(media.emphasis){
-                <img [src]="media.imgSize?.small" alt="Imagem da notícia" />
-              }
-            }
-            @if (hasNoEmphasisImage(news)) {
-              <div class="no-image">Sem imagem</div>
-            }
-          </div>
+      <app-news-list-filters
+        [filterDate]="filterDate()"
+        [filterOrder]="filterOrder()"
+        [filterViews]="filterViews()"
+        [filterCategory]="filterCategory()"
+        [filterSearch]="filterSearch()"
+        [filterEmphasis]="filterEmphasis()"
+        (filterDateChange)="setFilterDate($event)"
+        (filterViewsChange)="setFilterViews($event)"
+        (filterOrderChange)="setFilterOrder($event)"
+        (filterCategoryChange)="setFilterCategory($event)"
+        (filterSearchChange)="setFilterSearch($event)"
+        (filterEmphasisChange)="setFilterEmphasis($event)">
+      </app-news-list-filters>
+
+      <!-- Ações em Massa -->
+      <div class="g-bulk-actions" [class.active]="selectedIds().size > 0">
+        <div class="selection-info">
+          <span class="count">{{ selectedIds().size }}</span> selecionadas
         </div>
-
-        <div class="news-cell news-content-cell">
-          <div class="news-title-wrapper">
-            <h3 class="news-title">{{news.title}}</h3>
-          </div>
-          <p class="news-subtitle">{{news.subtitle}}</p>
-        </div>
-
-        <div class="news-cell news-meta-cell">
-          <div class="news-meta">
-            <span class="news-author"><b>Por:</b> {{news.author}}</span>
-            <span class="news-date">{{news.published | date:'dd/MM/yyyy - HH:mm'}}</span>
-            <span class="news-categories">
-              @for (categoryId of news.categoryId; track categoryId) {
-                @for (category of categories(); track category.id) {
-                  @if(category.id === categoryId){
-                    <span class="category-chip">{{category.name}}</span>
-                  }
-                }
-              }
-            </span>
-            <span class="news-views">{{news.views}} visualizações</span>
-          </div>
-        </div>
-
-        <div class="news-cell news-actions-cell">
-          <div class="news-actions">
-            <button class="btn-action btn-view" (click)="openNewsInSite(news.slug)" [attr.aria-label]="'Ir para página da notícia'" title="Ir para página">
-              <span class="material-icons">description</span>
-            </button>
-            <button class="btn-action btn-edit" [routerLink]="['/news',news.id]" [attr.aria-label]="'Editar notícia'" title="Editar">
-              <span class="material-icons">settings</span>
-            </button>
-            <button class="btn-action btn-delete" (click)="deleteNews(news.id)" [attr.aria-label]="'Excluir notícia'" title="Excluir">
-              <span class="material-icons">delete</span>
-            </button>
-          </div>
+        <div class="actions-group">
+          <button (click)="bulkUpdateStatus('ACTIVE')" title="Ativar selecionadas">
+            <span class="material-icons">visibility</span>
+          </button>
+          <button (click)="bulkUpdateStatus('INACTIVE')" title="Desativar selecionadas">
+            <span class="material-icons">visibility_off</span>
+          </button>
+          <button (click)="bulkToggleEmphasis(true)" title="Adicionar aos destaques">
+            <span class="material-icons">star</span>
+          </button>
+          <button (click)="bulkToggleEmphasis(false)" title="Remover dos destaques">
+            <span class="material-icons">star_outline</span>
+          </button>
+          <button class="danger" (click)="bulkUpdateStatus('TRASH')" title="Mover para lixeira">
+            <span class="material-icons">delete_outline</span>
+          </button>
+          <button class="danger" (click)="bulkDelete()" title="Excluir permanentemente">
+            <span class="material-icons">delete_forever</span>
+          </button>
+          <button class="btn-clear" (click)="clearSelection()" title="Limpar seleção">
+            <span class="material-icons">close</span>
+          </button>
         </div>
       </div>
-    } @empty {
-      <div class="news-empty">
-        <p>Nenhuma notícia encontrada.</p>
+
+      <div class="g-list-info">
+        <div class="total-count">
+          <span class="label">Total encontrado:</span>
+          <span class="value">{{ totalItems() }}</span>
+        </div>
+        <div class="total-count">
+          <span class="label">Destaques ativos:</span>
+          <span class="value">{{ totalFeatured() }} / 6</span>
+        </div>
+        <div class="pagination-summary">
+          Página {{ currentPage() }} de {{ lastPage() }}
+        </div>
       </div>
-    }
+
+      <div class="g-data-list">
+        <div class="news-list-header">
+          <div class="header-cell header-select">
+            <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll($event)" />
+          </div>
+          <div class="header-cell header-featured"></div>
+          <div class="header-cell header-image">Imagem</div>
+          <div class="header-cell header-content">Conteúdo</div>
+          <div class="header-cell header-meta">Metadados</div>
+          <div class="header-cell header-actions">Ações</div>
+        </div>
+
+        @for(item of news(); track item.id){
+          <div class="news-row" [class.selected]="isSelected(item.id)">
+            <div class="g-data-cell g-cell-select">
+              <input type="checkbox" [checked]="isSelected(item.id)" (change)="toggleSelection(item.id)" />
+            </div>
+
+            <div class="g-data-cell news-featured-cell">
+              @if(item.isEmphasis) {
+                <span class="emphasis-star material-icons" title="Notícia em destaque">star</span>
+              }
+            </div>
+
+            <div class="g-data-cell g-cell-image">
+              @if (getFeaturedImage(item)) {
+                <img [src]="getFeaturedImage(item)" alt="Imagem da notícia" />
+              } @else {
+                <div class="no-image">Sem imagem</div>
+              }
+            </div>
+
+            <div class="g-data-cell g-cell-content">
+              <h4 class="title">{{item.title}}</h4>
+              <p class="subtitle">{{item.subtitle}}</p>
+            </div>
+
+            <div class="g-data-cell news-meta-cell">
+              <div class="news-meta">
+                <span class="news-author"><b>Por:</b> {{item.author}}</span>
+                <span class="news-date">{{item.published | date:'dd/MM/yyyy - HH:mm'}}</span>
+                <span class="news-categories">
+                  {{ getCategoryNames(item.categoryId) }}
+                </span>
+                <span class="news-views">{{item.views}} visualizações</span>
+                <span class="news-status-badge" [class]="item.status.toLowerCase()">{{item.status}}</span>
+              </div>
+            </div>
+
+            <div class="g-data-cell g-cell-actions">
+              <button class="btn-action" (click)="openNewsInSite(item.slug)" title="Ver no site">
+                <span class="material-icons">description</span>
+              </button>
+              <button class="btn-action" [routerLink]="['/news', item.id]" title="Editar">
+                <span class="material-icons">edit</span>
+              </button>
+              <button class="btn-action btn-delete" (click)="toggleSelection(item.id); bulkUpdateStatus('TRASH')" title="Lixeira">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <div class="news-empty">
+            <p>{{ isLoading() ? 'Carregando notícias...' : 'Nenhuma notícia encontrada.' }}</p>
+          </div>
+        }
+      </div>
+
+      <!-- Paginação -->
+      <div class="g-pagination">
+        <button class="btn-prev" [disabled]="currentPage() === 1" (click)="prevPage()">
+          <span class="material-icons">chevron_left</span> Anterior
+        </button>
+        <div class="page-info">
+          Página <strong>{{ currentPage() }}</strong> de {{ lastPage() }}
+        </div>
+        <button class="btn-next" [disabled]="currentPage() >= lastPage()" (click)="nextPage()">
+          Próxima <span class="material-icons">chevron_right</span>
+        </button>
+      </div>
+    </div>
   </div>
 </div>
+

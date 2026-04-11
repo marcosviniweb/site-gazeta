@@ -46,8 +46,8 @@ export class NewsSearchComponent implements OnDestroy {
       this.isLoading.set(true)
       this.searchTimeout = setTimeout(() => {
       this.apiService.getBySearch(query, 20).pipe()
-      .subscribe((news) => {
-        this.filteredNews.set(news);
+      .subscribe((response) => {
+        this.filteredNews.set(response.data);
         this.isLoading.set(false);
         this.searchTimeout = null;
       });

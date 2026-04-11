@@ -11,9 +11,20 @@ import { errorMessage } from './auth/constants/error-messages';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { devCorsConfig } from './config/cors.config';
+import compression from 'compression';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  
+  // Segurança com Helmet
+  app.use(helmet({
+    crossOriginResourcePolicy: false, // Necessário para exibir imagens/vídeos locais em domínios diferentes
+    contentSecurityPolicy: false,     // Desativado para facilitar compatibilidade com Swagger e editor
+  }));
+
+  // Compressão Gzip para reduzir tamanho dos chunks
+  app.use(compression());
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
 

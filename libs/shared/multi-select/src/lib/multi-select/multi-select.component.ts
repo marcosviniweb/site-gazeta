@@ -9,12 +9,12 @@ import {
   ElementRef,
   forwardRef,
   afterRenderEffect,
+  model,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { MultiSelectConfig, MultiSelectItem } from '../../models/multi-select.model';
-
-
+import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
+import { MultiSelectConfig } from '../../models/multi-select.model';
+import { MultiSelectItem } from '../../models/multi-select-item.model';
 
 const DEFAULT_CONFIG: Required<MultiSelectConfig> = {
   placeholder: 'Nenhum item selecionado',
@@ -29,9 +29,9 @@ const DEFAULT_CONFIG: Required<MultiSelectConfig> = {
 };
 
 @Component({
-  selector: 'multi-select',
+  selector: 'lib-multi-select',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './multi-select.component.html',
   styleUrl: './multi-select.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,34 +44,39 @@ const DEFAULT_CONFIG: Required<MultiSelectConfig> = {
   ],
 })
 export class MultiSelectComponent implements ControlValueAccessor {
-  // ViewChild para gerenciar focus
-  private dropdownContainer = viewChild<ElementRef<HTMLDivElement>>('dropdownContainer');
   private dropdownMenu = viewChild<ElementRef<HTMLDivElement>>('dropdownMenu');
-  private searchInput = viewChild<ElementRef<HTMLInputElement>>('searchInput');
 
-  // Inputs - Genéricos para aceitar qualquer tipo de array
-  // Os objetos devem ter pelo menos: { id: string | number, label: string }
-  items = input.required<any[]>();
+  items = input.required<unknown[]>();
   config = input<Partial<MultiSelectConfig>>({});
-  selectedItems = input<any[]>([]);
+  selectedItems = model<unknown[]>([]);
+  valueProp = input<string | null>(null);
 
-  // Outputs - Retornam o mesmo tipo que foi passado
-  selectedItemsChange = output<any[]>();
   dropdownStateChange = output<boolean>();
 
-  // Signals internos
   protected searchTerm = signal<string>('');
   protected dropdownOpen = signal<boolean>(false);
   protected touched = signal<boolean>(false);
   protected internalDisabled = signal<boolean>(false);
+  protected focusedIndex = signal<number>(-1);
 
-  // Configuração computada
+  /**
+   * Helper para o template acessar propriedades de itens desconhecidos (unknown)
+   */
+  asItem(item: unknown): MultiSelectItem {
+    return item as MultiSelectItem;
+  }
+
   readonly mergedConfig = computed<Required<MultiSelectConfig>>(() => ({
     ...DEFAULT_CONFIG,
     ...this.config(),
   }));
 
-  // Itens filtrados
+  readonly isAllSelected = computed(() => {
+    const items = this.items();
+    const selected = this.selectedItems();
+    return items.length > 0 && selected.length === items.length;
+  });
+
   readonly filteredItems = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
     const allItems = this.items();
@@ -80,44 +85,38 @@ export class MultiSelectComponent implements ControlValueAccessor {
       return allItems;
     }
 
-    return allItems.filter((item: any) => {
-      const label = (item.label? item.label : item.name || '').toLowerCase();
-      const description = (item.description || '').toLowerCase();
+    return allItems.filter((item) => {
+      const i = item as Record<string, unknown>;
+      const label = (String(i['label'] ?? i['name'] ?? i['title'] ?? '')).toLowerCase();
+      const description = (String(i['description'] ?? '')).toLowerCase();
       return label.includes(term) || description.includes(term);
     });
   });
 
-  // Verificar se está desabilitado
   readonly isDisabled = computed(
     () => this.mergedConfig().disabled || this.internalDisabled()
   );
 
-  // ControlValueAccessor
-  private onChange: (value: any[]) => void = () => {};
-  private onTouched: () => void = () => {};
+  private onChange: (value: unknown[]) => void = () => { /* noop */ };
+  private onTouched: () => void = () => { /* noop */ };
 
-
-constructor() {
-  afterRenderEffect(() => {
-    if (this.dropdownOpen()) {
-      const element = this.dropdownMenu()?.nativeElement;
-      if (element && element !== document.activeElement) {
-        element.focus();
+  constructor() {
+    afterRenderEffect(() => {
+      if (this.dropdownOpen()) {
+        const element = this.dropdownMenu()?.nativeElement;
+        if (element && element !== document.activeElement) {
+          element.focus();
+        }
       }
-    }
-  });
-}
-
-  /**
-   * Verifica se um item está selecionado
-   */
-  isItemSelected(item: any): boolean {
-    return this.selectedItems().some((s: any) => s.id === item.id);
+    });
   }
 
-  /**
-   * Alterna o estado do dropdown
-   */
+  isItemSelected(item: unknown): boolean {
+    const items = this.selectedItems();
+    const i = item as Record<string, unknown>;
+    return items.some((s: unknown) => (s as Record<string, unknown>)['id'] === i['id']);
+  }
+
   toggleDropdown(event?: Event): void {
     if (this.isDisabled()) return;
 
@@ -127,42 +126,58 @@ constructor() {
     const newState = !this.dropdownOpen();
     this.dropdownOpen.set(newState);
     this.dropdownStateChange.emit(newState);
-
-    if (!newState) {
+    
+    if (newState) {
+      this.focusedIndex.set(-1);
+    } else {
       this.searchTerm.set('');
       this.markAsTouched();
     }
   }
 
-  /**
-   * Fecha o dropdown
-   */
-  closeDropdown(): void {
-    this.dropdownOpen.set(false);
-    this.searchTerm.set('');
-    this.dropdownStateChange.emit(false);
-    this.markAsTouched();
+  selectAll(): void {
+    if (this.isDisabled()) return;
+    const currentSelected = [...this.selectedItems()];
+    const filtered = this.filteredItems();
+
+    filtered.forEach(item => {
+      const i = item as Record<string, unknown>;
+      if (!this.isItemSelected(item) && !i['disabled']) {
+        currentSelected.push(item);
+      }
+    });
+
+    this.emitChange(currentSelected);
   }
 
-  /**
-   * Manipula mudanças no campo de busca
-   */
+  clearAll(): void {
+    if (this.isDisabled()) return;
+    this.emitChange([]);
+  }
+
+  closeDropdown(): void {
+    if (this.dropdownOpen()) {
+      this.dropdownOpen.set(false);
+      this.searchTerm.set('');
+      this.dropdownStateChange.emit(false);
+      this.markAsTouched();
+    }
+  }
+
   onSearchChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
   }
 
-  /**
-   * Seleciona/desseleciona um item
-   */
-  selectItem(item: any, event?: Event): void {
-    if (this.isDisabled() || item.disabled) return;
+  selectItem(item: unknown, event?: Event): void {
+    const i = item as Record<string, unknown>;
+    if (this.isDisabled() || i['disabled']) return;
 
     event?.preventDefault();
     event?.stopPropagation();
 
     const current = [...this.selectedItems()];
-    const index = current.findIndex((s: any) => s.id === item.id);
+    const index = current.findIndex((s: unknown) => (s as Record<string, unknown>)['id'] === i['id']);
 
     if (index >= 0) {
       current.splice(index, 1);
@@ -173,26 +188,20 @@ constructor() {
     this.emitChange(current);
   }
 
-  /**
-   * Remove um item selecionado
-   */
-  removeItem(item: any, event?: Event): void {
+  removeItem(item: unknown, event?: Event): void {
     if (this.isDisabled()) return;
 
     event?.preventDefault();
     event?.stopPropagation();
 
-    const current = this.selectedItems().filter((s: any) => s.id !== item.id);
+    const i = item as Record<string, unknown>;
+    const current = this.selectedItems().filter((s: unknown) => (s as Record<string, unknown>)['id'] !== i['id']);
     this.emitChange(current);
   }
 
-  /**
-   * Manipula o blur no container do dropdown
-   */
   onDropdownBlur(event: FocusEvent): void {
     const relatedTarget = event.relatedTarget as HTMLElement;
     const currentTarget = event.currentTarget as HTMLElement;
-    // Verifica se o foco saiu completamente do componente
     if (!currentTarget.contains(relatedTarget)) {
       setTimeout(() => {
         this.closeDropdown();
@@ -200,26 +209,76 @@ constructor() {
     }
   }
 
-  /**
-   * Manipula teclas de atalho
-   */
   onKeyDown(event: KeyboardEvent): void {
+    if (this.isDisabled()) return;
+
     if (event.key === 'Escape') {
       this.closeDropdown();
+      return;
+    }
+
+    if (!this.dropdownOpen()) {
+      if (event.key === 'Enter' || event.key === 'ArrowDown') {
+        this.toggleDropdown();
+      }
+      return;
+    }
+
+    const items = this.filteredItems();
+    if (items.length === 0) return;
+
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusedIndex.update(i => (i + 1) % items.length);
+        this.scrollToFocused();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusedIndex.update(i => (i - 1 + items.length) % items.length);
+        this.scrollToFocused();
+        break;
+      case 'Enter':
+        event.preventDefault();
+        if (this.focusedIndex() >= 0) {
+          this.selectItem(items[this.focusedIndex()]);
+        }
+        break;
+      case 'Tab':
+        this.closeDropdown();
+        break;
     }
   }
 
-  /**
-   * Emite mudanças para o parent
-   */
-  private emitChange(items: any[]): void {
-    this.selectedItemsChange.emit(items);
-    this.onChange(items);
+  private scrollToFocused(): void {
+    const listEl = this.dropdownMenu()?.nativeElement.querySelector('.dropdown-list');
+    const focusedEl = listEl?.querySelectorAll('.dropdown-item')[this.focusedIndex()] as HTMLElement;
+
+    if (listEl && focusedEl) {
+      const listRect = listEl.getBoundingClientRect();
+      const itemRect = focusedEl.getBoundingClientRect();
+
+      if (itemRect.bottom > listRect.bottom) {
+        focusedEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      } else if (itemRect.top < listRect.top) {
+        focusedEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
   }
 
-  /**
-   * Marca como touched
-   */
+  private emitChange(items: unknown[]): void {
+    this.selectedItems.set(items);
+
+    if (this.onChange) {
+      const prop = this.valueProp();
+      if (prop) {
+        this.onChange(items.map(item => (item as Record<string, unknown>)[prop]));
+      } else {
+        this.onChange(items);
+      }
+    }
+  }
+
   private markAsTouched(): void {
     if (!this.touched()) {
       this.touched.set(true);
@@ -227,12 +286,24 @@ constructor() {
     }
   }
 
-  // ControlValueAccessor implementation
-  writeValue(value: any[]): void {
-    // O valor é gerenciado externamente via input signal
+  writeValue(value: unknown[]): void {
+    if (value && Array.isArray(value)) {
+      const prop = this.valueProp();
+      if (prop) {
+        const items = this.items();
+        const mappedItems = value
+          .map(v => items.find(i => (i as Record<string, unknown>)[prop] === v))
+          .filter(i => !!i);
+        this.selectedItems.set(mappedItems);
+      } else {
+        this.selectedItems.set(value);
+      }
+    } else {
+      this.selectedItems.set([]);
+    }
   }
 
-  registerOnChange(fn: (value: any[]) => void): void {
+  registerOnChange(fn: (value: unknown[]) => void): void {
     this.onChange = fn;
   }
 

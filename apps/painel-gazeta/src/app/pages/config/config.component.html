@@ -1,64 +1,67 @@
-<div class="config-container">
-  <div class="config-card">
-    <div class="config-header">
-      <h2>Configurações do Sistema</h2>
-      <p>Gerencie as configurações gerais da aplicação</p>
+<div class="page-container">
+  <div class="page-card">
+    <!-- Header escuro -->
+    <div class="page-header">
+      <div class="header-text">
+        <h2>Configurações do Sistema</h2>
+        <p>Gerencie as configurações gerais da aplicação</p>
+      </div>
     </div>
 
-    <div class="config-content-wrapper">
-      <div class="config-main-content">
+    <!-- Tabs -->
+    <div class="page-tabs">
+      <button
+        type="button"
+        class="tab-button"
+        [class.active]="activeTab === 'social-media'"
+        (click)="setActiveTab('social-media')">
+        <span class="material-icons">share</span>
+        Redes Sociais
+      </button>
+      <button
+        type="button"
+        class="tab-button"
+        [class.active]="activeTab === 'home-config'"
+        (click)="setActiveTab('home-config')">
+        <span class="material-icons">home</span>
+        Configuração Home
+      </button>
+      <button
+        type="button"
+        class="tab-button"
+        [class.active]="activeTab === 'maintenance'"
+        (click)="setActiveTab('maintenance')">
+        <span class="material-icons">build</span>
+        Manutenção
+      </button>
+      @if(user === 'admin'){
+        <button
+          type="button"
+          class="tab-button"
+          [class.active]="activeTab === 'media-cleanup'"
+          (click)="setActiveTab('media-cleanup')">
+          <span class="material-icons">cleaning_services</span>
+          Limpeza de Mídias
+        </button>
+      }
+    </div>
 
-        <div class="tab-header">
-          <div class="tab-menu">
-            <button
-              type="button"
-              class="tab-button"
-              [class.active]="activeTab === 'social-media'"
-              (click)="setActiveTab('social-media')">
-              Redes Sociais
-            </button>
-            <button
-              type="button"
-              class="tab-button"
-              [class.active]="activeTab === 'home-config'"
-              (click)="setActiveTab('home-config')">
-              Configuração Home
-            </button>
-            <button
-              type="button"
-              class="tab-button"
-              [class.active]="activeTab === 'maintenance'"
-              (click)="setActiveTab('maintenance')">
-              Manutenção
-            </button>
-            @if(user === 'admin'){
-            <button
-              type="button"
-              class="tab-button"
-              [class.active]="activeTab === 'media-cleanup'"
-              (click)="setActiveTab('media-cleanup')">
-              Limpeza de Mídias
-            </button>
-          }
-          </div>
-        </div>
+    <!-- Conteúdo -->
+    <div class="page-content">
+      <div class="tab-content" [class.active]="activeTab === 'social-media'">
+        <app-social-media></app-social-media>
+      </div>
 
-        <div class="tab-content" [class.active]="activeTab === 'social-media'">
-          <app-social-media></app-social-media>
-        </div>
+      <div class="tab-content" [class.active]="activeTab === 'home-config'">
+        <app-home-config></app-home-config>
+      </div>
 
-        <div class="tab-content" [class.active]="activeTab === 'home-config'">
-          <app-home-config></app-home-config>
-        </div>
+      <div class="tab-content" [class.active]="activeTab === 'maintenance'">
+        <app-maintenance></app-maintenance>
+      </div>
 
-        <div class="tab-content" [class.active]="activeTab === 'maintenance'">
-          <app-maintenance></app-maintenance>
-        </div>
-
-        <div class="tab-content" [class.active]="activeTab === 'media-cleanup'">
-          <app-media-cleanup></app-media-cleanup>
-        </div>
-
+      <div class="tab-content" [class.active]="activeTab === 'media-cleanup'">
+        <app-media-cleanup></app-media-cleanup>
       </div>
     </div>
   </div>

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, BehaviorSubject, of, forkJoin } from 'rxjs';
+import { Observable, of, forkJoin } from 'rxjs';
 import { map, switchMap, tap, shareReplay, catchError } from 'rxjs/operators';
-import { Category, News } from '@site-gazeta/models';
+import { Category, News, PaginatedResponse } from '@site-gazeta/models';
 import { ApiConfigService, HomeCategoryGridItem, HomeHighlightItem } from './api-config.service';
 
 /**
@@ -46,6 +46,7 @@ export class HomeNewsOrchestratorService {
     if (!this.gridCache$) {
       this.gridCache$ = this.apiConfigService.getHomeCategoryConfig().pipe(
         switchMap(config => {
+          console.log('Orchestrator: Processing Category Grid', config?.primary?.categories?.length);
           if (!config || !config.primary || !config.primary.categories) return of([]);
           return forkJoin(
             config.primary.categories.map((category: Category) =>
@@ -53,6 +54,11 @@ export class HomeNewsOrchestratorService {
                 .pipe(map((news) => ({ category, news })))
             )
           );
+        }),
+        tap(grid => console.log('Orchestrator: Grid Loaded', grid.length)),
+        catchError(err => {
+          console.error('Orchestrator Error: getCategoryGrid failed', err);
+          return of([]);
         }),
         shareReplay(1)
       );
@@ -67,6 +73,7 @@ export class HomeNewsOrchestratorService {
     if (!this.highlightsCache$) {
       this.highlightsCache$ = this.apiConfigService.getHomeCategoryConfig().pipe(
         switchMap(config => {
+          console.log('Orchestrator: Processing Highlights', config?.secondary?.categories?.length);
           if (!config || !config.secondary || !config.secondary.categories) return of([]);
           return forkJoin(
             config.secondary.categories.map((category: Category) =>
@@ -74,6 +81,11 @@ export class HomeNewsOrchestratorService {
                 .pipe(map((news) => ({ category, news })))
             )
           );
+        }),
+        tap(highlights => console.log('Orchestrator: Highlights Loaded', highlights.length)),
+        catchError(err => {
+          console.error('Orchestrator Error: getHighlights failed', err);
+          return of([]);
         }),
         shareReplay(1)
       );
@@ -86,16 +98,11 @@ export class HomeNewsOrchestratorService {
    * acima já carregaram e registraram no exclude global.
    */
   getFilteredMoreNews(): Observable<News[]> {
-    // Nós podemos adicionar o parâmetro "exclude" nativamente na request do backend,
-    // ou pegar as recém fetchadas ignorando a RAM.
     const excludes = Array.from(this.globalExcludedIds).join(',');
     
-    // Fazemos um catch all pegando direto da API passando a string dos IDs registrados até o momento
-    // Reutiliza endpoint GET /news genérico provido no ApiConfigService
-    return this.apiConfigService['httpClient'].get<News[]>(
-      `${this.apiConfigService['apiUrl']}/news`, 
-      { params: { exclude: excludes } }
-    ).pipe(
+    // Reutiliza o método getNews da lib passando exclude
+    return this.apiConfigService.getNews({ exclude: excludes }).pipe(
+      map(response => response.data),
       catchError(() => of([]))
     );
   }
@@ -106,17 +113,22 @@ export class HomeNewsOrchestratorService {
    * @param limit Limite máximo de amostragem após filtro
    */
   private fetchAndFilterNews(categoryId: number, limit?: number): Observable<News[]> {
-    // Como queremos evitar Request Race Condition, forçamos que essa chamada à API 
-    // passe o "exclude" local preenchido ATÉ QUANDO essa request for MONTADA!
     const localExcludes = Array.from(this.globalExcludedIds).join(',');
 
-    return this.apiConfigService['httpClient'].get<News[]>(
-      `${this.apiConfigService['apiUrl']}/news/category/${categoryId}`,
-      { params: { exclude: localExcludes } } // Bypass no interceptor antigo
-    ).pipe(
-      tap(news => this.registerIds(news)),
-      map(news => limit ? news.slice(0, limit) : news),
-      catchError(() => of([]))
+    return this.apiConfigService.getNewsForCategory(categoryId, { exclude: localExcludes }).pipe(
+      map(response => response.data),
+      tap(news => {
+        console.log(`Orchestrator: Fetched ${news?.length} news for Category ${categoryId} (Excludes: ${this.globalExcludedIds.size})`);
+        this.registerIds(news);
+      }),
+      map(news => {
+        const safeNews = news || [];
+        return limit ? safeNews.slice(0, limit) : safeNews;
+      }),
+      catchError(err => {
+        console.error(`Orchestrator Error: fetchAndFilterNews failed for Category ${categoryId}`, err);
+        return of([]);
+      })
     );
   }
 

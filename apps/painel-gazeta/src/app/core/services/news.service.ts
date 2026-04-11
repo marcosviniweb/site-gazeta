@@ -1,19 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../env/env';
-import { News, NewsMedia, NewsVideo } from '@site-gazeta/models';
+import { News, NewsMedia, NewsVideo, PaginatedResponse, PaginationParams } from '@site-gazeta/models';
+import { toHttpParams } from '@site-gazeta/api';
 import { Observable, tap, switchMap, map } from 'rxjs';
 
-interface NewsQueryParams {
-  page?: number;
-  limit?: number;
-  categoryId?: number;
-  status?: string;
-  includeTrash?: boolean;
-  search?: string;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
+// Interfaces locais removidas em favor do @site-gazeta/models
 
 @Injectable({
   providedIn: 'root'
@@ -30,32 +22,24 @@ export class NewsService {
   }
 
   /**
-   * Listar notícias com filtros opcionais
+   * Listar notícias com filtros opcionais (Paginaçao)
    */
-  getAll(params?: NewsQueryParams): Observable<News[]> {
-    let httpParams = new HttpParams();
+  getAll(params?: PaginationParams): Observable<PaginatedResponse<News>> {
+    let url = this.apiUrl;
 
-    if (params) {
-      Object.keys(params).forEach(key => {
-        const value = params[key as keyof NewsQueryParams];
-        if (value !== undefined && value !== null) {
-          httpParams = httpParams.set(key, value.toString());
-        }
-      });
+    if (params?.search) {
+      url = `${this.apiUrl}/search`;
     }
 
-    return this.http.get<News[]>(this.apiUrl, { params: httpParams });
+    const httpParams = toHttpParams(params);
+    return this.http.get<PaginatedResponse<News>>(url, { params: httpParams });
   }
 
   /**
-   * Buscar notícias por termo
+   * Buscar notícias por termo (Paginado)
    */
-  search(searchTerm: string, limit = 50): Observable<News[]> {
-    const params = new HttpParams()
-      .set('search', searchTerm)
-      .set('limit', limit.toString());
-
-    return this.http.get<News[]>(`${this.apiUrl}/search`, { params });
+  search(searchTerm: string, params?: PaginationParams): Observable<PaginatedResponse<News>> {
+    return this.getAll({ ...params, search: searchTerm });
   }
 
   /**
@@ -160,6 +144,13 @@ export class NewsService {
   }
 
   /**
+   * Listar notícias em destaque
+   */
+  getFeatured(): Observable<News[]> {
+    return this.http.get<News[]>(`${this.apiUrl}/featured`);
+  }
+
+  /**
    * Atualizar destaque da notícia com limite de 6
    * Se tentar marcar uma 7ª notícia como destaque, remove o destaque da mais antiga
    */
@@ -175,18 +166,16 @@ export class NewsService {
     }
 
     // Se está adicionando destaque, primeiro verifica quantos já existem
-    return this.getAll().pipe(
-      tap((allNews: News[]) => {
-        const currentEmphasis = allNews.filter((n: News) => n.isEmphasis);
-        console.log('Destaques atuais:', currentEmphasis.length);
+    // Usamos o endpoint de destaques para ter a lista completa deles (limite de 6)
+    return this.getFeatured().pipe(
+      tap((featured: News[]) => {
+        console.log('Destaques atuais:', featured.length);
       }),
       // Se já tem 6 ou mais, remove o mais antigo
-      switchMap((allNews: News[]) => {
-        const currentEmphasis = allNews.filter((n: News) => n.isEmphasis);
-
-        if (currentEmphasis.length >= 6) {
+      switchMap((featured: News[]) => {
+        if (featured.length >= 6) {
           // Encontra a notícia mais antiga com destaque
-          const oldestEmphasis = currentEmphasis.reduce((oldest: News, current: News) => {
+          const oldestEmphasis = featured.reduce((oldest: News, current: News) => {
             const oldestDate = new Date(oldest.published || oldest.createdAt).getTime();
             const currentDate = new Date(current.published || current.createdAt).getTime();
             return currentDate < oldestDate ? current : oldest;

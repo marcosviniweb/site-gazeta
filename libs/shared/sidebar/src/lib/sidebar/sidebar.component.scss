@@ -1,348 +1,294 @@
 @use 'sass:color';
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
-// Variables
-$primary-color: #eb3237;
-$secondary-color: #0a80c4;
+
+// Cores Base e Variáveis CSS (Independência entre apps)
 $sidebar-width: 280px;
-$transition-default: 0.3s ease-in-out;
-$box-shadow-default: 0px 0px 10px rgba(0, 0, 0, 0.363);
-$box-shadow-light: 0px 0px 3px rgba(0, 0, 0, 0.24);
+$transition-fast: 0.2s ease;
+$transition-default: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-// Font Size Variables
-$font-size-base: 1rem; // 16px base
-$font-size-large: 1.2rem; // 19.2px
-$font-size-medium: 0.875rem; // 14px
-$font-size-small: 0.75rem; // 12px
-$font-size-xsmall: 0.625rem; // 10px
-
-// Mixins
-@mixin flex-column {
-  display: flex;
-  flex-direction: column;
-}
-
-@mixin fullscreen-fixed {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-
-//Host styles
 :host {
   display: contents;
   
-  // Quando em modo static, o host deve ocupar espaço
-  &:has(.sidebar-static) {
+  // Variáveis padrão (podem ser sobrescritas pela aplicação pai)
+  --sb-primary: #eb3237;
+  --sb-secondary: #0a80c4;
+  --sb-bg: #ffffff;
+  --sb-text: #334155; // Slate 700
+  --sb-text-muted: #64748b; // Slate 500
+  --sb-active-bg: rgba(235, 50, 55, 0.08);
+  --sb-hover-bg: #f8fafc;
+  --sb-border: #f1f5f9;
+  --sb-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+
+  &.is-static {
     display: block;
     width: $sidebar-width;
     height: 100%;
   }
 }
 
-// Sidebar Overlay - renderizado no topo do body
-.sidebar-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 10000;
-  display: flex;
-}
-
-// Backdrop
-.backdrop {
-  @include fullscreen-fixed;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 10001;
-  cursor: pointer;
-}
-
-// Main Sidebar
+// Sidebar Shell
 .sidebar {
-  z-index: 10002;
-  background: white;
   position: relative;
-  top: 0;
-  left: 0;
   width: $sidebar-width;
   height: 100vh;
-  @include flex-column;
-  justify-content: space-between;
-  box-shadow: $box-shadow-default;
+  background: var(--sb-bg);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--sb-shadow);
   transform: translateX(-100%);
   transition: transform $transition-default;
+  z-index: 10002;
+  overflow: hidden;
 
   &.sidebar_opened {
     transform: translateX(0);
   }
 
-  // Modo Static: renderizado dentro do layout
   &.sidebar-static {
     position: relative;
     height: 100%;
     transform: translateX(0);
     box-shadow: none;
-    border-right: 1px solid rgba(0, 0, 0, 0.1);
-
-    &.sidebar_opened {
-      transform: translateX(0);
-    }
-
-    // No modo static, não precisamos da animação de slide
-    &:not(.sidebar_opened) {
-      transform: translateX(0);
-    }
+    border-right: 1px solid var(--sb-border);
   }
 
-  // Header
-  &__header {
-    display: flex;
-    width: 100%;
-    box-shadow: $box-shadow-light;
+  // Estilos específicos para o Modo Admin (Painel)
+  &.is-admin {
+    // Caso precise de ajustes específicos para o painel
+  }
+}
 
-    .logo {
-      padding: 5px;
+// Overlay & Backdrop
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+
+  .backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5); // Slate 900 com opacidade
+    backdrop-filter: blur(4px);
+    z-index: 10001;
+    cursor: pointer;
+  }
+}
+
+// Header
+.sidebar__header {
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--sb-border);
+
+  .logo {
+    width: 100%;
+    max-width: 180px;
+    transition: transform $transition-fast;
+
+    &:hover {
+      transform: scale(1.02);
+    }
+
+    img {
       width: 100%;
-      background: rgba(0, 0, 0, 0.137);
-
-      img {
-        width: 100%;
-        height: auto;
-      }
+      height: auto;
+      display: block;
     }
   }
+}
 
-  // Content
-  &__content {
-    @include flex-column;
-    flex-grow: 1;
-    width: 100%;
-    padding: 10px;
-    overflow-y: auto;
+// Content
+.sidebar__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 12px;
+  
+  // Custom Scrollbar
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { 
+    background: #cbd5e1; 
+    border-radius: 10px; 
+  }
 
-    // Scrollbar customizada ultra fina para o conteúdo principal
-    &::-webkit-scrollbar {
-      width: 2px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.15);
-      border-radius: 1px;
-    }
-
-    &::-webkit-scrollbar-thumb:hover {
-      background: rgba(0, 0, 0, 0.3);
-    }
-
-    // Para Firefox
-    scrollbar-width: thin;
-    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+  .sidebar__content__menu {
+    display: flex;
+    flex-direction: column;
+    // Sem gap para que as bordas fiquem encostadas se desejado, 
+    // ou mantemos o gap e as bordas ficam nos itens.
+    gap: 2px; 
 
     .menu-item {
-      margin-bottom: 5px;
+      border-bottom: 1px solid var(--sb-border);
+      padding-bottom: 4px;
+      margin-bottom: 4px;
 
-      // Menu pai com filhos
-      .menu-parent {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px 15px;
-        margin: 5px;
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        border-radius: 4px;
-        cursor: pointer;
-        background: rgba(0, 0, 0, 0.02);
-        font-size: $font-size-medium;
-        font-weight: 600;
-        color: $primary-color;
-        transition: all $transition-default;
-
-        &:hover {
-          color: $secondary-color;
-          background: rgba(0, 0, 0, 0.05);
-          transform: translateY(-1px);
-        }
-
-        &.expanded {
-          border-bottom-left-radius: 0;
-          border-bottom-right-radius: 0;
-          background: rgba(0, 0, 0, 0.08);
-        }
-
-        .menu-text {
-          flex-grow: 1;
-        }
-
-        .expand-icon {
-          font-size: $font-size-large;
-          transition: transform $transition-default;
-        }
+      &:last-child {
+        border-bottom: none;
       }
+    }
+  }
+}
 
-      // Submenu com animação accordion
-      .submenu {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height $transition-default ease-out;
-        background: rgba(0, 0, 0, 0.02);
-        border-left: 1px solid rgba(0, 0, 0, 0.1);
-        border-right: 1px solid rgba(0, 0, 0, 0.1);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        margin: 0 5px 5px 5px;
-        border-bottom-left-radius: 4px;
-        border-bottom-right-radius: 4px;
+// Shared Menu Item Styles
+%menu-item-base {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: var(--sb-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all $transition-fast;
+  position: relative;
 
-        &.expanded {
-          max-height: 200px; // Altura para ~5 itens (40px cada)
-          overflow-y: auto;
-          transition: max-height $transition-default ease-in;
+  &:hover {
+    background-color: var(--sb-hover-bg);
+    color: var(--sb-primary);
+    
+    .menu-icon { color: var(--sb-primary); }
+  }
 
-          // Scrollbar customizada ultra fina
-          &::-webkit-scrollbar {
-            width: 2px;
-          }
+  &.active {
+    background-color: var(--sb-active-bg);
+    color: var(--sb-primary);
+    font-weight: 600;
 
-          &::-webkit-scrollbar-track {
-            background: transparent;
-          }
+    .menu-icon { color: var(--sb-primary); }
 
-          &::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 1px;
-          }
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 20%;
+      bottom: 20%;
+      width: 3px;
+      background: var(--sb-primary);
+      border-radius: 0 4px 4px 0;
+    }
+  }
 
-          &::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 0, 0, 0.4);
-          }
+  .menu-item-core {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+  }
 
-          // Para Firefox
-          scrollbar-width: thin;
-          scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-        }
+  .menu-icon {
+    font-size: 20px;
+    color: var(--sb-text-muted);
+    transition: color $transition-fast;
+  }
+}
 
-        .submenu-item {
-          display: block;
-          padding: 10px 20px 10px 30px;
-          font-size: $font-size-small;
-          text-decoration: none;
-          color: color.adjust($primary-color, $lightness: -10%);
-          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-          transition: all $transition-default;
+// Menu Simples
+.menu-simple {
+  @extend %menu-item-base;
+}
 
-          &:last-child {
-            border-bottom: none;
-          }
+// Menu Pai (Accordion)
+.menu-parent {
+  @extend %menu-item-base;
+  justify-content: space-between;
 
-          &:hover {
-            background: rgba(0, 0, 0, 0.05);
-            color: $secondary-color;
-            padding-left: 35px;
-          }
+  .expand-icon {
+    font-size: 18px;
+    color: var(--sb-text-muted);
+    transition: transform $transition-default;
+  }
 
-          &.active {
-            background: rgba($primary-color, 0.1);
-            color: $primary-color;
-            font-weight: 600;
-            border-left: 3px solid $primary-color;
-          }
-        }
-      }
+  &.expanded {
+    background-color: var(--sb-hover-bg);
+    
+    .expand-icon {
+      transform: rotate(0deg);
+    }
+  }
+}
 
-      // Menu simples sem filhos
-      .menu-simple {
-        display: block;
-        padding: 12px 15px;
-        margin: 5px;
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        border-radius: 4px;
-        font-size: $font-size-medium;
-        text-decoration: none;
-        color: $primary-color;
-        transition: all $transition-default;
-        font-weight: 500;
-        background: white;
+// Submenu Container
+.submenu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height $transition-default linear, opacity $transition-fast;
+  opacity: 0;
+  padding-left: 20px;
+  margin-top: 2px;
+  
+  &.expanded {
+    max-height: 500px;
+    opacity: 1;
+    margin-bottom: 8px;
+  }
 
-        &:hover {
-          background: rgba(0, 0, 0, 0.02);
-          color: $secondary-color;
-          transform: translateY(-1px);
-        }
+  .submenu-item {
+    display: block;
+    padding: 8px 16px;
+    margin: 2px 0;
+    font-size: 0.8125rem;
+    color: var(--sb-text-muted);
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all $transition-fast;
 
-        &.active {
-          background: rgba($secondary-color, 0.1);
-          color: $secondary-color;
-          font-weight: 600;
-          border-color: $secondary-color;
-        }
+    &:hover {
+      background: var(--sb-hover-bg);
+      color: var(--sb-primary);
+      padding-left: 20px;
+    }
+
+    &.active {
+      color: var(--sb-primary);
+      background: var(--sb-active-bg);
+      font-weight: 600;
+    }
+  }
+}
+
+// Footer
+.sidebar__footer {
+  padding: 16px;
+  
+  .footer_auth {
+    margin-bottom: 8px;
+
+    ::ng-deep .auth_button {
+      @extend %menu-item-base;
+      width: calc(100% - 10px);
+      margin: 5px;
+      border: 1px solid var(--sb-border);
+      background: transparent;
+      justify-content: center;
+      
+      &:hover {
+        background: var(--sb-hover-bg);
+        border-color: var(--sb-primary);
       }
     }
   }
 
-  // Footer
-  &__footer {
-    .footer_auth {
-      padding: 10px;
-      display: flex;
-      justify-content: flex-start;
-
-      ::ng-deep {
-        .auth_button {
-          cursor: pointer;
-          display: block;
-          padding: 12px 15px;
-          margin: 5px;
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          border-radius: 4px;
-          font-size: $font-size-medium;
-          text-decoration: none;
-          color: $primary-color;
-          transition: all $transition-default;
-          font-weight: 500;
-          background: white;
-
-          &:hover {
-            background: rgba(0, 0, 0, 0.02);
-            color: $secondary-color;
-            transform: translateY(-1px);
-          }
-        }
-      }
+  .footer-bottom {
+    .divider {
+      display: block;
+      height: 1px;
+      background: var(--sb-border);
+      margin-bottom: 12px;
     }
 
     .footer__content {
-      padding: 10px;
-      font-size: $font-size-xsmall;
-      font-weight: 500;
-
-      .created_by {
+      p {
+        font-size: 0.75rem;
+        color: var(--sb-text-muted);
+        text-align: center;
         font-weight: 400;
-        font-size: $font-size-xsmall;
-        font-style: italic;
       }
     }
   }
-}
-
-// Backdrop
-.backdrop {
-  @include fullscreen-fixed;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 9998;
-}
-
-// State classes
-.sidebar_opened {
-  transform: translateX(0) !important;
-}
-
-.opened_mode {
-  position: relative;
-  transform: translateX(0) !important;
 }

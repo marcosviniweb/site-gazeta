@@ -4,10 +4,13 @@ import { CreateVideoDto } from './dto/create-video.dto';
 import { UpdateVideoDto } from './dto/update-video.dto';
 import { VideoResponseDto } from './dto/video-response.dto';
 import { UploadVideoDto } from './dto/upload-video.dto';
+import { VideoQueryDto } from './dto/video-query.dto';
+import { VideoPaginatedResponse } from './dto/video-paginated-response.dto';
 import { VideoProcessingService } from './services/video-processing.service';
 import { VideoMetadataService } from './services/video-metadata.service';
 import { VideoOptimizerService } from './services/video-optimizer.service';
 import { sanitizeFileName } from '../utils/file-name-sanitizer';
+import { Prisma } from '@prisma/client';
 type UploadedFile = { originalname: string; buffer: Buffer; mimetype: string };
 
 @Injectable()
@@ -214,21 +217,96 @@ export class VideoService {
     return `${nameWithoutExt}.mp4`;
   }
 
-  async findAll(): Promise<VideoResponseDto[]> {
-    const videos = await this.prisma.video.findMany({
-      include: {
-        videoCategories: {
-          include: {
-            category: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+  /**
+   * Constrói condições WHERE para queries de vídeos
+   */
+  private buildWhereCondition(query?: VideoQueryDto): any {
+    const whereCondition: any = {};
 
-    return videos.map(video => this.formatResponse(video));
+    if (query?.search) {
+      whereCondition.title = { contains: query.search };
+    }
+
+    if (query?.categoryId) {
+      whereCondition.videoCategories = {
+        some: {
+          categoryId: query.categoryId
+        }
+      };
+    }
+
+    if (query?.featured !== undefined) {
+      whereCondition.featured = query.featured;
+    }
+
+    if (query?.date) {
+      const dateStr = query.date;
+      whereCondition.createdAt = {
+        gte: new Date(`${dateStr}T00:00:00.000Z`),
+        lte: new Date(`${dateStr}T23:59:59.999Z`)
+      };
+    }
+
+    return whereCondition;
+  }
+
+  /**
+   * Constrói array dinâmico de ordenação para vídeos
+   */
+  private buildOrderByCondition(query?: VideoQueryDto, defaultFeaturedFirst = false): any[] {
+    const orderBy: any[] = [];
+
+    if (query?.views) {
+      orderBy.push({ views: query.views });
+    }
+    
+    if (query?.order) {
+      orderBy.push({ createdAt: query.order });
+    }
+
+    if (orderBy.length === 0) {
+      if (defaultFeaturedFirst) {
+        orderBy.push({ featured: 'desc' });
+      }
+      orderBy.push({ createdAt: 'desc' });
+    }
+
+    return orderBy;
+  }
+
+  async findAll(query?: VideoQueryDto): Promise<VideoPaginatedResponse> {
+    const whereCondition = this.buildWhereCondition(query);
+    const orderBy = this.buildOrderByCondition(query, false);
+    const page = query?.page || 1;
+    const limit = query?.limit || 25;
+    const skip = (page - 1) * limit;
+
+    const [videos, total] = await Promise.all([
+      this.prisma.video.findMany({
+        where: whereCondition,
+        include: {
+          videoCategories: {
+            include: {
+              category: true
+            }
+          }
+        },
+        orderBy,
+        skip,
+        take: limit
+      }),
+      this.prisma.video.count({ where: whereCondition })
+    ]);
+
+    return {
+      data: videos.map(video => this.formatResponse(video)),
+      meta: {
+        total,
+        page,
+        limit,
+        lastPage: Math.ceil(total / limit)
+      }
+    };
   }
 
   async findFeatured(): Promise<VideoResponseDto[]> {
@@ -558,6 +636,49 @@ export class VideoService {
     }
 
     return video;
+  }
+
+  /**
+   * Atualiza o destaque de múltiplos vídeos (Bulk)
+   */
+  async bulkToggleFeatured(ids: number[], featured: boolean): Promise<{ count: number }> {
+    // Se está ativando destaque, precisamos gerenciar o limite de 3
+    if (featured) {
+      // Como é bulk, simplificamos: removemos destaque de TODOS os antigos que não estão na lista nova
+      // Mas a regra de negócio diz: no máximo 3.
+      // Vou apenas aplicar o updateMany e depois rodar o manageFeaturedVideos para limpar excessos.
+      const result = await this.prisma.video.updateMany({
+        where: { id: { in: ids } },
+        data: { featured }
+      });
+      
+      await this.manageFeaturedVideos();
+      return { count: result.count };
+    }
+
+    // Se está desativando, apenas faz o updateMany
+    const result = await this.prisma.video.updateMany({
+      where: { id: { in: ids } },
+      data: { featured }
+    });
+
+    return { count: result.count };
+  }
+
+  /**
+   * Remove múltiplos vídeos permanentemente (Bulk)
+   */
+  async bulkRemove(ids: number[]): Promise<{ count: number }> {
+    let count = 0;
+    for (const id of ids) {
+      try {
+        await this.remove(id);
+        count++;
+      } catch (error) {
+        this.logger.error(`Erro ao remover vídeo ${id} em lote:`, error);
+      }
+    }
+    return { count };
   }
 
   private formatResponse(video: any): VideoResponseDto {

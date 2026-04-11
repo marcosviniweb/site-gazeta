@@ -1,10 +1,9 @@
-<div class="ads-list-filters">
+<div class="g-filters-container">
   <div class="filter-group">
     <label for="filter-date">Data de início</label>
     <input 
       id="filter-date" 
       type="date" 
-      class="filter-input" 
       [value]="filterDate()" 
       (input)="onDateChange($any($event.target).value)" 
     />
@@ -14,7 +13,6 @@
     <label for="filter-order">Ordem</label>
     <select 
       id="filter-order" 
-      class="filter-input" 
       [value]="filterOrder() ?? ''" 
       (change)="onOrderChange($any($event.target).value)">
       <option value="">Todos</option>
@@ -27,7 +25,6 @@
     <label for="filter-position">Posição</label>
     <select 
       id="filter-position" 
-      class="filter-input" 
       [value]="filterPosition()" 
       (change)="onPositionChange($any($event.target).value)">
       @for (position of positions; track position.value) {
@@ -40,7 +37,6 @@
     <label for="filter-placement">Página</label>
     <select 
       id="filter-placement" 
-      class="filter-input" 
       [value]="filterPlacement()" 
       (change)="onPlacementChange($any($event.target).value)">
       @for (placement of placements; track placement.value) {
@@ -53,7 +49,6 @@
     <label for="filter-status">Status</label>
     <select 
       id="filter-status" 
-      class="filter-input" 
       [value]="filterStatus() === null ? '' : filterStatus() ? 'true' : 'false'" 
       (change)="onStatusChange($any($event.target).value)">
       @for (status of statusOptions; track status.value) {
@@ -67,11 +62,11 @@
     <input 
       id="filter-search" 
       type="text" 
-      class="filter-input search-input" 
       placeholder="Pesquisar anúncio..." 
       [value]="filterSearch()" 
       (input)="onSearchChange($any($event.target).value)" 
     />
   </div>
 </div>
+
 

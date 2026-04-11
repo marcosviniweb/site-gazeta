@@ -1,28 +1,35 @@
-<div class="news-container">
-  <div class="news-header">
-    <h1>Gerenciamento de Usuários</h1>
-    <p>Gerencie os usuários do sistema</p>
-  </div>
+<div class="page-container">
+  <div class="page-card">
+    <!-- Header escuro -->
+    <div class="page-header">
+      <div class="header-text">
+        <h2>Gerenciamento de Usuários</h2>
+        <p>Gerencie os usuários do sistema</p>
+      </div>
+    </div>
 
-  <div class="news-tabs">
+    <!-- Tabs -->
+    <div class="page-tabs">
       <button 
-      class="tab-button" 
-      [class.active]="activeTab === 'create'"
-      (click)="setActiveTab('create')">
-      <i class="fas fa-plus"></i>
-      Criar Usuário
-    </button>
-    <button 
-      class="tab-button" 
-      [class.active]="activeTab === 'list'"
-      (click)="setActiveTab('list')">
-      <i class="fas fa-list"></i>
-      Lista de Usuários
-    </button>
-  </div>
+        class="tab-button" 
+        [class.active]="activeTab === 'create'"
+        (click)="setActiveTab('create')">
+        <span class="material-icons">person_add</span>
+        Criar Usuário
+      </button>
+      <button 
+        class="tab-button" 
+        [class.active]="activeTab === 'list'"
+        (click)="setActiveTab('list')">
+        <span class="material-icons">people</span>
+        Lista de Usuários
+      </button>
+    </div>
 
-  <div class="news-content">
-    <app-user-list *ngIf="activeTab === 'list'"></app-user-list>
-    <app-create-user *ngIf="activeTab === 'create'"></app-create-user>
+    <!-- Conteúdo -->
+    <div class="page-content">
+      <app-user-list *ngIf="activeTab === 'list'"></app-user-list>
+      <app-create-user *ngIf="activeTab === 'create'"></app-create-user>
+    </div>
   </div>
 </div>

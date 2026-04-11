@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal, ViewChild, computed } from '@angular/core';
 
 import { TextEditorComponent } from '@site-gazeta/text-editor';
 import {
@@ -7,10 +7,12 @@ import {
   ReactiveFormsModule,
   FormsModule,
 } from '@angular/forms';
+import { MultiSelectComponent } from '@site-gazeta/multi-select';
 import { NewsMidiaComponent } from './news-midia/news-midia.component';
 import { NewsMedia, NewsVideo, Category, News } from '@site-gazeta/models';
 import { FormValidatorComponent, FormValidatorService } from '@site-gazeta/form-validator';
 import { concatMap,  first,  firstValueFrom,  from, Subject,   takeUntil, toArray, tap } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { NewsService } from '../../core/services/news.service';
 import { CategoryService } from '../../core/services/category.service';
 import { ActivatedRoute, RouterModule } from '@angular/router';
@@ -25,7 +27,8 @@ import { AlertService } from '@site-gazeta/alert';
     FormsModule,
     NewsMidiaComponent,
     FormValidatorComponent,
-    RouterModule
+    RouterModule,
+    MultiSelectComponent
 ],
   providers: [FormValidatorService],
   templateUrl: './news.component.html',
@@ -46,14 +49,26 @@ export class NewsComponent implements OnInit, OnDestroy {
   urlDisplay = signal<string>('');
   displayError = signal<{ [key: string]: string } | null>({});
   availableCategories = signal<Category[]>([]);
-  selectedCategories = signal<Category[]>([]);
-  categoryDropdownOpen = signal<boolean>(false);
   isEdit = signal<boolean>(false)
-  newsId:number |null = null
+  isLoadingEdit = signal<boolean>(false)
+  editNewsTitle = signal<string>('')
+  newsId: number | undefined = undefined;
   exportEditNewsMedia = signal<{newsMedia:NewsMedia[], newsVideos:NewsVideo[]}| null>(null)
   isSavingNews = signal<boolean>(false)
   isUploadingMedia = signal<boolean>(false)
   mediaUploadProgress = signal<{ current: number; total: number }>({ current: 0, total: 0 })
+  headerSubtitle = computed(() => {
+    return this.isEdit() ? 'Atualize os dados da publicação' : 'Preencha os dados para publicar';
+  });
+
+  headerTitle = computed(() => {
+    if (this.isEdit()) {
+      const title = this.editNewsTitle();
+      return title ? `Editando: ${title}` : 'Editando notícia...';
+    }
+    return 'Nova Notícia';
+  });
+
   form = this.fb.group({
     categoryId: [[] as number[], [Validators.required]],
     title: ['', [Validators.required]],
@@ -65,9 +80,37 @@ export class NewsComponent implements OnInit, OnDestroy {
     newsVideo: [[] as NewsVideo[]],
     published: [this.getCurrentDateTime(), [Validators.required]],
     isEmphasis: [false],
-    validity: [null],
+    validity: [null as string | null],
     status: ['ACTIVE'],
+  });
 
+  // Signal que observa as mudanças do formulário para reatividade dos computed
+  formValue = toSignal(this.form.valueChanges, { initialValue: this.form.value });
+
+  // Computed: contagem de campos preenchidos por aba
+  infoFieldsStatus = computed(() => {
+    const v = this.formValue();
+    if (!v) return { filled: 0, total: 4 };
+    let filled = 0;
+    const total = 4;
+    if (v.categoryId && (v.categoryId as number[]).length > 0) filled++;
+    if (v.title) filled++;
+    if (v.subtitle) filled++;
+    if (v.author) filled++;
+    return { filled, total };
+  });
+
+  contentFieldStatus = computed(() => {
+    const v = this.formValue();
+    if (!v) return { filled: 0, total: 1 };
+    return { filled: v.content ? 1 : 0, total: 1 };
+  });
+
+  mediaFieldStatus = computed(() => {
+    const v = this.formValue();
+    if (!v) return { count: 0 };
+    const count = v.newsMidia ? (v.newsMidia as NewsMedia[]).length : 0;
+    return { count };
   });
 
   errorMessage = {
@@ -115,22 +158,25 @@ export class NewsComponent implements OnInit, OnDestroy {
     .then((param)=>{
       const newsId = param['id']
       if(newsId){
-        this.getCategories();
         this.isEdit.set(true)
-        this.newsId = newsId
+        this.isLoadingEdit.set(true)
+        this.newsId = Number(newsId)
         firstValueFrom(this.newsService.getById(newsId))
         .then((resp)=>{
           console.log(resp);
-          const news:News = resp as News
-          news.categoryId.forEach((categoryId) => {
-            const category = this.availableCategories().find(cat => cat.id === categoryId);
-            this.selectedCategories.update((cats) => [...cats, category!]);
-          });
+          const news = resp as News;
+          this.editNewsTitle.set(news.title || '')
           this.form.patchValue({
             ...resp,
-            validity: resp.validity ? null : null
-          } as any)
+            // Formata a data de validade para YYYY-MM-DD se existir
+            validity: news.validity ? news.validity.split('T')[0] : null
+          });
           this.exportEditNewsMedia.set({newsMedia:news.mediaNews,newsVideos:news.videoNews})
+          this.isLoadingEdit.set(false)
+        })
+        .catch(err => {
+          this.isLoadingEdit.set(false)
+          throw err
         })
       }
     })
@@ -198,7 +244,7 @@ export class NewsComponent implements OnInit, OnDestroy {
     }
   }
 
-  private handleEmphasisUpdate(newsId: number, isEmphasisValue: boolean, formValue: any) {
+  private handleEmphasisUpdate(newsId: number, isEmphasisValue: boolean, formValue: Record<string, unknown>) {
     // Atualizar newsId imediatamente para evitar deletar imagens no OnDestroy
     this.newsId = newsId;
 
@@ -224,8 +270,9 @@ export class NewsComponent implements OnInit, OnDestroy {
     });
   }
 
-  private processMediaUpload(formValue: any, newsId: number) {
-    const newsMedia = formValue.newsMidia as NewsMedia[]
+
+  private processMediaUpload(formValue: Record<string, unknown>, newsId: number) {
+    const newsMedia = formValue['newsMidia'] as NewsMedia[]
     const midias: FormData[] = []
     const seenFiles = new Set<string>();
 
@@ -257,7 +304,6 @@ export class NewsComponent implements OnInit, OnDestroy {
       .pipe(
         concatMap((midia, index) => {
           return this.newsService.uploadMedia(midia).pipe(
-            // Atualizar progresso após cada upload
             tap(() => {
               this.mediaUploadProgress.set({ current: index + 1, total: midias.length });
             })
@@ -330,45 +376,6 @@ export class NewsComponent implements OnInit, OnDestroy {
     this.urlDisplaySet(slug);
   }
 
-  toggleCategoryDropdown() {
-    this.categoryDropdownOpen.set(!this.categoryDropdownOpen());
-  }
-
-  selectCategory(category: Category) {
-    const currentSelected = this.selectedCategories();
-    const isAlreadySelected = currentSelected.some(
-      (cat) => cat.id === category.id
-    );
-
-    if (!isAlreadySelected) {
-      const newSelected = [...currentSelected, category];
-      this.selectedCategories.set(newSelected);
-      this.updateFormCategories(newSelected);
-    }
-
-    this.categoryDropdownOpen.set(false);
-  }
-
-  removeCategory(categoryId: number) {
-    const newSelected = this.selectedCategories().filter(
-      (cat) => cat.id !== categoryId
-    );
-    this.selectedCategories.set(newSelected);
-    this.updateFormCategories(newSelected);
-  }
-
-  private updateFormCategories(categories: Category[]) {
-    const categoryIds = categories.map((cat) => cat.id as number);
-    this.form.patchValue({ categoryId: categoryIds });
-  }
-
-  getAvailableCategories(): Category[] {
-    const selectedIds = this.selectedCategories().map((cat) => cat.id);
-    return this.availableCategories().filter(
-      (cat) => !selectedIds.includes(cat.id as number)
-    );
-  }
-
   onFormValue(formValue: { newsVideo: NewsVideo[]; newsMedia: NewsMedia[] }) {
     this.form.patchValue({
       newsVideo: formValue.newsVideo,
@@ -376,25 +383,26 @@ export class NewsComponent implements OnInit, OnDestroy {
     });
   }
 
-  onReady(editor: any) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onReady(editor: any): void {
     console.log(editor);
   }
 
   onReset() {
-    this.form.reset();
-    this.form.controls['content'].reset('');
-    this.selectedCategories.set([]);
+    this.form.reset({
+      author: 'Gazeta do Pará',
+      status: 'ACTIVE',
+      published: this.getCurrentDateTime(),
+      isEmphasis: false,
+      newsMidia: [],
+      newsVideo: [],
+      categoryId: []
+    });
     this.isSavingNews.set(false);
     this.isUploadingMedia.set(false);
-    setTimeout(() => {
-      this.form.patchValue({
-        published: this.getCurrentDateTime(),
-        author: 'Gazeta do Pará',
-        status: 'ACTIVE',
-      });
-    }, 0);
     this.activeTab = 'info';
   }
+
 
   // Método melhorado para obter data e hora atual
   private getCurrentDateTime(): string {

@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable, catchError, firstValueFrom, forkJoin, map, of, switchMap } from 'rxjs';
-import { Category, News, PrimaryConfig, SecondaryConfig, Video } from '@site-gazeta/models';
+import { BehaviorSubject, Observable, catchError, firstValueFrom, forkJoin, map, of, switchMap, tap } from 'rxjs';
+import { Category, News, PrimaryConfig, SecondaryConfig, Video, SocialMediaConfig, PaginatedResponse, PaginationParams } from '@site-gazeta/models';
 import { LIBRARY_CONFIG } from '../config/api-config';
+import { toHttpParams } from '../util/api-params.util';
 
 interface CarouselConfig {
   id: number;
@@ -38,8 +39,13 @@ export class ApiConfigService {
       return this.$newsFeatured.asObservable();
     }
 
-    firstValueFrom(this.httpClient.get<News[]>(`${this.apiUrl}/news/featured`)).then((news) => {
+    firstValueFrom(this.httpClient.get<News[] | PaginatedResponse<News>>(`${this.apiUrl}/news/featured`)).then((response) => {
+      const news = Array.isArray(response) ? response : response.data;
+      console.log('API: News Featured loaded', news.length);
       this.$newsFeatured.next(news);
+    }).catch((err) => {
+      console.error('API Error: getNewsFeatured failed', err);
+      this.$newsFeatured.next([]);
     });
 
     return this.$newsFeatured.asObservable();
@@ -59,11 +65,57 @@ export class ApiConfigService {
     return this.httpClient.get<{
       primary: PrimaryConfig;
       secondary: SecondaryConfig;
-    }>(`${this.apiUrl}/config/top-categories`);
+    }>(`${this.apiUrl}/config/top-categories`).pipe(
+      tap(config => console.log('API: Home Config loaded', config)),
+      catchError(err => {
+        console.error('API Error: getHomeCategoryConfig failed', err);
+        throw err;
+      })
+    );
   }
 
-  getNewsForCategory(categoryId: number): Observable<News[]> {
-    return this.httpClient.get<News[]>(`${this.apiUrl}/news/category/${categoryId}`);
+  getNewsForCategory(categoryId: number, params?: PaginationParams): Observable<PaginatedResponse<News>> {
+    const httpParams = toHttpParams(params);
+    return this.httpClient.get<any>(`${this.apiUrl}/news/category/${categoryId}`, { params: httpParams }).pipe(
+      map(response => {
+        // 1. Caso seja um array puro
+        if (Array.isArray(response)) {
+          return {
+            data: response || [],
+            meta: {
+              total: response.length,
+              page: params?.page || 1,
+              limit: params?.limit || response.length,
+              lastPage: 1
+            }
+          };
+        }
+        
+        // 2. Caso seja um objeto paginado, validar se tem .data e normalizar meta se necessário
+        if (response && typeof response === 'object') {
+          return {
+            data: response.data || [],
+            meta: {
+              total: response.meta?.total ?? response.meta?.totalItems ?? 0,
+              page: response.meta?.page ?? response.meta?.currentPage ?? 1,
+              limit: response.meta?.limit ?? response.meta?.itemsPerPage ?? 10,
+              lastPage: response.meta?.lastPage ?? response.meta?.totalPages ?? 1
+            }
+          };
+        }
+
+        // 3. Caso de fallback (nulo ou formatos inesperados)
+        return { 
+          data: [], 
+          meta: { total: 0, page: 1, limit: 10, lastPage: 0 } 
+        };
+      }),
+      tap(res => console.log(`API: News for category ${categoryId} processed`, res.data?.length)),
+      catchError(err => {
+        console.error(`API Error: getNewsForCategory failed for ${categoryId}`, err);
+        return of({ data: [], meta: { total: 0, page: 1, limit: 10, lastPage: 0 } });
+      })
+    );
   }
 
   getLatestNews(): Observable<News[]> {
@@ -71,15 +123,27 @@ export class ApiConfigService {
       return this.$latestNews.asObservable();
     }
 
-    firstValueFrom(this.httpClient.get<News[]>(`${this.apiUrl}/news/latest-news`)).then((news) => {
+    firstValueFrom(this.httpClient.get<News[] | PaginatedResponse<News>>(`${this.apiUrl}/news/latest-news`)).then((response) => {
+      const news = Array.isArray(response) ? response : response.data;
+      console.log('API: Latest News loaded', news.length);
       this.$latestNews.next(news);
+    }).catch((err) => {
+      console.error('API Error: getLatestNews failed', err);
+      this.$latestNews.next([]);
     });
 
     return this.$latestNews.asObservable();
   }
 
   getMostViewedNews(): Observable<News[]> {
-    return this.httpClient.get<News[]>(`${this.apiUrl}/news/most-viewed`);
+    return this.httpClient.get<News[] | PaginatedResponse<News>>(`${this.apiUrl}/news/most-viewed`).pipe(
+      map(response => Array.isArray(response) ? response : response.data),
+      tap(news => console.log('API: Most Viewed loaded', news?.length)),
+      catchError(err => {
+        console.error('API Error: getMostViewedNews failed', err);
+        return of([]);
+      })
+    );
   }
 
   getCategoryGrid(): Observable<HomeCategoryGridItem[]> {
@@ -88,9 +152,9 @@ export class ApiConfigService {
         forkJoin(
           config.primary.categories.map((category: Category) =>
             this.getNewsForCategory(category.id as number).pipe(
-              map((news) => ({
+              map((response) => ({
                 category,
-                news,
+                news: response.data,
               }))
             )
           )
@@ -104,10 +168,10 @@ export class ApiConfigService {
       switchMap((config) =>
         forkJoin(
           config.secondary.categories.map((category: Category) =>
-            this.getNewsForCategory(category.id as number).pipe(
-              map((news) => ({
+            this.getNewsForCategory(category.id as number, { limit: 5 }).pipe(
+              map((response) => ({
                 category,
-                news: news.slice(0, 5),
+                news: response.data,
               }))
             )
           )
@@ -120,8 +184,9 @@ export class ApiConfigService {
     return this.getHighlights();
   }
 
-  getNews(): Observable<News[]> {
-    return this.httpClient.get<News[]>(`${this.apiUrl}/news`);
+  getNews(params?: PaginationParams): Observable<PaginatedResponse<News>> {
+    const httpParams = toHttpParams(params);
+    return this.httpClient.get<PaginatedResponse<News>>(`${this.apiUrl}/news`, { params: httpParams });
   }
 
   getCategories(): Observable<Category[]> {
@@ -133,19 +198,25 @@ export class ApiConfigService {
       return this.$videosFeatured.asObservable();
     }
 
-    firstValueFrom(this.httpClient.get<Video[]>(`${this.apiUrl}/videos/featured`)).then((videos) => {
+    firstValueFrom(this.httpClient.get<Video[] | PaginatedResponse<Video>>(`${this.apiUrl}/videos/featured`)).then((response) => {
+      const videos = Array.isArray(response) ? response : response.data;
       this.$videosFeatured.next(videos);
+    }).catch(() => {
+      this.$videosFeatured.next([]);
     });
 
     return this.$videosFeatured.asObservable();
   }
 
-  getVideos(): Observable<Video[]> {
-    return this.httpClient.get<Video[]>(`${this.apiUrl}/videos`);
+  getVideos(params?: PaginationParams): Observable<PaginatedResponse<Video>> {
+    const httpParams = toHttpParams(params);
+    return this.httpClient.get<PaginatedResponse<Video>>(`${this.apiUrl}/videos`, { params: httpParams });
   }
 
   getVideosLatest(): Observable<Video[]> {
-    return this.httpClient.get<Video[]>(`${this.apiUrl}/videos/latest`);
+    return this.httpClient.get<Video[] | PaginatedResponse<Video>>(`${this.apiUrl}/videos/latest`).pipe(
+      map(response => Array.isArray(response) ? response : response.data)
+    );
   }
 
   getVideosByCategory(excludeIds?: number[]): Observable<Video[]> {
@@ -156,14 +227,16 @@ export class ApiConfigService {
       url += `?excludeIds=${idsParam}`;
     }
 
-    return this.httpClient.get<Video[]>(url);
+    return this.httpClient.get<Video[] | PaginatedResponse<Video>>(url).pipe(
+      map(response => Array.isArray(response) ? response : response.data)
+    );
   }
 
   getRelatedNews(newsId: number): Observable<News[]> {
     return this.httpClient.get<News[]>(`${this.apiUrl}/news/related-news/${newsId}`);
   }
 
-  getSocialMedia(): Observable<Record<string, string>> {
-    return this.httpClient.get<Record<string, string>>(`${this.apiUrl}/config/social-media`);
+  getSocialMedia(): Observable<SocialMediaConfig> {
+    return this.httpClient.get<SocialMediaConfig>(`${this.apiUrl}/config/social-media`);
   }
 }

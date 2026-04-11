@@ -42,7 +42,7 @@
   justify-content: center;
   align-items: center;
   padding: 2rem;
-  animation: scaleIn 0.3s ease-out;
+  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   overflow: hidden; // Previne overflow em mobile
   -webkit-overflow-scrolling: touch;
 }
@@ -88,41 +88,33 @@
   right: 1rem;
 }
 
-// Botão de fechar
+// Botão de fechar (Ajustado para o novo Design System)
 .modal-close {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 20px;
-  height: 20px;
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.459);
-  border: 1.5px solid rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05); // Fundo sutil em vez de preto
+  border: none;
+  border-radius: 10px;
+  color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 10001;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  z-index: 10001; // Garante que fique acima do header
 
   .material-icons {
-    color: white;
-    font-size: 16px;
-    transition: transform 0.3s ease;
-    font-weight: 600;
+    font-size: 20px;
+    font-weight: normal;
   }
 
   &:hover {
-    background: rgba(0, 0, 0, 0.8);
-    border-color: white;
+    background: rgba(235, 50, 55, 0.1);
+    color: var(--accent-red);
     transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-
-    .material-icons {
-      transform: rotate(90deg);
-    }
   }
 
   &:active {

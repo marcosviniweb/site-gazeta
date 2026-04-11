@@ -1,21 +1,27 @@
-<div class="videos-container">
-  <div class="videos-card">
-    @if (isEdit()) {
-      <button class="back-btn" [routerLink]="['/videosList']">
-        <span class="material-icons">arrow_back</span>
-        Voltar
-      </button>
-    }
-    
-    <div class="videos-header">
-      <h2>Gerenciar Vídeos</h2>
-      <p>Faça upload e edite seus vídeos</p>
+<div class="page-container">
+  <div class="page-card">
+    <!-- Header escuro -->
+    <div class="page-header">
+      <div class="header-left">
+        @if (isEdit()) {
+          <a class="back-btn" [routerLink]="['/videosList']">
+            <span class="material-icons">arrow_back</span>
+          </a>
+        }
+        <div class="header-text">
+          <h2>Gerenciar Vídeos</h2>
+          <p>Faça upload e edite seus vídeos</p>
+        </div>
+      </div>
     </div>
 
-    <app-video-upload
-      [videoToEdit]="videoToEdit()"
-      (onSave)="handleSave($event)"
-      (onCancel)="handleCancel()">
-    </app-video-upload>
+    <!-- Conteúdo -->
+    <div class="page-content">
+      <app-video-upload
+        [videoToEdit]="videoToEdit()"
+        (onSave)="handleSave($event)"
+        (onCancel)="handleCancel()">
+      </app-video-upload>
+    </div>
   </div>
 </div>

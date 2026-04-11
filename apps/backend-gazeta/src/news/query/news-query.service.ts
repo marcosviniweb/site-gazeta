@@ -4,6 +4,19 @@ import { NewsResponseDto } from '../dto/news-response.dto';
 import { NewsQueryDto } from '../dto/news-query.dto';
 import { NewsStatus } from '../dto/news-status.enum';
 import { NewsFormatterService } from '../core/news-formatter.service';
+import { Prisma } from '../../../generated/prisma';
+
+export interface NewsPaginatedMeta {
+  total: number;
+  page: number;
+  limit: number;
+  lastPage: number;
+}
+
+export interface NewsPaginatedResponse {
+  data: NewsResponseDto[];
+  meta: NewsPaginatedMeta;
+}
 
 @Injectable()
 export class NewsQueryService {
@@ -13,7 +26,33 @@ export class NewsQueryService {
   ) {}
 
   /**
-   * Inclui padrão para queries de notícias
+   * Seletor de campos para listagens (Otimizado - Sem o campo 'content')
+   */
+  private getNewsListSelect() {
+    return {
+      id: true,
+      title: true,
+      subtitle: true,
+      slug: true,
+      status: true,
+      published: true,
+      views: true,
+      author: true,
+      isEmphasis: true,
+      createdAt: true,
+      updateAt: true,
+      newsCategories: {
+        include: {
+          category: true
+        }
+      },
+      mediaNews: true,
+      videoNews: true
+    };
+  }
+
+  /**
+   * Inclui padrão para queries de detalhes (Completo)
    */
   private getNewsInclude() {
     return {
@@ -42,8 +81,8 @@ export class NewsQueryService {
   /**
    * Constrói condições WHERE para queries
    */
-  private buildWhereCondition(query?: NewsQueryDto): any {
-    const whereCondition: any = {};
+  private buildWhereCondition(query?: NewsQueryDto): Prisma.NewsWhereInput {
+    const whereCondition: Prisma.NewsWhereInput = {};
 
     // Filtro de status: status específico tem prioridade sobre includeTrash
     if (query?.status) {
@@ -69,72 +108,153 @@ export class NewsQueryService {
       }
     }
 
+    // Novos Filtros Server-Side Paginados
+    if (query?.categoryId) {
+      whereCondition.newsCategories = {
+        some: {
+          categoryId: query.categoryId
+        }
+      };
+    }
+
+    if (query?.isEmphasis !== undefined) {
+      whereCondition.isEmphasis = query.isEmphasis;
+    }
+
+    if (query?.date) {
+      // Formato YYYY-MM-DD
+      const dateStr = query.date;
+      whereCondition.createdAt = {
+        gte: new Date(`${dateStr}T00:00:00.000Z`),
+        lte: new Date(`${dateStr}T23:59:59.999Z`)
+      };
+    }
+
     return whereCondition;
   }
 
   /**
-   * Lista todas as notícias com filtros
+   * Constrói array dinâmico de ordenação
    */
-  async findAll(query?: NewsQueryDto): Promise<NewsResponseDto[]> {
+  private buildOrderByCondition(query?: NewsQueryDto, defaultEmphasisFirst = false): Prisma.NewsOrderByWithRelationInput[] {
+    const orderBy: Prisma.NewsOrderByWithRelationInput[] = [];
+
+    if (query?.views) {
+      orderBy.push({ views: query.views });
+    }
+    
+    if (query?.order) {
+      orderBy.push({ createdAt: query.order });
+    }
+
+    // Padrões se nenhum método de order foi provido
+    if (orderBy.length === 0) {
+      if (defaultEmphasisFirst) {
+        orderBy.push({ isEmphasis: 'desc' });
+      }
+      orderBy.push({ createdAt: 'desc' });
+    }
+
+    return orderBy;
+  }
+
+  /**
+   * Lista todas as notícias com paginação e filtros
+   */
+  async findAll(query?: NewsQueryDto): Promise<NewsPaginatedResponse> {
     const whereCondition = this.buildWhereCondition(query);
+    const orderBy = this.buildOrderByCondition(query, false);
+    const page = query?.page || 1;
+    const limit = query?.limit || 25;
+    const skip = (page - 1) * limit;
 
-    const news = await this.prisma.news.findMany({
-      where: whereCondition,
-      include: this.getNewsInclude(),
-      orderBy: { createdAt: 'desc' }
-    });
+    const [news, total] = await Promise.all([
+      this.prisma.news.findMany({
+        where: whereCondition,
+        select: this.getNewsListSelect(),
+        orderBy,
+        skip,
+        take: limit
+      }),
+      this.prisma.news.count({ where: whereCondition })
+    ]);
 
-    return this.formatter.formatManyNewsResponse(news);
+    return {
+      data: this.formatter.formatManyNewsResponse(news),
+      meta: {
+        total,
+        page,
+        limit,
+        lastPage: Math.ceil(total / limit)
+      }
+    };
   }
 
   /**
-   * Busca notícias por termo de busca
+   * Busca notícias por termo de busca com paginação e filtros
    */
-  async search(searchTerm: string, limit = 50): Promise<NewsResponseDto[]> {
-    const normalizedSearch = searchTerm.trim();
+  async search(query: NewsQueryDto & { search: string }): Promise<NewsPaginatedResponse> {
+    const searchTerm = query.search.trim();
+    const page = query.page || 1;
+    const limit = query.limit || 25;
+    const skip = (page - 1) * limit;
 
-    const news = await this.prisma.news.findMany({
-      where: {
-        AND: [
-          // Apenas notícias ativas
-          { status: NewsStatus.ACTIVE },
-          // Buscar em título, subtítulo ou nome da categoria
-          {
-            OR: [
-              { title: { contains: normalizedSearch } },
-              { subtitle: { contains: normalizedSearch } },
-              {
-                newsCategories: {
-                  some: {
-                    category: {
-                      name: { contains: normalizedSearch }
-                    }
-                  }
-                }
+    // Filtros de busca
+    const searchCondition = {
+      OR: [
+        { title: { contains: searchTerm } },
+        { subtitle: { contains: searchTerm } },
+        {
+          newsCategories: {
+            some: {
+              category: {
+                name: { contains: searchTerm }
               }
-            ]
+            }
           }
-        ]
-      },
-      include: this.getNewsInclude(),
-      orderBy: [
-        { isEmphasis: 'desc' }, // Notícias em destaque primeiro
-        { views: 'desc' },       // Depois por views
-        { createdAt: 'desc' }    // E por data
-      ],
-      take: limit
-    });
+        }
+      ]
+    };
 
-    return this.formatter.formatManyNewsResponse(news);
+    // Filtros de status (reutilizando a lógica do buildWhereCondition)
+    const whereCondition = this.buildWhereCondition(query);
+    
+    // Combina busca com status
+    const combinedWhere = {
+      AND: [
+        whereCondition,
+        searchCondition
+      ]
+    };
+    
+    const orderBy = this.buildOrderByCondition(query, true);
+
+    const [news, total] = await Promise.all([
+      this.prisma.news.findMany({
+        where: combinedWhere,
+        select: this.getNewsListSelect(),
+        orderBy,
+        skip,
+        take: limit
+      }),
+      this.prisma.news.count({ where: combinedWhere })
+    ]);
+
+    return {
+      data: this.formatter.formatManyNewsResponse(news),
+      meta: {
+        total,
+        page,
+        limit,
+        lastPage: Math.ceil(total / limit)
+      }
+    };
   }
 
-  /**
-   * Busca notícias em destaque
-   */
   async findFeatured(exclude?: string): Promise<NewsResponseDto[]> {
     const excludeIds = this.parseExcludeIds(exclude);
 
-    const whereCondition: any = {
+    const whereCondition: Prisma.NewsWhereInput = {
       status: NewsStatus.ACTIVE,
       isEmphasis: true
     };
@@ -145,7 +265,7 @@ export class NewsQueryService {
 
     const news = await this.prisma.news.findMany({
       where: whereCondition,
-      include: this.getNewsInclude(),
+      select: this.getNewsListSelect(),
       orderBy: [
         { views: 'desc' },      // Por views
         { createdAt: 'desc' }   // E por data
@@ -165,7 +285,7 @@ export class NewsQueryService {
       where: {
         status: NewsStatus.ACTIVE
       },
-      include: this.getNewsInclude(),
+      select: this.getNewsListSelect(),
       orderBy: { createdAt: 'desc' },
       take: limit
     });
@@ -181,7 +301,7 @@ export class NewsQueryService {
   async findMostViewed(): Promise<NewsResponseDto[]> {
     const targetCount = 9;
     const maxWeeksBack = 52; // Limite de 1 ano
-    let collectedNews: any[] = [];
+    const collectedNews: NewsResponseDto[] = [];
 
     for (let week = 0; week < maxWeeksBack && collectedNews.length < targetCount; week++) {
       const endDate = new Date();
@@ -201,12 +321,15 @@ export class NewsQueryService {
             { published: { lte: endDate.toISOString() } }
           ]
         },
-        include: this.getNewsInclude(),
+        select: this.getNewsListSelect(),
         orderBy: { views: 'desc' }
       });
 
+      // Formatar notícias antes de adicionar à coleção
+      const formattedWeekNews = this.formatter.formatManyNewsResponse(weekNews, true);
+
       // Adicionar notícias que ainda não foram coletadas
-      for (const news of weekNews) {
+      for (const news of formattedWeekNews) {
         if (collectedNews.length >= targetCount) break;
         if (!collectedNews.some(n => n.id === news.id)) {
           collectedNews.push(news);
@@ -258,7 +381,7 @@ export class NewsQueryService {
             some: { categoryId: categoryId }
           }
         },
-        include: this.getNewsInclude()
+        select: this.getNewsListSelect()
       });
 
       // Embaralhar e pegar até 3 notícias
@@ -286,7 +409,7 @@ export class NewsQueryService {
   async findByCategory(categoryId: number, exclude?: string): Promise<NewsResponseDto[]> {
     const excludeIds = this.parseExcludeIds(exclude);
 
-    const whereCondition: any = {
+    const whereCondition: Prisma.NewsWhereInput = {
       status: NewsStatus.ACTIVE,
       newsCategories: {
         some: {
@@ -301,7 +424,7 @@ export class NewsQueryService {
 
     const news = await this.prisma.news.findMany({
       where: whereCondition,
-      include: this.getNewsInclude(),
+      select: this.getNewsListSelect(),
       orderBy: { createdAt: 'desc' }
     });
 

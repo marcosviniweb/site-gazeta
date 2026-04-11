@@ -1,0 +1,59 @@
+// ─── Pagination Design System ────────────────────────
+// Centraliza os controles de paginação de listas.
+
+@mixin pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin-top: 1.5rem;
+}
+
+@mixin btn-pagination {
+  background: white;
+  border: 1px solid var(--border);
+  color: var(--secondary);
+  padding: 0.5rem 1.25rem;
+  border-radius: 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--accent-blue);
+    color: white;
+    border-color: var(--accent-blue);
+    box-shadow: 0 4px 10px rgba(var(--accent-blue-rgb), 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ─── Classes Globais ─────────────────────────────────
+.g-pagination {
+  @include pagination-container;
+  
+  .btn-prev, .btn-next {
+    @include btn-pagination;
+  }
+  
+  .page-info {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    
+    strong {
+      color: var(--accent-blue);
+      font-weight: 700;
+    }
+  }
+}

@@ -182,17 +182,19 @@ export class TextEditorComponent implements ControlValueAccessor, OnInit, OnDest
   private cdr = inject(ChangeDetectorRef);
 
   @Input() apiUrl = 'https://gazetadopara.com/api';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   @Input() resetFormControl: any;
   @Input() newsId?: number;
   /** Exibe botão para upload de vídeo embutido no texto (MP4/MOV). */
   @Input() enableContentVideoUpload = true;
-  @Output() ready = new EventEmitter<any>();
+  @Output() ready = new EventEmitter<unknown>();
   @ViewChild('videoFileInput') videoFileInput!: ElementRef<HTMLInputElement>;
 
   protected editor = CKBuilding.default || CKBuilding;
   protected value = '';
   protected disable = false;
   protected editorConfig: Record<string, unknown> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected editorInstance: any = null;
   protected videoUploading = false;
   /** Card de confirmação após inserir vídeo no HTML. */
@@ -203,8 +205,8 @@ export class TextEditorComponent implements ControlValueAccessor, OnInit, OnDest
   private contentAssetRemovalDebounce: ReturnType<typeof setTimeout> | null = null;
   private readonly contentAssetRemovalDebounceMs = 2500;
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  private onChange = (_value: string) => {};
+  // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+  private onChange = (_v: string) => {};
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   protected onTouched = () => {};
   formControl = new FormControl('');
@@ -341,10 +343,12 @@ export class TextEditorComponent implements ControlValueAccessor, OnInit, OnDest
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onReady(editor: any): void {
     this.editorInstance = editor;
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       editor.plugins.get('FileRepository').createUploadAdapter = (loader: any) => {
         return new UploadAdapter(loader, this.apiUrl);
       };
@@ -514,6 +518,7 @@ export class TextEditorComponent implements ControlValueAccessor, OnInit, OnDest
     }, 10000);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private scrollLastVideoIntoView(editor: any): void {
     setTimeout(() => {
       try {
@@ -543,6 +548,7 @@ export class TextEditorComponent implements ControlValueAccessor, OnInit, OnDest
    * Passar {@code { value: '...' }} grava [object Object] no atributo e aparece "Trecho HTML" quebrado.
    * Depois tentamos toModel (GHS) e, por último, htmlEmbed com outros fragmentos.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private insertVideoAtCursor(editor: any, videoUrl: string): boolean {
     const safe = escapeHtmlAttribute(videoUrl);
     const videoTag = `<video class="news-inline-video" controls playsinline preload="metadata" src="${safe}"></video>`;
@@ -569,6 +575,7 @@ export class TextEditorComponent implements ControlValueAccessor, OnInit, OnDest
   }
 
   /** HtmlEmbed: segundo argumento deve ser string (CKEditor 5 HtmlEmbedCommand.execute(value?: string)). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private tryHtmlEmbedStrategies(editor: any, videoTag: string, videoUrl: string): boolean {
     const cmd = editor.commands?.get?.('htmlEmbed');
     if (!cmd?.isEnabled) {
@@ -599,6 +606,7 @@ export class TextEditorComponent implements ControlValueAccessor, OnInit, OnDest
     return false;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private tryInsertVideoHtml(editor: any, html: string, videoUrl: string): boolean {
     try {
       const viewFragment = editor.data.processor.toView(html);
@@ -634,7 +642,14 @@ export class TextEditorComponent implements ControlValueAccessor, OnInit, OnDest
   }
 
   writeValue(value: string): void {
-    this.value = value || '';
+    const newValue = value || '';
+    this.value = newValue;
+    
+    // Sincroniza com o FormControl interno para que o CKEditor reflita a mudança
+    if (this.formControl.value !== newValue) {
+      this.formControl.setValue(newValue, { emitEvent: false });
+    }
+
     if (this.editorInstance) {
       setTimeout(() => this.updateTrackedContentUrls(), 100);
     }

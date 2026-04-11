@@ -14,137 +14,47 @@
       }
 
       <!-- Sidebar -->
-      <div class="sidebar" [class.sidebar_opened]="isOpened_()">
-        <div class="toggle_sidebar"></div>
-        <div class="sidebar__header">
-          <div class="logo">
-            <img src="img/logo02.webp" alt="logo">
-          </div>
-        </div>
-        <div class="sidebar__content">
-          <div class="sidebar__content__menu">
-            @for (menu of menuItems(); track menu.id ?? menu.name) {
-              <div class="menu-item">
-                @if (menu.type === 'submenu' && menu.children && menu.children.length > 0) {
-                  <!-- Menu pai com filhos (submenu) -->
-                  <div class="menu-parent"
-                     (click)="toggleMenu(menu.name || '')"
-                     (keydown.enter)="toggleMenu(menu.name || '')"
-                     (keydown.space)="toggleMenu(menu.name || '')"
-                     [class.expanded]="isMenuExpanded(menu.name || '')"
-                     tabindex="0"
-                     role="button">
-                  <span class="menu-text">{{ menu.name }}</span>
-                  <span class="expand-icon material-icons">
-                    {{ isMenuExpanded(menu.name || '') ? 'expand_less' : 'expand_more' }}
-                  </span>
-                </div>
-
-                <!-- Submenu -->
-                <div class="submenu"
-                     [class.expanded]="isMenuExpanded(menu.name || '')">
-                  @for (child of menu.children; track child.id ?? child.name) {
-                    @if (child.type === 'internal') {
-                      <a [routerLink]="child.routerLink"
-                         routerLinkActive="active"
-                         [routerLinkActiveOptions]="{exact: true}"
-                         class="submenu-item"
-                         (click)="closeSidebar()">
-                        {{ child.name }}
-                      </a>
-                    } @else if (child.type === 'external') {
-                      <a [href]="child.externalLink"
-                         target="_blank"
-                         rel="noopener noreferrer"
-                         class="submenu-item">
-                        {{ child.name }}
-                      </a>
-                    } @else if (child.type === 'category') {
-                      <a [routerLink]="['/category', child.slug]"
-                         routerLinkActive="active"
-                         [routerLinkActiveOptions]="{exact: true}"
-                         class="submenu-item"
-                         (click)="closeSidebar()">
-                        {{ child.name }}
-                      </a>
-                    }
-                  }
-                </div>
-              } @else {
-                <!-- Menu simples sem filhos -->
-                @if (menu.type === 'internal') {
-                  <a [routerLink]="menu.routerLink"
-                     routerLinkActive="active"
-                     [routerLinkActiveOptions]="{exact: true}"
-                     class="menu-simple"
-                     (click)="closeSidebar()">
-                    {{ menu.name }}
-                  </a>
-                } @else if (menu.type === 'external') {
-                  <a [href]="menu.externalLink"
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     class="menu-simple">
-                    {{ menu.name }}
-                  </a>
-                } @else if (menu.type === 'category') {
-                  <a [routerLink]="['/category', menu.slug]"
-                     routerLinkActive="active"
-                     [routerLinkActiveOptions]="{exact: true}"
-                     class="menu-simple"
-                     (click)="closeSidebar()">
-                    {{ menu.name }}
-                  </a>
-                } @else {
-                  <!-- Fallback para estrutura antiga (router ou routerLink) -->
-                  <a [routerLink]="menu.router || menu.routerLink"
-                     routerLinkActive="active"
-                     [routerLinkActiveOptions]="{exact: true}"
-                     class="menu-simple"
-                     (click)="closeSidebar()">
-                    {{ menu.name }}
-                  </a>
-                }
-              }
-            </div>
-            }
-          </div>
-        </div>
-        <div class="sidebar__footer">
-          <span class="divider"></span>
-          <div class="footer_auth">
-            <ng-content ></ng-content>
-          </div>
-          <div class="footer__content">
-            <p>© 2025 - Todos os direitos reservados</p>
-          </div>
-        </div>
+      <div class="sidebar" [class.sidebar_opened]="isOpened_()" [class.is-admin]="adminMode()">
+        <ng-container *ngTemplateOutlet="sidebarContent"></ng-container>
       </div>
     </div>
   }
 } @else {
   <!-- Modo Static: Renderizado dentro do componente -->
-  <div class="sidebar sidebar-static" [class.sidebar_opened]="isOpened_()">
-    <div class="toggle_sidebar"></div>
-    <div class="sidebar__header">
-      <div class="logo">
-        <img src="img/logo02.webp" alt="logo">
-      </div>
+  <div class="sidebar sidebar-static" [class.sidebar_opened]="isOpened_()" [class.is-admin]="adminMode()">
+    <ng-container *ngTemplateOutlet="sidebarContent"></ng-container>
+  </div>
+}
+
+<!-- Template Unificado para o Conteúdo do Sidebar -->
+<ng-template #sidebarContent>
+  <div class="sidebar__header">
+    <div class="logo">
+      <img src="img/logo02.webp" alt="logo">
     </div>
-    <div class="sidebar__content">
-      <div class="sidebar__content__menu">
-        @for (menu of menuItems(); track menu.id ?? menu.name) {
-          <div class="menu-item">
-            @if (menu.type === 'submenu' && menu.children && menu.children.length > 0) {
-              <!-- Menu pai com filhos (submenu) -->
-              <div class="menu-parent"
+  </div>
+
+  <div class="sidebar__content">
+    <div class="sidebar__content__menu">
+      @for (menu of menuItems(); track menu.id ?? menu.name) {
+        <div class="menu-item">
+          @if (menu.type === 'submenu' && menu.children && menu.children.length > 0) {
+            <!-- Menu pai com filhos (submenu) -->
+            <div class="menu-parent"
                  (click)="toggleMenu(menu.name || '')"
                  (keydown.enter)="toggleMenu(menu.name || '')"
                  (keydown.space)="toggleMenu(menu.name || '')"
                  [class.expanded]="isMenuExpanded(menu.name || '')"
                  tabindex="0"
                  role="button">
-              <span class="menu-text">{{ menu.name }}</span>
+              
+              <div class="menu-item-core">
+                @if (menu.icon) {
+                  <span class="menu-icon material-icons">{{ menu.icon }}</span>
+                }
+                <span class="menu-text">{{ menu.name }}</span>
+              </div>
+
               <span class="expand-icon material-icons">
                 {{ isMenuExpanded(menu.name || '') ? 'expand_less' : 'expand_more' }}
               </span>
@@ -182,53 +92,34 @@
             </div>
           } @else {
             <!-- Menu simples sem filhos -->
-            @if (menu.type === 'internal') {
-              <a [routerLink]="menu.routerLink"
-                 routerLinkActive="active"
-                 [routerLinkActiveOptions]="{exact: true}"
-                 class="menu-simple"
-                 (click)="closeSidebar()">
-                {{ menu.name }}
-              </a>
-            } @else if (menu.type === 'external') {
-              <a [href]="menu.externalLink"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 class="menu-simple">
-                {{ menu.name }}
-              </a>
-            } @else if (menu.type === 'category') {
-              <a [routerLink]="['/category', menu.slug]"
-                 routerLinkActive="active"
-                 [routerLinkActiveOptions]="{exact: true}"
-                 class="menu-simple"
-                 (click)="closeSidebar()">
-                {{ menu.name }}
-              </a>
-            } @else {
-              <!-- Fallback para estrutura antiga (router ou routerLink) -->
-              <a [routerLink]="menu.router || menu.routerLink"
-                 routerLinkActive="active"
-                 [routerLinkActiveOptions]="{exact: true}"
-                 class="menu-simple"
-                 (click)="closeSidebar()">
-                {{ menu.name }}
-              </a>
-            }
+            <a [routerLink]="menu.routerLink || menu.router"
+               routerLinkActive="active"
+               [routerLinkActiveOptions]="{exact: true}"
+               class="menu-simple"
+               (click)="closeSidebar()">
+              
+              <div class="menu-item-core">
+                @if (menu.icon) {
+                  <span class="menu-icon material-icons">{{ menu.icon }}</span>
+                }
+                <span class="menu-text">{{ menu.name }}</span>
+              </div>
+            </a>
           }
         </div>
-        }
-      </div>
-    </div>
-    <div class="sidebar__footer">
-      <span class="divider"></span>
-      <div class="footer_auth">
-        <ng-content ></ng-content>
-      </div>
-      <div class="footer__content">
-        <p>© 2025 - Todos os direitos reservados</p>
-      </div>
+      }
     </div>
   </div>
-}
 
+  <div class="sidebar__footer">
+    <div class="footer_auth">
+      <ng-content></ng-content>
+    </div>
+    <div class="footer-bottom">
+        <span class="divider"></span>
+        <div class="footer__content">
+            <p>© 2025 - Painel Administrativo</p>
+        </div>
+    </div>
+  </div>
+</ng-template>

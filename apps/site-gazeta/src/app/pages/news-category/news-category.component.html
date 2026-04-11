@@ -82,7 +82,14 @@
     </div>
     <div class="more-news">
       <div class="more-news-container">
-      <lib-more-news [moreNews]="moreNews()" [title]="''" [category]="category()!" [slice]="3"></lib-more-news>
+      <lib-more-news 
+        [moreNews]="moreNews()" 
+        [paginationMeta]="paginationMeta()"
+        [title]="''" 
+        [category]="category()!" 
+        [slice]="3"
+        (loadMoreRequested)="loadMore()">
+      </lib-more-news>
       </div>
     </div>
     } @else {

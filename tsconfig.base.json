@@ -14,6 +14,8 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "paths": {
       "@site-gazeta/ads": ["libs/components/ads/src/index.ts"],
       "@site-gazeta/ads-config": ["libs/ts/types/index.ts"],

@@ -1,103 +1,40 @@
-@use 'sass:color';
+@use '../../../styles/variables' as vars;
 
-// Variables
-$primary-color: #eb3237;
-$secondary-color: #0a80c4;
-$box-shadow-default: 0px 0px 10px rgba(0, 0, 0, 0.363);
-$font-size-base: 1rem;
-
-// Container e Card - usado apenas no componente principal
-.category-container {
+.category-layout {
+  display: grid;
+  grid-template-columns: 420px 1fr;
   height: 100%;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
-  padding: 2rem 1rem;
-}
+  min-height: 0;
+  gap: 0;
+  align-items: stretch;
 
-.category-card {
-  display: flex;
-  flex-direction: column;
-  background: white;
-  border-radius: 12px;
-  box-shadow: $box-shadow-default;
-  padding: 2rem;
-  width: 100%;
-  height: 100%;
-  animation: slideUp 0.6s ease-out;
-  .category-form-container-wrapper{
-    display: flex;
-    flex-direction: row;
-    flex: 1;
-    min-height: 0; // Permite que o flex encolha
-    gap: 1.5rem;
- 
-    .category-form-container, .category-list-container{
-      flex: 0 0 50%;
-      min-width: 0; // Permite que encolha
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .category-list-container {
-      overflow: hidden; // Container não deve ter scroll, apenas o conteúdo interno
-    }
+  @media (max-width: 1100px) {
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow-y: initial;
   }
 }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+.category-form-section {
+  min-width: 0;
+  background: #fcfcfc;
+  padding: 2rem;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+
+  @media (max-width: 1100px) {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
 }
 
-// Header - usado apenas no componente principal
-.category-header {
-  text-align: center;
-  margin-bottom: 2rem;
-  h2 { color: $secondary-color; font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
-  p { color: color.adjust($secondary-color, $lightness: 20%); font-size: $font-size-base; margin: 0; }
-}
+.category-list-section {
+  min-width: 0;
+  background: white;
+  padding: 2rem;
 
-// Responsividade para o componente principal
-@media (max-width: 1000px) {
-    .category-container {
-        padding: 1rem;
-        height: auto;
-    }
-
-    .category-card {
-        padding: 1.5rem;
-        height: auto;
-        max-height: max-content;
-
-        .category-form-container-wrapper {
-            flex-direction: column;
-
-            .category-form-container,
-            .category-list-container {
-                flex: 0 0 100%;
-            }
-        }
-    }
-
-}
-@media (max-width: 768px) {
-    .category-container {
-        padding: 1rem;
-    }
-
-    .category-card {
-        padding: 1.5rem;
-
-        .category-form-container-wrapper {
-            flex-direction: column;
-
-            .category-form-container,
-            .category-list-container {
-                flex: 0 0 100%;
-            }
-        }
-    }
-
+  .list-inner-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
 }

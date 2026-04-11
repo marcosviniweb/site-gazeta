@@ -1,10 +1,23 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '../../generated/prisma';
 import { CreateAdvertisementDto } from './dto/create-advertisement.dto';
 import { UpdateAdvertisementDto } from './dto/update-advertisement.dto';
 import { AdvertisementResponseDto } from './dto/advertisement-response.dto';
-import { AdvertisementQueryDto } from './dto/advertisement-query.dto';
+import { AdsQueryDto } from './dto/ads-query.dto';
+import { AdsPaginatedResponse } from './dto/ads-paginated-response.dto';
 import { AdvertisementImageService } from './services/advertisement-image.service';
+
+type AdvertisementWithCreator = Prisma.AdvertisementGetPayload<{
+  include: {
+    creator: {
+      select: {
+        id: true;
+        name: true;
+      };
+    };
+  };
+}>;
 
 @Injectable()
 export class AdvertisementService {
@@ -15,7 +28,7 @@ export class AdvertisementService {
 
   async create(
     createAdvertisementDto: CreateAdvertisementDto,
-    file: any,
+    file: Express.Multer.File,
     userId: number
   ): Promise<AdvertisementResponseDto> {
     // Upload da imagem
@@ -55,19 +68,11 @@ export class AdvertisementService {
     }
   }
 
-  async findAll(query?: AdvertisementQueryDto): Promise<AdvertisementResponseDto[]> {
-    const where: any = {};
+  private buildWhereCondition(query?: AdsQueryDto): Prisma.AdvertisementWhereInput {
+    const where: Prisma.AdvertisementWhereInput = {};
 
-    if (query?.placement) {
-      where.placement = query.placement;
-    }
-
-    if (query?.position) {
-      where.position = query.position;
-    }
-
-    if (query?.isActive !== undefined) {
-      where.isActive = query.isActive;
+    if (query?.active !== undefined) {
+      where.isActive = query.active;
     }
 
     if (query?.search) {
@@ -77,40 +82,64 @@ export class AdvertisementService {
       ];
     }
 
-    // Adicionar filtro de data atual para anúncios ativos
-    const now = new Date();
-    where.AND = [
-      {
-        OR: [
-          { startDate: null },
-          { startDate: { lte: now } }
-        ]
-      },
-      {
-        OR: [
-          { endDate: null },
-          { endDate: { gte: now } }
-        ]
-      }
-    ];
+    if (query?.date) {
+      const dateStr = query.date;
+      where.createdAt = {
+        gte: new Date(`${dateStr}T00:00:00.000Z`),
+        lte: new Date(`${dateStr}T23:59:59.999Z`)
+      };
+    }
 
-    const advertisements = await this.prisma.advertisement.findMany({
-      where,
-      include: {
-        creator: {
-          select: {
-            id: true,
-            name: true,
+    return where;
+  }
+
+  private buildOrderByCondition(query?: AdsQueryDto): Prisma.AdvertisementOrderByWithRelationInput[] {
+    const orderBy: Prisma.AdvertisementOrderByWithRelationInput[] = [];
+    
+    if (query?.order) {
+      orderBy.push({ createdAt: query.order as Prisma.SortOrder });
+    } else {
+      orderBy.push({ priority: 'desc' });
+      orderBy.push({ createdAt: 'desc' });
+    }
+
+    return orderBy;
+  }
+
+  async findAll(query?: AdsQueryDto): Promise<AdsPaginatedResponse> {
+    const where = this.buildWhereCondition(query);
+    const orderBy = this.buildOrderByCondition(query);
+    const page = query?.page || 1;
+    const limit = query?.limit || 25;
+    const skip = (page - 1) * limit;
+
+    const [advertisements, total] = await Promise.all([
+      this.prisma.advertisement.findMany({
+        where,
+        include: {
+          creator: {
+            select: {
+              id: true,
+              name: true,
+            },
           },
         },
-      },
-      orderBy: [
-        { priority: 'desc' },
-        { createdAt: 'desc' }
-      ],
-    });
+        orderBy,
+        skip,
+        take: limit,
+      }),
+      this.prisma.advertisement.count({ where })
+    ]);
 
-    return advertisements.map(ad => this.formatResponse(ad));
+    return {
+      data: advertisements.map(ad => this.formatResponse(ad)),
+      meta: {
+        total,
+        page,
+        limit,
+        lastPage: Math.ceil(total / limit)
+      }
+    };
   }
 
   async findByPlacement(placement: string): Promise<AdvertisementResponseDto[]> {
@@ -169,10 +198,10 @@ export class AdvertisementService {
       },
     });
 
-    const adsBySize = advertisements.reduce<Record<string, any[]>>((acc, ad) => {
+    const adsBySize = advertisements.reduce<Record<string, AdvertisementWithCreator[]>>((acc, ad) => {
       if (!ad.size) return acc;
       acc[ad.size] = acc[ad.size] ?? [];
-      acc[ad.size].push(ad);
+      acc[ad.size].push(ad as AdvertisementWithCreator);
       return acc;
     }, {});
 
@@ -211,7 +240,7 @@ export class AdvertisementService {
   async update(
     id: number,
     updateAdvertisementDto: UpdateAdvertisementDto,
-    file?: any,
+    file?: Express.Multer.File,
     userId?: number
   ): Promise<AdvertisementResponseDto> {
     const existingAd = await this.prisma.advertisement.findUnique({
@@ -241,8 +270,15 @@ export class AdvertisementService {
     }
 
     try {
-      const updateData: any = {
-        ...updateAdvertisementDto,
+      const updateData: Prisma.AdvertisementUpdateInput = {
+        title: updateAdvertisementDto.title,
+        description: updateAdvertisementDto.description,
+        clickUrl: updateAdvertisementDto.clickUrl,
+        position: updateAdvertisementDto.position,
+        placement: updateAdvertisementDto.placement,
+        size: updateAdvertisementDto.size,
+        isActive: updateAdvertisementDto.isActive,
+        priority: updateAdvertisementDto.priority,
         imageUrl,
       };
 
@@ -300,7 +336,7 @@ export class AdvertisementService {
     });
   }
 
-  async toggleActive(id: number, userId?: number): Promise<AdvertisementResponseDto> {
+  async toggleActive(id: number): Promise<AdvertisementResponseDto> {
     const advertisement = await this.prisma.advertisement.findUnique({
       where: { id },
     });
@@ -327,7 +363,7 @@ export class AdvertisementService {
     return this.formatResponse(updatedAd);
   }
 
-  private formatResponse(advertisement: any): AdvertisementResponseDto {
+  private formatResponse(advertisement: AdvertisementWithCreator): AdvertisementResponseDto {
     return {
       id: advertisement.id,
       title: advertisement.title,
@@ -348,7 +384,7 @@ export class AdvertisementService {
     };
   }
 
-  private selectAdByPriority(ads: any[]): any {
+  private selectAdByPriority(ads: AdvertisementWithCreator[]): AdvertisementWithCreator | null {
     if (!ads || ads.length === 0) return null;
     if (ads.length === 1) return ads[0];
 

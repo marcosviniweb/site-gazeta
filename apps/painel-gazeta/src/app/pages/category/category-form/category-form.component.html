@@ -1,80 +1,66 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit()" class="category-form">
-  <div class="form-group">
-    <label for="name">Nome da Categoria</label>
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="g-form-container">
+  
+  <div class="g-form-group">
+    <label for="name">Nome da Categoria <span class="required">*</span></label>
     <input
       type="text"
       id="name"
       formControlName="name"
       autocomplete="off"
-      placeholder="Digite o nome da categoria"
-      [class.error]="form.get('name')?.invalid && form.get('name')?.touched"
-      />
+      placeholder="Ex: Política, Esportes..."
+    />
     @if (form.get('name')?.invalid && form.get('name')?.touched) {
-      <div class="error-message">
-        Nome é obrigatório
-      </div>
+      <div class="g-field-error">Nome é obrigatório</div>
     }
   </div>
 
-  <div class="form-group">
-    <label for="description">Descrição</label>
+  <div class="g-form-group">
+    <label for="description">Descrição <span class="required">*</span></label>
     <textarea
       id="description"
       formControlName="description"
-      placeholder="Digite a descrição da categoria"
+      placeholder="Breve descrição da categoria"
       rows="3"
-
-      [class.error]="form.get('description')?.invalid && form.get('description')?.touched"
     ></textarea>
     @if (form.get('description')?.invalid && form.get('description')?.touched) {
-      <div class="error-message">
-        Descrição é obrigatória
-      </div>
+      <div class="g-field-error">Descrição é obrigatória</div>
     }
   </div>
 
-  <div class="form-group">
-    <label for="color">Cor da Categoria</label>
+  <div class="g-form-group">
+    <span class="g-label">Cor da Categoria <span class="required">*</span></span>
     <app-color-picker
       [selectedColor]="selectedColor()"
       [usedColors]="usedColors()"
       (colorChange)="onColorChange($event)"
     />
     @if (!isColorAvailable()) {
-      <div class="error-message">
-        Esta cor já está sendo utilizada por outra categoria
-      </div>
+      <div class="g-field-error">Esta cor já está sendo utilizada por outra categoria</div>
     }
   </div>
 
-  <div class="form-group">
-    <div class="toggle-group">
-      <label class="toggle-label" for="isActive">Status da Categoria</label>
-      <div class="toggle-container">
-        <input
-          type="checkbox"
-          id="isActive"
-          formControlName="isActive"
-          class="toggle-input"
-          />
-        <label for="isActive" class="toggle-switch">
-          <span class="toggle-slider"></span>
-        </label>
-        <span class="toggle-text">
-          {{ form.get('isActive')?.value ? 'Ativa' : 'Inativa' }}
-        </span>
-      </div>
+  <div class="g-form-group">
+    <span class="g-label">Status</span>
+    <label class="g-toggle mini">
+      <input type="checkbox" formControlName="isActive" />
+      <span class="switch"></span>
+      <span class="label">{{ form.get('isActive')?.value ? 'Ativa' : 'Inativa' }}</span>
+    </label>
+  </div>
+
+  <div class="g-crud-footer no-padding border-none margin-top-lg">
+    <div class="actions-right full-width">
+      <button type="submit" class="btn-primary full-width" [disabled]="form.invalid || !isColorAvailable()">
+        <span class="material-icons">{{ isEditing() ? 'save' : 'add_circle' }}</span>
+        {{ isEditing() ? 'Atualizar Categoria' : 'Criar Categoria' }}
+      </button>
+      
+      @if (isEditing()) {
+        <button type="button" class="btn-secondary full-width" (click)="onCancel()">
+          Cancelar
+        </button>
+      }
     </div>
   </div>
-
-  <div class="form-actions">
-    <button type="submit" class="btn-primary" [disabled]="form.invalid || !isColorAvailable()">
-      {{ isEditing() ? 'Atualizar' : 'Criar' }} Categoria
-    </button>
-    @if (isEditing()) {
-      <button type="button" class="btn-secondary" (click)="onCancel()">
-        Cancelar
-      </button>
-    }
-  </div>
 </form>
+

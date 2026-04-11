@@ -19,6 +19,7 @@ import {
 import { NewsStatusService } from './news-status.service';
 import { NewsResponseDto } from '../dto/news-response.dto';
 import { UpdateNewsStatusDto } from '../dto/update-news-status.dto';
+import { BulkUpdateStatusDto } from '../dto/bulk-news.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { NewsErrorInterceptor } from '../interceptors/news-error.interceptor';
 
@@ -112,6 +113,21 @@ export class NewsStatusController {
   async permanentDelete(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
     await this.newsStatusService.permanentDelete(id);
     return { message: 'Notícia excluída permanentemente com sucesso' };
+  }
+
+  @Patch('bulk/status')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ 
+    summary: 'Atualizar status em lote',
+    description: 'Permite ativar, desativar ou mover para lixeira múltiplas notícias de uma só vez.'
+  })
+  @ApiResponse({ status: 200, description: 'Status das notícias atualizados com sucesso' })
+  @ApiResponse({ status: 401, description: 'Não autorizado' })
+  async bulkUpdateStatus(
+    @Body() bulkDto: BulkUpdateStatusDto
+  ): Promise<{ count: number }> {
+    return await this.newsStatusService.bulkUpdateStatus(bulkDto.ids, bulkDto.status);
   }
 }
 

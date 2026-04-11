@@ -3,7 +3,7 @@ import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { ApiService } from '../../core/service/api.service';
 import { AnalyticsService } from '../../core/service/analytics.service';
 import { SessionService } from '../../core/service/session.service';
-import { Category, News } from '@site-gazeta/models';
+import { Category, News, PaginatedResponse, PaginationMeta } from '@site-gazeta/models';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { MoreNewsComponent } from '@site-gazeta/more-news';
@@ -24,6 +24,8 @@ export class NewsCategoryComponent implements OnInit {
 
   protected isLoading = signal<boolean>(true);
   protected imageLoadingState = signal<Record<number, boolean>>({});
+  protected paginationMeta = signal<PaginationMeta | null>(null);
+  protected currentPage = signal<number>(1);
 
 
   private emphasisNews = computed(() => {
@@ -69,6 +71,8 @@ export class NewsCategoryComponent implements OnInit {
     this.isLoading.set(true);
     this.news.set([]);
     this.imageLoadingState.set({});
+    this.currentPage.set(1);
+    this.paginationMeta.set(null);
   }
 
   getCategories(slug: string) {
@@ -85,20 +89,34 @@ export class NewsCategoryComponent implements OnInit {
     });
   }
 
-  getNewsForCategory(category: Category) {
+  getNewsForCategory(category: Category, page = 1) {
     if (category) {
-      // Usa getNewsForCategory que chama o endpoint correto /news/category/:id
-      // Este endpoint suporta o parâmetro 'exclude' via interceptor
-      this.apiService.getNewsForCategory(category.id as number)
-        .subscribe((news) => {
-          const typedNews = news as News[];
-          this.initializeImageLoading(typedNews);
-          this.news.set(typedNews);
+      this.apiService.getNewsForCategory(category.id as number, { page, limit: 12 })
+        .subscribe((response: PaginatedResponse<News>) => {
+          const newNews = response.data;
+          this.initializeImageLoading(newNews);
+          
+          if (page === 1) {
+            this.news.set(newNews);
+          } else {
+            this.news.update(current => [...current, ...newNews]);
+          }
+
+          this.paginationMeta.set(response.meta);
+          this.currentPage.set(response.meta.page);
+
           setTimeout(() => {
             this.isLoading.set(false);
           }, 300);
-
         });
+    }
+  }
+
+  loadMore() {
+    const category = this.category();
+    const meta = this.paginationMeta();
+    if (category && meta && meta.page < meta.lastPage) {
+      this.getNewsForCategory(category, meta.page + 1);
     }
   }
 
@@ -140,8 +158,8 @@ export class NewsCategoryComponent implements OnInit {
   private trackCategoryView(slug: string): void {
     const sessionId = this.sessionService.getSessionId();
     this.analyticsService.trackPageView(`/category/${slug}`, sessionId).subscribe({
-      next: () => {},
-      error: () => {}
+      next: () => { /* View tracked successfully */ },
+      error: (err) => { console.error('Analytics tracking failed', err); }
     });
   }
 }

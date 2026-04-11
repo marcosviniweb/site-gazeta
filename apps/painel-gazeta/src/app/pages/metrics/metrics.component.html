@@ -1,187 +1,207 @@
-<div class="grid gap-3">
-    <!-- Filtros e Última Atualização -->
-    <div class="col-12">
-        <div class="filters-container">
-            <div class="filters-row">
-                <p-datepicker [(ngModel)]="period" selectionMode="range" [showIcon]="true"
-                    dateFormat="dd/mm/yy"></p-datepicker>
-
-                <p-select [(ngModel)]="selectedGranularity" [options]="granularityOptions" optionLabel="label"
-                    optionValue="value" placeholder="Granularidade"></p-select>
-
-                <button pButton type="button" icon="pi pi-refresh" (click)="applyFilters()" 
-                    class="apply-button" label="Aplicar">Aplicar</button>
-            </div>
-            <div class="last-update" *ngIf="lastUpdate">
-                <i class="pi pi-clock"></i>
-                <span>Última atualização: {{ lastUpdate | date:'dd/MM/yyyy HH:mm:ss' }}</span>
-            </div>
+<div class="g-page-container">
+  <div class="g-page-card">
+    <!-- Cabeçalho da Página -->
+    <header class="g-page-header">
+      <div class="header-left">
+        <div class="header-text">
+          <h2>Métricas e Performance</h2>
+          <p>Acompanhe o desempenho do site, acessos e atividades em tempo real</p>
         </div>
-    </div>
+      </div>
+      <div class="header-actions">
+        @if (lastUpdate) {
+          <div class="last-update-pill" title="Última atualização dos dados">
+            <span class="material-icons">history</span>
+            <span>Última atualização: {{ lastUpdate | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+          </div>
+        }
+      </div>
+    </header>
 
-    <!-- KPIs -->
-    <div class="col-12">
-        <div class="grid">
-            <div class="col-12 md:col-6 lg:col-3" *ngFor="let k of kpis; index as i">
-                <div class="kpi-card" [ngClass]="'kpi-card--' + i" [pTooltip]="getKpiTooltip(i)" 
-                    tooltipPosition="top">
-                    <ng-container *ngIf="!loading; else kpiSkeleton">
-                        <div class="kpi">
-                            <div class="kpi-header">
-                                <div class="kpi-icon" [ngClass]="'kpi-icon--' + i">
-                                    <i class="pi" [ngClass]="getKpiIcon(i)"></i>
-                                </div>
-                                <div class="kpi-delta"
-                                    [ngClass]="{ up: (k.deltaPercent || 0) >= 0, down: (k.deltaPercent || 0) < 0 }">
-                                    <i class="pi"
-                                        [ngClass]="{ 'pi-arrow-up': (k.deltaPercent || 0) >= 0, 'pi-arrow-down': (k.deltaPercent || 0) < 0 }"></i>
-                                    <span>{{ k.deltaPercent }}%</span>
-                                </div>
-                            </div>
-                            <div class="kpi-content">
-                                <div class="kpi-label">{{ k.label }}</div>
-                                <div class="kpi-value">{{ k.value | number }}</div>
-                            </div>
-                        </div>
-                    </ng-container>
-                    <ng-template #kpiSkeleton>
-                        <p-skeleton width="100%" height="2rem" class="mb-2"></p-skeleton>
-                        <p-skeleton width="60%" height="1.5rem"></p-skeleton>
+    <div class="g-page-content">
+      <!-- Filtros de Dashboard -->
+      <div class="g-filters-container dashboard-filters">
+        <div class="filters-main">
+          <div class="filter-group">
+            <label for="filterPeriod">
+              <span class="material-icons">calendar_today</span>
+              Período de Análise
+            </label>
+            <p-datepicker [(ngModel)]="period" selectionMode="range" [showIcon]="true" dateFormat="dd/mm/yy" inputId="filterPeriod"></p-datepicker>
+          </div>
+
+          <div class="filter-group">
+            <label for="filterGranularity">
+              <span class="material-icons">visibility</span>
+              Visualização
+            </label>
+            <p-select [(ngModel)]="selectedGranularity" [options]="granularityOptions" optionLabel="label"
+              optionValue="value" placeholder="Granularidade" inputId="filterGranularity"></p-select>
+          </div>
+
+          <div class="filter-actions">
+            <button type="button" class="btn-primary" (click)="applyFilters()" [disabled]="loading">
+              <span class="material-icons">refresh</span>
+              Atualizar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPIs (Estatísticas Principais) -->
+      <div class="g-stat-grid">
+        @for (k of kpis; track k.label; let i = $index) {
+          <div class="g-stat-card" [ngClass]="'color-' + i">
+            <ng-container *ngIf="!loading; else kpiSkeleton">
+              <div class="stat-header">
+                <div class="stat-icon">
+                  <span class="material-icons">{{ getKpiMaterialIcon(i) }}</span>
+                </div>
+                <div class="stat-delta" [ngClass]="{ up: (k.deltaPercent || 0) >= 0, down: (k.deltaPercent || 0) < 0 }">
+                  <span class="material-icons">{{ (k.deltaPercent || 0) >= 0 ? 'trending_up' : 'trending_down' }}</span>
+                  <span>{{ k.deltaPercent }}%</span>
+                </div>
+              </div>
+              <div class="stat-body">
+                <span class="stat-value">{{ k.value | number }}</span>
+                <span class="stat-label">{{ k.label }}</span>
+              </div>
+            </ng-container>
+            <ng-template #kpiSkeleton>
+              <div class="g-skeleton-card">
+                <div class="skeleton-line full"></div>
+                <div class="skeleton-line half"></div>
+              </div>
+            </ng-template>
+          </div>
+        }
+      </div>
+
+      <!-- Layout de Gráficos e Tabelas -->
+      <div class="dashboard-main-layout">
+        
+        <!-- Fileira 1: Gráficos -->
+        <div class="dashboard-row">
+          <div class="g-crud-card">
+            <header class="g-crud-header mini soft-accent">
+              <div class="header-text">
+                <h3><span class="material-icons">show_chart</span> Acessos ao Site</h3>
+              </div>
+            </header>
+            <div class="card-content chart-box">
+              <ng-container *ngIf="!loading; else chartSkeleton">
+                <p-chart type="line" [data]="accessData" [options]="accessOptions"></p-chart>
+              </ng-container>
+              <ng-template #chartSkeleton>
+                <div class="g-loading-overlay position-relative"><div class="spinner"></div></div>
+              </ng-template>
+            </div>
+          </div>
+
+          <div class="g-crud-card">
+            <header class="g-crud-header mini soft-success">
+              <div class="header-text">
+                <h3><span class="material-icons">analytics</span> Páginas Vistas</h3>
+              </div>
+            </header>
+            <div class="card-content chart-box">
+              <ng-container *ngIf="!loading; else chartSkeleton2">
+                <p-chart type="bar" [data]="pagesData" [options]="pagesOptions"></p-chart>
+              </ng-container>
+              <ng-template #chartSkeleton2>
+                <div class="g-loading-overlay position-relative"><div class="spinner"></div></div>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fileira 2: Top News e Logs -->
+        <div class="dashboard-row scrollable">
+          
+          <div class="g-crud-card flex-2">
+            <header class="g-crud-header mini soft-info">
+              <div class="header-text">
+                <h3><span class="material-icons">star</span> Conteúdos em Destaque</h3>
+              </div>
+            </header>
+            <div class="card-content no-padding">
+              <ng-container *ngIf="!loading; else tableSkeleton">
+                @if (topNews.length) {
+                  <p-table [value]="topNews" [paginator]="true" [rows]="5" styleClass="g-table-modern">
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th>Título da Notícia</th>
+                        <th class="text-right">Visualizações</th>
+                        <th class="text-right">Acesso</th>
+                      </tr>
                     </ng-template>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Gráficos -->
-    <div class="col-12">
-        <div class="metrics-flex">
-            <div class="metrics-flex__item">
-                <div class="chart-card">
-                    <div class="chart-card-header">
-                        <div class="chart-title">
-                            <i class="pi pi-chart-line"></i>
-                            <span>Acessos</span>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <ng-container *ngIf="!loading; else chartSkeleton">
-                            <p-chart type="line" [data]="accessData" [options]="accessOptions"></p-chart>
-                        </ng-container>
-                        <ng-template #chartSkeleton>
-                            <p-skeleton width="100%" height="280px"></p-skeleton>
-                        </ng-template>
-                    </div>
-                </div>
-            </div>
-
-            <div class="metrics-flex__item">
-                <div class="chart-card chart-card--pages">
-                    <div class="chart-card-header chart-card-header--pages">
-                        <div class="chart-title">
-                            <i class="pi pi-file"></i>
-                            <span>Páginas Vistas</span>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <ng-container *ngIf="!loading; else chartSkeleton2">
-                            <p-chart type="bar" [data]="pagesData" [options]="pagesOptions"></p-chart>
-                        </ng-container>
-                        <ng-template #chartSkeleton2>
-                            <p-skeleton width="100%" height="280px"></p-skeleton>
-                        </ng-template>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Top Notícias e Logs -->
-    <div class="col-12">
-        <div class="metrics-flex">
-            <div class="metrics-flex__item">
-                <div class="table-card">
-                    <div class="table-card-header">
-                        <div class="table-title">
-                            <i class="pi pi-star-fill"></i>
-                            <span>Top Notícias</span>
-                        </div>
-                    </div>
-                    <ng-container *ngIf="!loading; else tableSkeleton">
-                        <p-table *ngIf="topNews?.length; else emptyTopNews" [value]="topNews" [paginator]="true"
-                            [rows]="5" sortField="views" [sortOrder]="-1" responsiveLayout="scroll"
-                            styleClass="top-news-table">
-                            <ng-template pTemplate="header">
-                                <tr>
-                                    <th>Título</th>
-                                    <th class="text-center">Views</th>
-                                    <th class="text-center">Último Acesso</th>
-                                </tr>
-                            </ng-template>
-                            <ng-template pTemplate="body" let-row let-i="rowIndex">
-                                <tr>
-                                    <td>
-                                        <div class="news-title">
-                                            <span class="news-rank">{{ i + 1 }}</span>
-                                            {{ row.title }}
-                                        </div>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge-views">{{ row.views | number }}</span>
-                                    </td>
-                                    <td class="text-center text-sm">{{ row.lastAccess | date:'dd/MM/yy HH:mm' }}</td>
-                                </tr>
-                            </ng-template>
-                        </p-table>
-                    </ng-container>
-                    <ng-template #emptyTopNews>
-                        <div class="empty-state">
-                            <i class="pi pi-inbox"></i>
-                            <p>Sem dados para o período selecionado</p>
-                        </div>
+                    <ng-template pTemplate="body" let-row let-i="rowIndex">
+                      <tr>
+                        <td>
+                          <div class="g-news-badge-cell">
+                            <span class="rank">{{ i + 1 }}</span>
+                            <span class="text-truncate">{{ row.title }}</span>
+                          </div>
+                        </td>
+                        <td class="text-right">
+                          <span class="g-badge accent mini">{{ row.views | number }}</span>
+                        </td>
+                        <td class="text-right color-muted text-xs">
+                          {{ row.lastAccess | date:'dd/MM HH:mm' }}
+                        </td>
+                      </tr>
                     </ng-template>
-                    <ng-template #tableSkeleton>
-                        <p-skeleton width="100%" height="200px"></p-skeleton>
-                    </ng-template>
-                </div>
+                  </p-table>
+                } @else {
+                  <div class="g-empty-state">
+                    <span class="material-icons">inbox</span>
+                    <p>Sem dados de navegação no período.</p>
+                  </div>
+                }
+              </ng-container>
+              <ng-template #tableSkeleton>
+                <div class="g-loading-overlay position-relative"><div class="spinner"></div></div>
+              </ng-template>
             </div>
+          </div>
 
-            <div class="metrics-flex__item">
-                <div class="timeline-card">
-                    <div class="timeline-card-header">
-                        <div class="timeline-title">
-                            <i class="pi pi-clock"></i>
-                            <span>Atividades Recentes</span>
+          <div class="g-crud-card flex-1">
+            <header class="g-crud-header mini soft-warning">
+              <div class="header-text">
+                <h3><span class="material-icons">history</span> Atividades do Painel</h3>
+              </div>
+            </header>
+            <div class="card-content timeline-box">
+              <ng-container *ngIf="!loading; else timelineSkeleton">
+                @if (logs.length) {
+                  <div class="g-timeline">
+                    @for (event of logs; track event.timestamp) {
+                      <div class="timeline-event">
+                        <div class="event-marker"></div>
+                        <div class="event-content">
+                          <span class="user">{{ event.user }}</span>
+                          <span class="action">{{ event.action }}</span>
+                          <span class="time">{{ event.timestamp | date:'dd/MM HH:mm' }}</span>
                         </div>
-                    </div>
-                    <div class="timeline-container">
-                        <ng-container *ngIf="!loading; else timelineSkeleton">
-                            <p-timeline *ngIf="logs?.length; else emptyLogs" [value]="logs" 
-                                styleClass="custom-timeline">
-                                <ng-template pTemplate="content" let-event>
-                                    <div class="log-item">
-                                        <div class="log-user">{{ event.user }}</div>
-                                        <div class="log-action">{{ event.action }}</div>
-                                        <div class="log-time">{{ event.timestamp | date:'dd/MM HH:mm' }}</div>
-                                    </div>
-                                </ng-template>
-                            </p-timeline>
-                        </ng-container>
-                        <ng-template #emptyLogs>
-                            <div class="empty-state">
-                                <i class="pi pi-inbox"></i>
-                                <p>Nenhuma atividade registrada</p>
-                            </div>
-                        </ng-template>
-                        <ng-template #timelineSkeleton>
-                            <p-skeleton width="100%" height="200px"></p-skeleton>
-                        </ng-template>
-                    </div>
-                </div>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="g-empty-state mini">
+                    <p>Nenhuma atividade recente.</p>
+                  </div>
+                }
+              </ng-container>
+              <ng-template #timelineSkeleton>
+                <div class="g-loading-overlay position-relative"><div class="spinner"></div></div>
+              </ng-template>
             </div>
+          </div>
+
         </div>
+
+      </div>
     </div>
-
-
-
+  </div>
 </div>
+

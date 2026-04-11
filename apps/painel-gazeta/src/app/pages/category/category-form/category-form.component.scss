@@ -1,125 +1,37 @@
-@use 'sass:color';
+@use '../../../../styles/variables' as vars;
+@use '../../../../styles/components' as comps;
 
-$primary-color: #eb3237;
-$secondary-color: #0a80c4;
-$transition-default: 0.3s ease-in-out;
-$box-shadow-light: 0px 0px 3px rgba(0, 0, 0, 0.24);
-$font-size-base: 1rem;
-$font-size-medium: 0.875rem;
-$font-size-small: 0.75rem;
-
-@mixin button-base {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  font-size: $font-size-base;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all $transition-default;
-  text-decoration: none;
-  display: inline-block;
-  text-align: center;
-  &:disabled { opacity: 0.6; cursor: not-allowed; }
+.g-form-container {
+  padding: 0.5rem;
 }
 
-.category-form {
-  margin-bottom: 3rem;
-  padding-bottom: 2rem;
-
+// ─── Overrides Específicos ──────────────────────────
+textarea {
+  resize: none !important;
+  min-height: 100px;
 }
 
-.form-group {
-  margin-bottom: 1.5rem;
-  label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: #333;
-    font-weight: 600;
-    font-size: $font-size-medium;
-  }
-  input, textarea {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 2px solid rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    font-size: $font-size-base;
-    transition: all $transition-default;
-    box-sizing: border-box;
-    color: #333;
-    resize: none !important;
-    &:focus {
-      outline: none;
-      border-color: $secondary-color;
-      box-shadow: 0 0 0 3px rgba($secondary-color, 0.1);
-    }
-    &.error {
-      border-color: $primary-color;
-      box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
-    }
-    &::placeholder { color: rgba(0, 0, 0, 0.4); }
-  }
-  textarea { resize: vertical; min-height: 80px; }
-}
-
-.toggle-group {
-  .toggle-label {
-    display: block;
-    margin-bottom: 0.75rem;
-    color: #333;
-    font-weight: 600;
-    font-size: $font-size-medium;
-  }
-  .toggle-container { display: flex; align-items: center; gap: 0.75rem; }
-  .toggle-input { display: none; }
-  .toggle-switch {
-    position: relative;
-    display: inline-block;
-    width: 50px;
-    height: 24px;
-    background-color: rgba(0, 0, 0, 0.2);
-    border-radius: 24px;
-    cursor: pointer;
-    transition: background-color $transition-default;
-    .toggle-slider {
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 20px;
-      height: 20px;
-      background-color: white;
-      border-radius: 50%;
-      transition: transform $transition-default;
-      box-shadow: $box-shadow-light;
-    }
-  }
-  .toggle-input:checked + .toggle-switch {
-    background-color: #28a745;
-    .toggle-slider { transform: translateX(26px); }
-  }
-  .toggle-text { font-weight: 600; color: #333; font-size: $font-size-medium; }
-}
-
-.error-message { color: $primary-color; font-size: $font-size-small; margin-top: 0.25rem; }
-
-.form-actions { display: flex; gap: 1rem; justify-content: flex-start; }
-.btn-primary, .btn-secondary { @include button-base; }
-.btn-primary {
-  background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
-  color: white;
-  &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba($secondary-color, 0.3);
+// ─── Footer customizado para barra lateral ──────────
+.g-crud-footer {
+  .actions-right {
+    flex-direction: column;
+    gap: 0.8rem;
   }
 }
-.btn-secondary {
-  background: rgba(0, 0, 0, 0.02);
-  color: color.adjust($secondary-color, $lightness: -10%);
-  border: 2px solid rgba(0, 0, 0, 0.1);
-  &:hover { background: rgba(0, 0, 0, 0.05); border-color: rgba(0, 0, 0, 0.2); }
+
+.full-width {
+  width: 100% !important;
+  justify-content: center !important;
 }
 
-@media (max-width: 768px) {
-  .form-actions { flex-direction: column; }
-  .btn-primary, .btn-secondary { width: 100%; }
-  .toggle-container { justify-content: flex-start; }
+.margin-top-lg {
+  margin-top: 1.5rem;
+}
+
+.border-none {
+  border: none !important;
+}
+
+.no-padding {
+  padding: 0 !important;
 }

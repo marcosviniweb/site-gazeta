@@ -2,20 +2,27 @@
 #dropdownContainer
   class="multi-select-container"
   [class.disabled]="isDisabled()"
+  tabindex="-1"
   (keydown)="onKeyDown($event)">
 
   <!-- Selected Items Display -->
   <div
     class="selected-items"
-    #dropdownContainer
+    [class.has-items]="selectedItems().length > 0"
+    (click)="toggleDropdown($event)"
+    (keydown.enter)="toggleDropdown($event)"
+    (keydown.space)="toggleDropdown($event)"
     tabindex="0"
+    role="combobox"
+    [attr.aria-expanded]="dropdownOpen()"
+    aria-haspopup="listbox"
+    aria-controls="multiselect-listbox"
     >
 
     <!-- Toggle Button -->
     <button
       type="button"
       class="toggle-btn"
-      (click)="toggleDropdown($event)"
       [disabled]="isDisabled()"
       [attr.aria-expanded]="dropdownOpen()"
       [attr.aria-label]="dropdownOpen() ? 'Fechar dropdown' : 'Abrir dropdown'">
@@ -24,40 +31,49 @@
       </span>
     </button>
 
-    <!-- Empty State -->
+    <!-- Display State -->
     @if (selectedItems().length === 0) {
       <div class="empty-state">
         <span class="material-icons">add_circle_outline</span>
         <span>{{ mergedConfig().placeholder }}</span>
       </div>
-    }
-
-    <!-- Selected Tags -->
-    @for (item of selectedItems(); track item.id) {
-      <div class="item-tag" [class.disabled]="item.disabled">
-        <span class="item-label">{{ item.label? item.label : item.name }}</span>
-        <button
-          type="button"
-          class="remove-item-btn"
-          (click)="removeItem(item, $event)"
-          [disabled]="isDisabled() || item.disabled"
-          [attr.aria-label]="'Remover ' + (item.label? item.label : item.name)">
-          <span class="material-icons">close</span>
-        </button>
+    } @else {
+      <!-- Selected Tags with Limit -->
+      <div class="tags-wrapper">
+        @for (item of selectedItems().slice(0, 3); track asItem(item).id) {
+          <div 
+            class="item-tag" 
+            [class.disabled]="asItem(item).disabled" 
+            (click)="$event.stopPropagation()"
+            (keydown.enter)="$event.stopPropagation()"
+            (keydown.space)="$event.stopPropagation()"
+            tabindex="0">
+            <span class="item-label">{{ asItem(item).label || asItem(item).name }}</span>
+            <button
+              type="button"
+              class="remove-item-btn"
+              (click)="removeItem(item, $event)"
+              [disabled]="isDisabled() || asItem(item).disabled">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+        }
+        @if (selectedItems().length > 3) {
+          <div class="more-counter" [title]="'Mais ' + (selectedItems().length - 3) + ' itens selecionados'">
+            +{{ selectedItems().length - 3 }}
+          </div>
+        }
       </div>
     }
 
-    <!-- Add Button -->
+    <!-- Add Button (Visible when empty or as 'add more') -->
     <button
       type="button"
       class="add-item-btn"
-      (click)="toggleDropdown($event)"
       [disabled]="isDisabled()"
       [class.active]="dropdownOpen()">
       <span class="material-icons">add</span>
-      {{ selectedItems().length > 0
-        ? mergedConfig().addMoreButtonLabel
-        : mergedConfig().addButtonLabel }}
+      {{ selectedItems().length > 0 ? 'Mais' : 'Adicionar' }}
     </button>
   </div>
 
@@ -65,11 +81,28 @@
   @if (dropdownOpen() && !isDisabled()) {
     <div
       class="dropdown-menu"
-      tabindex="0"
+      tabindex="-1"
+      id="multiselect-listbox"
       #dropdownMenu
       (focusout)="onDropdownBlur($event)"
-      (click)="$event.stopPropagation()">
+      (click)="$event.stopPropagation()"
+      (keydown.escape)="closeDropdown()"
+      role="listbox">
 
+      <!-- Actions Header -->
+      <div class="dropdown-header">
+        <div class="selection-actions">
+          <button type="button" class="action-link" (click)="selectAll()">
+            <span class="material-icons">done_all</span>
+            Selecionar Todos
+          </button>
+          <div class="divider"></div>
+          <button type="button" class="action-link danger" (click)="clearAll()">
+            <span class="material-icons">clear_all</span>
+            Limpar Seleção
+          </button>
+        </div>
+      </div>
 
       <!-- Search Input -->
       @if (mergedConfig().showSearch) {
@@ -79,37 +112,38 @@
             #searchInput
             type="text"
             [placeholder]="mergedConfig().searchPlaceholder"
-            [value]="searchTerm()"
-            (input)="onSearchChange($event)"
+            [ngModel]="searchTerm()"
+            (ngModelChange)="searchTerm.set($event)"
             (click)="$event.stopPropagation()"
-            autocomplete="off"
-            tabindex="0">
+            autocomplete="off">
         </div>
       }
 
       <!-- Items List -->
       <div class="dropdown-list" [style.max-height]="mergedConfig().maxHeight">
         @if (filteredItems().length > 0) {
-          @for (item of filteredItems(); track item.id) {
+          @for (item of filteredItems(); track asItem(item).id; let i = $index) {
             <div
               class="dropdown-item"
               [class.selected]="isItemSelected(item)"
-              [class.disabled]="item.disabled"
+              [class.disabled]="asItem(item).disabled"
+              [class.focused]="focusedIndex() === i"
               (click)="selectItem(item, $event)"
-              (keyup.enter)="selectItem(item, $event)"
-              (keyup.space)="selectItem(item, $event)"
-              [tabindex]="item.disabled ? -1 : 0"
-              role="button"
-              [attr.aria-pressed]="isItemSelected(item)"
-              [attr.aria-disabled]="item.disabled">
+              (keydown.enter)="selectItem(item, $event)"
+              (keydown.space)="selectItem(item, $event)"
+              role="option"
+              tabindex="0"
+              [attr.aria-selected]="isItemSelected(item)">
 
               <span class="material-icons check-icon">
                 {{ isItemSelected(item) ? 'check_box' : 'check_box_outline_blank' }}
               </span>
 
               <div class="item-info">
-                <span class="item-label">{{ item.label? item.label : item.name }}</span>
-
+                <span class="item-label" [innerHTML]="asItem(item).label || asItem(item).name"></span>
+                @if (asItem(item).description) {
+                  <small class="item-description">{{ asItem(item).description }}</small>
+                }
               </div>
             </div>
           }

@@ -1,599 +1,110 @@
 @use '../../../../styles/variables' as vars;
+@use '../../../../styles/data-list' as dl;
 
-.ads-list-container {
-  width: 100%;
-  padding: 2rem 1rem;
-  background: linear-gradient(135deg, var(--accent-red) 0%, var(--accent-blue) 100%);
-  min-height: 100vh;
-}
-
-.ads-list-info {
-  @include vars.card;
-  background: white;
-  padding: 1rem 1.5rem;
-  margin-bottom: 1rem;
-  border-radius: var(--radius);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-
-  .ads-count {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-family: 'Open Sans', sans-serif;
-
-    .count-label {
-      font-size: 0.95rem;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    .count-value {
-      font-size: 1.1rem;
-      color: var(--accent-blue);
-      font-weight: 700;
-      padding: 0.25rem 0.75rem;
-      background: rgba(10, 128, 196, 0.1);
-      border-radius: var(--radius);
-    }
-  }
-}
-
-.ads-list {
-  @include vars.card;
+// Estilos específicos da lista de anúncios
+.header-left {
   display: flex;
-  flex-direction: column;
-  overflow-x: auto;
-  background: white;
+  align-items: center;
+  gap: 1rem;
 }
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+// Configuração do Grid de Anúncios
+$ads-columns: 50px 100px 120px 2fr 1.5fr minmax(120px, auto);
 
 .ads-list-header {
-  display: grid;
-  grid-template-columns: 60px 100px 2fr 1.5fr 140px;
-  gap: 1rem;
-  padding: 1rem 1.5rem;
-  background: var(--light);
-  border-bottom: 2px solid var(--border);
-  font-weight: 600;
-  font-size: 0.875rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-
-  .header-cell {
-    display: flex;
-    align-items: center;
-  }
+  @include dl.data-list-header($ads-columns);
 }
 
 .ads-row {
-  @include vars.card;
-  display: grid;
-  grid-template-columns: 60px 100px 2fr 1.5fr 140px;
-  gap: 1rem;
-  padding: 1rem 1.5rem;
-  align-items: center;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
-  animation: slideUp 0.3s ease-out;
-
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.02);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  }
-
-  &:last-child {
-    border-bottom: none;
-  }
+  @include dl.data-list-row($ads-columns);
+  min-height: 100px; // Altura reservada
 }
 
-.ads-cell {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-}
-
+// Status Indicator
 .ads-status-cell {
   justify-content: center;
-
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-
-    .material-icons {
-      font-size: 1.5rem;
-    }
-
-    &.status-active {
-      color: var(--success);
-    }
-
-    &.status-inactive {
-      color: var(--text-muted);
-    }
+  .status-indicator {
+    font-size: 24px;
+    &.active { color: var(--success); }
+    &.inactive { color: var(--text-muted); opacity: 0.5; }
   }
 }
 
-.ads-image-cell {
-  justify-content: center;
-  
-  .ads-card-img {
-    width: 80px;
-    height: 60px;
-    border-radius: var(--radius);
-    overflow: hidden;
-    background: var(--light);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .no-image {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      text-align: center;
-      padding: 0.25rem;
-      line-height: 1.2;
-    }
-  }
-}
-
-.ads-content-cell {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
-  padding-right: 1rem;
-
-  .ads-title-wrapper {
-    display: flex;
-    align-items: center;
-    width: 100%;
-  }
-
-  .ads-title {
-    color: var(--accent-blue);
-    font-size: 0.875rem;
-    font-weight: 600;
-    margin: 0;
-    line-height: 1.3;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .ads-description {
-    color: var(--text-muted);
-    font-size: 0.75rem;
-    margin: 0;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-}
-
+// Metadados específicos
 .ads-meta-cell {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.2rem;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-
   .ads-meta {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
-    width: 100%;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
 
-    span {
-      display: flex;
-      margin: 0;
-      line-height: 1.4;
-
-      b {
-        font-weight: 600;
-        margin-right: 0.25rem;
-      }
-    }
-  }
-}
-
-.ads-actions-cell {
-  justify-content: flex-end;
-  
-  .ads-actions {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-
-    .btn-action {
-      width: 36px;
-      height: 36px;
-      border-radius: var(--radius);
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-      background: transparent;
-
-      .material-icons {
-        font-size: 20px;
-        transition: transform 0.2s ease;
-      }
-
-      &:hover {
-        transform: translateY(-2px);
-
-        .material-icons {
-          transform: scale(1.1);
-        }
-      }
-
-      &:active {
-        transform: translateY(0);
-      }
+    .item {
+      b { color: var(--secondary); font-weight: 600; }
     }
 
-    .btn-toggle {
-      color: var(--secondary);
+    .status-badge {
+      display: inline-block;
+      width: fit-content;
+      padding: 0.1rem 0.6rem;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 0.65rem;
+      margin-top: 0.25rem;
+      background: #f5f5f5;
+      color: #757575;
 
-      &:hover {
-        background: rgba(0, 0, 0, 0.05);
-        color: var(--secondary);
-      }
-    }
-
-    .btn-edit {
-      color: var(--secondary);
-
-      &:hover {
-        background: rgba(0, 0, 0, 0.05);
-        color: var(--secondary);
-      }
-    }
-
-    .btn-delete {
-      color: var(--danger);
-
-      &:hover {
-        background: rgba(235, 50, 55, 0.1);
-        color: var(--danger);
+      &.active {
+        background: #e8f5e9;
+        color: #2e7d32;
       }
     }
   }
 }
 
 .ads-empty {
-  padding: 3rem 1.5rem;
+  padding: 4rem 2rem;
   text-align: center;
   color: var(--text-muted);
-  font-size: 1rem;
-}
-
-// Modal styles
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.2s ease-out;
-}
-
-.modal-content {
-  background: white;
-  border-radius: var(--radius);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  max-width: 500px;
-  width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
-  animation: slideUp 0.3s ease-out;
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1.5rem;
-  border-bottom: 2px solid var(--border);
-
-  .material-icons.warning {
-    color: var(--warning);
-    font-size: 2rem;
-  }
-
-  h3 {
-    margin: 0;
-    color: var(--text);
-    font-size: 1.25rem;
-    font-weight: 700;
-  }
-}
-
-.modal-body {
-  padding: 1.5rem;
-
-  p {
-    margin: 0 0 0.75rem 0;
-    color: var(--text);
-    line-height: 1.5;
-
-    strong {
-      color: var(--accent-blue);
-      font-weight: 600;
-    }
-
-    &.warning-text {
-      color: var(--text-muted);
-      font-size: 0.875rem;
-    }
-  }
-}
-
-.modal-actions {
-  display: flex;
-  gap: 1rem;
-  padding: 1.5rem;
-  border-top: 2px solid var(--border);
-  justify-content: flex-end;
-
-  button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: var(--radius);
-    font-weight: 600;
-    font-size: 0.9375rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
-
-    .material-icons {
-      font-size: 20px;
-    }
-
-    &:hover {
-      transform: translateY(-2px);
-    }
-  }
-
-  .btn-cancel {
-    background: var(--light);
-    color: var(--text);
-
-    &:hover {
-      background: rgba(0, 0, 0, 0.05);
-    }
-  }
-
-  .btn-delete {
-    background: var(--danger);
-    color: white;
-
-    &:hover {
-      background: rgba(235, 50, 55, 0.9);
-      box-shadow: 0 4px 12px rgba(235, 50, 55, 0.3);
-    }
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  font-style: italic;
+  font-size: 1.1rem;
 }
 
 // Responsividade
-:host ::ng-deep {
-  app-ads-list-filters {
-    display: block;
-    margin-bottom: 1rem;
-  }
-}
-
 @media (max-width: 1024px) {
-  .ads-list-container {
-    padding: 1.5rem 0.75rem;
-  }
-
-  .ads-list-info {
-    padding: 0.875rem 1.25rem;
-  }
-
-  .ads-list-header,
-  .ads-row {
-    grid-template-columns: 50px 80px 1.5fr 1fr 120px;
-    padding: 0.875rem 1.25rem;
-    gap: 0.75rem;
-  }
+  $ads-columns-tablet: 40px 80px 100px 1.5fr 1fr 100px;
+  
+  .ads-list-header { grid-template-columns: $ads-columns-tablet; }
+  .ads-row { grid-template-columns: $ads-columns-tablet; }
 }
 
 @media (max-width: 768px) {
-  .ads-list-container {
-    padding: 1rem 0.5rem;
-  }
-
-  .ads-list-info {
-    padding: 0.875rem 1rem;
-    margin-bottom: 0.75rem;
-
-    .ads-count {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0.375rem;
-
-      .count-label {
-        font-size: 0.875rem;
-      }
-
-      .count-value {
-        font-size: 1rem;
-      }
-    }
-  }
-
-  .ads-list-header {
-    display: none;
-  }
-
+  .ads-list-header { display: none; }
+  
   .ads-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: 40px 1fr;
+    grid-template-areas: 
+      "select status"
+      "select image" 
+      "select content" 
+      "select meta" 
+      "actions actions";
     gap: 0.75rem;
     padding: 1rem;
 
-    .ads-status-cell {
-      display: flex;
-      justify-content: flex-start;
-      order: -1;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 0.5rem;
-
-      .status-badge .material-icons {
-        font-size: 1.25rem;
-      }
-    }
-
-    .ads-image-cell {
-      justify-content: flex-start;
-      
-      .ads-card-img {
-        width: 100%;
-        height: 180px;
-        max-width: 100%;
-      }
-    }
-
-    .ads-content-cell {
-      padding-right: 0;
-
-      .ads-title {
-        font-size: 0.9375rem;
-      }
-
-      .ads-description {
-        font-size: 0.8125rem;
-      }
-    }
-
-    .ads-meta-cell {
-      .ads-meta {
-        font-size: 0.8125rem;
-      }
-    }
-
-    .ads-actions-cell {
-      justify-content: flex-start;
-      padding-top: 0.75rem;
-      border-top: 1px solid var(--border);
-      margin-top: 0.5rem;
-
-      .ads-actions {
-        gap: 0.75rem;
-
-        .btn-action {
-          width: 40px;
-          height: 40px;
-
-          .material-icons {
-            font-size: 22px;
-          }
-        }
-      }
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .ads-list-container {
-    padding: 0.75rem 0.25rem;
-  }
-
-  .ads-list-info {
-    padding: 0.75rem;
-
-    .ads-count {
-      .count-label {
-        font-size: 0.8125rem;
-      }
-
-      .count-value {
-        font-size: 0.9375rem;
-        padding: 0.2rem 0.625rem;
-      }
-    }
-  }
-
-  .ads-row {
-    padding: 0.875rem;
-
-    .ads-content-cell {
-      .ads-title {
-        font-size: 0.875rem;
-      }
-
-      .ads-description {
-        font-size: 0.75rem;
-      }
-    }
-
-    .ads-meta-cell {
-      .ads-meta {
-        font-size: 0.75rem;
-      }
-    }
-
-    .ads-actions-cell {
-      .ads-actions {
-        .btn-action {
-          width: 38px;
-          height: 38px;
-
-          .material-icons {
-            font-size: 20px;
-          }
-        }
-      }
-    }
+    .g-data-cell { min-width: 0; }
+    .g-cell-select { grid-area: select; }
+    .ads-status-cell { grid-area: status; justify-content: flex-start; }
+    .g-cell-image { grid-area: image; }
+    .g-cell-content { grid-area: content; }
+    .ads-meta-cell { grid-area: meta; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 0.5rem; }
+    .g-cell-actions { grid-area: actions; border-top: 1px solid var(--border); padding-top: 0.5rem; }
+    
+    .g-cell-image img { max-width: 150px; }
   }
 }

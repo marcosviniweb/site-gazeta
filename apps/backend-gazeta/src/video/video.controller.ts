@@ -30,6 +30,9 @@ import { VideoService } from './video.service';
 import { CreateVideoDto } from './dto/create-video.dto';
 import { UpdateVideoDto } from './dto/update-video.dto';
 import { VideoResponseDto } from './dto/video-response.dto';
+import { VideoQueryDto } from './dto/video-query.dto';
+import { VideoPaginatedResponse } from './dto/video-paginated-response.dto';
+import { BulkToggleFeaturedDto, BulkDeleteVideoDto } from './dto/bulk-video.dto';
 import { Request } from 'express';
 
 @ApiTags('Vídeos')
@@ -107,8 +110,35 @@ export class VideoController {
         },
         duration: {
           type: 'string',
-          description: 'OPCIONAL. Se omitida, será calculada automaticamente (MM:SS ou HH:MM:SS).',
+          description: 'OPCIONAL. Duração (MM:SS ou HH:MM:SS). Se omitida, será calculada automaticamente.',
           example: '01:51'
+        },
+        categoryId: {
+          type: 'array',
+          items: { type: 'number' },
+          description: 'IDs das categorias vinculadas ao vídeo',
+          example: [1, 2]
+        },
+        featured: {
+          type: 'boolean',
+          description: 'Define se o vídeo deve aparecer em destaque',
+          example: true
+        },
+        tags: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Tags relacionadas ao vídeo',
+          example: ['tucurui', 'energia']
+        },
+        description: {
+          type: 'string',
+          description: 'Descrição detalhada do vídeo',
+          example: 'Reportagem sobre a Usina de Tucuruí'
+        },
+        newsSlug: {
+          type: 'string',
+          description: 'Slug de uma notícia vinculada a este vídeo',
+          example: 'usina-de-tucurui-atinge-recorde'
         }
       },
       required: ['video', 'title']
@@ -210,17 +240,17 @@ export class VideoController {
 
   @Get()
   @ApiOperation({
-    summary: 'Listar todos os vídeos',
-    description: 'Endpoint para obter todos os vídeos'
+    summary: 'Listar todos os vídeos paginados e filtrados',
+    description: 'Endpoint para obter todos os vídeos com suporte a paginação e filtros complexos'
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de vídeos',
-    type: [VideoResponseDto]
+    description: 'Lista paginada de vídeos',
+    type: VideoPaginatedResponse
   })
-  async findAll(): Promise<VideoResponseDto[]> {
+  async findAll(@Query() query: VideoQueryDto): Promise<VideoPaginatedResponse> {
     try {
-      return await this.videoService.findAll();
+      return await this.videoService.findAll(query);
     } catch (error) {
       throw new HttpException({
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -425,7 +455,33 @@ export class VideoController {
         },
         duration: {
           type: 'string',
-          description: 'Duração (OPCIONAL). Se o vídeo for trocado e este campo omitido, será recalculada automaticamente.'
+          description: 'Duração (OPCIONAL). Se o vídeo for trocado e este campo omitido, será recalculada.'
+        },
+        categoryId: {
+          type: 'array',
+          items: { type: 'number' },
+          description: 'Novas categorias (OPCIONAL)'
+        },
+        featured: {
+          type: 'boolean',
+          description: 'Alterar status de destaque (OPCIONAL)'
+        },
+        tags: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Novas tags (OPCIONAL)'
+        },
+        description: {
+          type: 'string',
+          description: 'Nova descrição (OPCIONAL)'
+        },
+        newsSlug: {
+          type: 'string',
+          description: 'Novo slug de notícia vinculada (OPCIONAL)'
+        },
+        removeThumbnail: {
+          type: 'boolean',
+          description: 'Se true, remove o thumbnail atual sem enviar um novo (OPCIONAL)'
         }
       }
     }
@@ -546,6 +602,32 @@ export class VideoController {
         error: 'Internal Server Error'
       }, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  @Patch('bulk/featured')
+  @ApiOperation({ 
+    summary: 'Atualizar destaque em lote',
+    description: 'Permite definir como destaque ou remover o destaque de múltiplos vídeos de uma só vez. Respeita o limite de 3 vídeos em destaque (remove os mais antigos se necessário).'
+  })
+  @ApiResponse({ status: 200, description: 'Destaque dos vídeos atualizado com sucesso' })
+  @ApiResponse({ status: 400, description: 'Dados inválidos' })
+  async bulkToggleFeatured(
+    @Body() bulkDto: BulkToggleFeaturedDto
+  ): Promise<{ count: number }> {
+    return await this.videoService.bulkToggleFeatured(bulkDto.ids, bulkDto.featured);
+  }
+
+  @Delete('bulk/delete')
+  @ApiOperation({ 
+    summary: 'Exclusão em lote',
+    description: 'Remove permanentemente múltiplos vídeos e seus arquivos físicos.'
+  })
+  @ApiResponse({ status: 200, description: 'Vídeos excluídos com sucesso' })
+  @ApiResponse({ status: 400, description: 'Dados inválidos' })
+  async bulkRemove(
+    @Body() bulkDto: BulkDeleteVideoDto
+  ): Promise<{ count: number }> {
+    return await this.videoService.bulkRemove(bulkDto.ids);
   }
 }
 

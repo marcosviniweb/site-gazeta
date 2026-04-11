@@ -1,0 +1,657 @@
+// ─── Mixins de Componentes Reutilizáveis ────────────
+// Cada mixin encapsula o estilo completo de um padrão de UI.
+// Use @include para aplicar, ou veja _components.scss para classes prontas.
+
+// ─── Inputs & Formulários ───────────────────────────
+@mixin form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e0e5ec;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  color: var(--text);
+  background: #fafbfc;
+  font-family: inherit;
+
+  &:hover {
+    border-color: rgba(10, 128, 196, 0.3);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    background: white;
+    box-shadow: 0 0 0 4px rgba(10, 128, 196, 0.08);
+  }
+
+  &.error {
+    border-color: var(--accent-red);
+    box-shadow: 0 0 0 4px rgba(235, 50, 55, 0.08);
+    background: rgba(235, 50, 55, 0.02);
+  }
+
+  &::placeholder {
+    color: #a0aec0;
+  }
+}
+
+@mixin form-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  color: #344054;
+  font-weight: 600;
+  font-size: 0.825rem;
+
+  .material-icons, .label-icon {
+    font-size: 18px;
+    color: #8b95a5;
+  }
+
+  .required {
+    color: var(--accent-red);
+    font-weight: 700;
+  }
+
+  i {
+    font-size: 18px;
+    color: var(--accent-blue);
+  }
+}
+
+@mixin form-group {
+  margin-bottom: 1.25rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  label {
+    @include form-label;
+  }
+
+  input, textarea, select {
+    @include form-input;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.6;
+  }
+}
+
+// ─── Botões ─────────────────────────────────────────
+@mixin btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+
+  .material-icons, i {
+    font-size: 20px;
+    transition: transform 0.25s ease;
+  }
+
+  &:hover:not(:disabled) .material-icons,
+  &:hover:not(:disabled) i {
+    transform: scale(1.05);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0) !important;
+  }
+}
+
+@mixin btn-primary {
+  @include btn-base;
+  background: linear-gradient(135deg, var(--accent-red) 0%, var(--accent-blue) 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(10, 128, 196, 0.2);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow:
+      0 8px 24px rgba(10, 128, 196, 0.3),
+      0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+@mixin btn-secondary {
+  @include btn-base;
+  background: white;
+  color: var(--accent-blue);
+  border: 2px solid #e0e5ec;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  &:hover:not(:disabled) {
+    background: rgba(10, 128, 196, 0.04);
+    border-color: var(--accent-blue);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(10, 128, 196, 0.12);
+  }
+}
+
+@mixin btn-danger {
+  @include btn-base;
+  background: linear-gradient(135deg, var(--accent-red) 0%, #c41e23 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(235, 50, 55, 0.2);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(235, 50, 55, 0.3);
+  }
+}
+
+
+// Botão com cores customizáveis (background, text)
+@mixin btn-variant($bg, $color) {
+  @include btn-base;
+  background: $bg;
+  color: $color;
+
+  &:hover:not(:disabled) {
+    filter: brightness(0.95);
+    transform: translateY(-1px);
+  }
+}
+
+// Botão de Ícone (Circular, usado em ações de tabela/lista)
+@mixin btn-icon-base($size: 32px) {
+  width: $size !important;
+  height: $size !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  border: none !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  color: var(--text-muted);
+  padding: 0 !important;
+  flex-shrink: 0;
+
+  i, .material-icons {
+    font-size: calc($size * 0.6) !important;
+    margin: 0 !important;
+  }
+
+  &:hover:not(:disabled) {
+    background: rgba(var(--accent-blue-rgb), 0.1) !important;
+    color: var(--accent-blue) !important;
+    transform: scale(1.1);
+  }
+
+  &.btn-edit:hover {
+    background: rgba(var(--accent-blue-rgb), 0.1) !important;
+    color: var(--accent-blue) !important;
+  }
+
+  &.btn-delete:hover {
+    background: rgba(var(--accent-red-rgb), 0.1) !important;
+    color: var(--accent-red) !important;
+  }
+}
+
+
+// ─── Toggle Switch ──────────────────────────────────
+@mixin toggle-group {
+  .toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .toggle-input {
+    display: none;
+  }
+
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 24px;
+    background-color: #d0d5dd;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+
+    .toggle-slider {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background-color: white;
+      border-radius: 50%;
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  .toggle-input:checked + .toggle-switch {
+    background-color: var(--success);
+    .toggle-slider {
+      transform: translateX(22px);
+    }
+  }
+
+  .toggle-text {
+    font-weight: 600;
+    color: #344054;
+    font-size: 0.85rem;
+  }
+
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.875rem;
+
+    i, .material-icons {
+      font-size: 18px;
+      color: var(--accent-blue);
+    }
+  }
+}
+
+// ─── Form Card ──────────────────────────────────────
+@mixin form-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 1px 2px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  transition: all 0.2s ease;
+
+  &:hover {
+    box-shadow:
+      0 4px 16px rgba(10, 128, 196, 0.08),
+      0 2px 4px rgba(0, 0, 0, 0.06);
+    border-color: rgba(10, 128, 196, 0.1);
+  }
+}
+
+@mixin form-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg,
+    rgba(235, 50, 55, 0.03) 0%,
+    rgba(10, 128, 196, 0.03) 100%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+  i, .material-icons {
+    font-size: 24px;
+    color: var(--accent-blue);
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text);
+    flex: 1;
+  }
+}
+
+@mixin form-card-body {
+  padding: 1.5rem;
+}
+
+// ─── Form Actions ───────────────────────────────────
+@mixin form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg,
+    rgba(235, 50, 55, 0.02) 0%,
+    rgba(10, 128, 196, 0.02) 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+
+  .btn-primary {
+    @include btn-primary;
+    flex: 1;
+  }
+
+  .btn-secondary {
+    @include btn-secondary;
+  }
+
+  @media (max-width: 576px) {
+    flex-direction: column;
+
+    button, .btn-primary, .btn-secondary {
+      width: 100%;
+    }
+  }
+}
+
+// ─── Sticky Actions Bar ─────────────────────────────
+@mixin sticky-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 2rem;
+  background: white;
+  border-top: 1px solid #e8ecf1;
+  flex-shrink: 0;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.04);
+}
+
+// ─── Field Messages ─────────────────────────────────
+@mixin field-error {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--danger);
+  font-size: 0.75rem;
+  margin-top: 0.35rem;
+  font-weight: 500;
+  animation: slideUp 0.2s ease;
+
+  .material-icons, i {
+    font-size: 16px;
+  }
+}
+
+@mixin field-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+  color: #8b95a5;
+  font-size: 0.75rem;
+
+  .material-icons, i, .hint-icon {
+    font-size: 14px;
+  }
+}
+
+// ─── Status Chips ───────────────────────────────────
+@mixin status-chips {
+  display: flex;
+  gap: 0.5rem;
+
+  .status-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1rem;
+    border: 2px solid #e0e5ec;
+    border-radius: 10px;
+    background: white;
+    color: #667085;
+    font-size: 0.825rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex: 1;
+    justify-content: center;
+
+    .material-icons, i {
+      font-size: 18px;
+    }
+
+    &:hover {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    &.active-green {
+      border-color: var(--success);
+      background: rgba(40, 167, 69, 0.08);
+      color: var(--success);
+    }
+
+    &.active-gray {
+      border-color: #8b95a5;
+      background: rgba(139, 149, 165, 0.08);
+      color: #667085;
+    }
+  }
+}
+
+// ─── Progress Bar ───────────────────────────────────
+@mixin progress-bar {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #e0e5ec;
+  overflow: hidden;
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent-red) 0%, var(--accent-blue) 100%);
+    transition: width 0.4s ease;
+    animation: progressPulse 1.5s infinite;
+  }
+}
+
+// ─── File Upload ────────────────────────────────────
+@mixin file-upload-area {
+  width: 100%;
+  padding: 2rem 1.5rem;
+  border: 3px dashed #d1d5db;
+  border-radius: 16px;
+  text-align: center;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg,
+    rgba(235, 50, 55, 0.02) 0%,
+    rgba(10, 128, 196, 0.02) 100%);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--accent-blue);
+    background: linear-gradient(135deg,
+      rgba(235, 50, 55, 0.05) 0%,
+      rgba(10, 128, 196, 0.05) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(10, 128, 196, 0.1);
+  }
+
+  .file-placeholder {
+    color: #6b7280;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+
+    i, .material-icons {
+      font-size: 2.5rem;
+      color: var(--accent-blue);
+      transition: transform 0.3s ease;
+    }
+
+    span {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    small {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+  }
+}
+
+// ─── Skeleton Loading ───────────────────────────────
+@mixin skeleton-line {
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+// ─── Page Layout (Padrão Form Pages) ────────────────
+// Usados por componentes via @use 'mixins' as m;
+@mixin page-container {
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--accent-red) 0%, var(--accent-blue) 100%);
+  padding: 1.25rem;
+}
+
+@mixin page-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 20px 50px -12px rgba(0, 0, 0, 0.25);
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.5s ease-out;
+}
+
+@mixin page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 2rem;
+  background: linear-gradient(135deg, var(--accent-blue) 0%, #063a5c 60%, #0a2540 100%);
+  color: white;
+  flex-shrink: 0;
+
+  h1, h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  p {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0.15rem 0 0 0;
+  }
+}
+
+@mixin page-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+@mixin page-back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(-2px);
+  }
+
+  .material-icons {
+    font-size: 20px;
+  }
+}
+
+@mixin page-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+
+  .material-icons {
+    font-size: 48px;
+    color: var(--accent-blue);
+    margin-bottom: 1rem;
+  }
+
+  p {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+}
+
+@mixin page-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0 2rem;
+  border-bottom: 1px solid #e8ecf1;
+  background: #fafbfc;
+
+  .tab-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1.25rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #667085;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+
+    &:hover {
+      color: var(--accent-blue);
+      background: rgba(10, 128, 196, 0.03);
+    }
+
+    &.active {
+      color: var(--accent-blue);
+      border-bottom-color: var(--accent-blue);
+    }
+
+    .material-icons, i {
+      font-size: 18px;
+    }
+  }
+}

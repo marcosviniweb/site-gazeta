@@ -1,138 +1,191 @@
-<div class="ads-list-container">
-  <app-ads-list-filters
-    [filterDate]="filterDate()"
-    [filterOrder]="filterOrder()"
-    [filterPosition]="filterPosition()"
-    [filterPlacement]="filterPlacement()"
-    [filterStatus]="filterStatus()"
-    [filterSearch]="filterSearch()"
-    (filterDateChange)="setFilterDate($event)"
-    (filterOrderChange)="setFilterOrder($event)"
-    (filterPositionChange)="setFilterPosition($event)"
-    (filterPlacementChange)="setFilterPlacement($event)"
-    (filterStatusChange)="setFilterStatus($event)"
-    (filterSearchChange)="setFilterSearch($event)">
-  </app-ads-list-filters>
-
-  <div class="ads-list-info">
-    <div class="ads-count">
-      <span class="count-label">Total de anúncios:</span>
-      <span class="count-value">{{ filteredAdvertisements().length }}</span>
-    </div>
-  </div>
-
-  <div class="ads-list">
-    <div class="ads-list-header">
-      <div class="header-cell header-status"></div>
-      <div class="header-cell header-image"></div>
-      <div class="header-cell header-content">Conteúdo</div>
-      <div class="header-cell header-meta">Metadados</div>
-      <div class="header-cell header-actions">Ações</div>
-    </div>
-    
-    @for(ad of filteredAdvertisements(); track ad.id){
-      <div class="ads-row">
-        <div class="ads-cell ads-status-cell">
-          @if(ad.isActive) {
-            <span class="status-badge status-active" title="Anúncio ativo">
-              <span class="material-icons">check_circle</span>
-            </span>
-          } @else {
-            <span class="status-badge status-inactive" title="Anúncio inativo">
-              <span class="material-icons">cancel</span>
-            </span>
-          }
-        </div>
-        
-        <div class="ads-cell ads-image-cell">
-          <div class="ads-card-img">
-            @if (ad.imageUrl) {
-              <img [src]="ad.imageUrl" [alt]="ad.title" />
-            } @else {
-              <div class="no-image">Sem imagem</div>
-            }
-          </div>
-        </div>
-        
-        <div class="ads-cell ads-content-cell">
-          <div class="ads-title-wrapper">
-            <h3 class="ads-title">{{ ad.title }}</h3>
-          </div>
-          @if (ad.description) {
-            <p class="ads-description">{{ ad.description }}</p>
-          }
-        </div>
-        
-        <div class="ads-cell ads-meta-cell">
-          <div class="ads-meta">
-            <span class="ads-position">
-              <b>Posição:</b> {{ getPositionLabel(ad.position) }}
-            </span>
-            <span class="ads-placement">
-              <b>Página:</b> {{ getPlacementLabel(ad.placement) }}
-            </span>
-            <span class="ads-priority">
-              <b>Prioridade:</b> {{ ad.priority }}
-            </span>
-            @if (ad.startDate) {
-              <span class="ads-date">
-                <b>Início:</b> {{ ad.startDate | date:'dd/MM/yyyy - HH:mm' }}
-              </span>
-            }
-            @if (ad.endDate) {
-              <span class="ads-date">
-                <b>Fim:</b> {{ ad.endDate | date:'dd/MM/yyyy - HH:mm' }}
-              </span>
-            }
-          </div>
-        </div>
-        
-        <div class="ads-cell ads-actions-cell">
-          <div class="ads-actions">
-            <button class="btn-action btn-toggle" (click)="toggleStatus(ad)" [attr.aria-label]="ad.isActive ? 'Desativar anúncio' : 'Ativar anúncio'" [title]="ad.isActive ? 'Desativar' : 'Ativar'">
-              <span class="material-icons">{{ ad.isActive ? 'pause' : 'play_arrow' }}</span>
-            </button>
-            <button class="btn-action btn-edit" (click)="editAdvertisement(ad)" [attr.aria-label]="'Editar anúncio'" title="Editar">
-              <span class="material-icons">settings</span>
-            </button>
-            <button class="btn-action btn-delete" (click)="confirmDelete(ad)" [attr.aria-label]="'Excluir anúncio'" title="Excluir">
-              <span class="material-icons">delete</span>
-            </button>
-          </div>
+<div class="g-page-container">
+  <div class="g-page-card">
+    <div class="g-page-header">
+      <div class="header-left">
+        <div class="header-text">
+          <h2>Lista de Anúncios</h2>
+          <p>Gerencie todos os anúncios cadastrados</p>
         </div>
       </div>
-    } @empty {
-      <div class="ads-empty">
-        <p>Nenhum anúncio encontrado.</p>
+      <div class="header-actions">
+        <a class="btn-primary" [routerLink]="['/ads']">
+          <span class="material-icons">add</span>
+          Criar Anúncio
+        </a>
       </div>
-    }
+    </div>
+
+    <div class="g-page-content">
+      <!-- Barra de Carregamento e Progresso -->
+      @if (isProcessing()) {
+        <div class="g-processing-overlay">
+          <div class="g-progress-container">
+            <p>Processando {{ processingProgress().current }} de {{ processingProgress().total }} anúncios...</p>
+            <div class="g-progress-bar">
+              <div class="fill" [style.width.%]="(processingProgress().current / processingProgress().total) * 100"></div>
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (isLoading()) {
+        <div class="g-loading-overlay">
+          <div class="spinner"></div>
+        </div>
+      }
+
+      <app-ads-list-filters
+        [filterDate]="filterDate()"
+        [filterOrder]="filterOrder()"
+        [filterPosition]="filterPosition()"
+        [filterPlacement]="filterPlacement()"
+        [filterStatus]="filterStatus()"
+        [filterSearch]="filterSearch()"
+        (filterDateChange)="setFilterDate($event)"
+        (filterOrderChange)="setFilterOrder($event)"
+        (filterPositionChange)="setFilterPosition($event)"
+        (filterPlacementChange)="setFilterPlacement($event)"
+        (filterStatusChange)="setFilterStatus($event)"
+        (filterSearchChange)="setFilterSearch($event)">
+      </app-ads-list-filters>
+
+      <!-- Ações em Massa -->
+      <div class="g-bulk-actions" [class.active]="selectedIds().size > 0">
+        <div class="selection-info">
+          <span class="count">{{ selectedIds().size }}</span> selecionados
+        </div>
+        <div class="actions-group">
+          <button (click)="bulkToggleStatus()" title="Alternar status (Ativo/Inativo)">
+            <span class="material-icons">power_settings_new</span>
+          </button>
+          <button class="danger" (click)="bulkDelete()" title="Excluir selecionados">
+            <span class="material-icons">delete_forever</span>
+          </button>
+          <button class="btn-clear" (click)="clearSelection()" title="Limpar seleção">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="g-list-info">
+        <div class="total-count">
+          <span class="label">Total encontrado:</span>
+          <span class="value">{{ totalItems() }}</span>
+        </div>
+        <div class="pagination-summary">
+          Página {{ currentPage() }} de {{ lastPage() }}
+        </div>
+      </div>
+
+      <div class="g-data-list">
+        <div class="ads-list-header">
+          <div class="header-cell header-select">
+            <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll($event)" />
+          </div>
+          <div class="header-cell header-featured">Status</div>
+          <div class="header-cell header-image">Banner</div>
+          <div class="header-cell header-content">Conteúdo</div>
+          <div class="header-cell header-meta">Metadados</div>
+          <div class="header-cell header-actions">Ações</div>
+        </div>
+
+        @for(ad of advertisements(); track ad.id){
+          <div class="ads-row" [class.selected]="isSelected(ad.id)">
+            <div class="g-data-cell g-cell-select">
+              <input type="checkbox" [checked]="isSelected(ad.id)" (change)="toggleSelection(ad.id)" />
+            </div>
+
+            <div class="g-data-cell ads-status-cell">
+              <span class="status-indicator material-icons" [class.active]="ad.isActive" [title]="ad.isActive ? 'Ativo' : 'Inativo'">
+                {{ ad.isActive ? 'check_circle' : 'cancel' }}
+              </span>
+            </div>
+
+            <div class="g-data-cell g-cell-image">
+              @if (ad.imageUrl) {
+                <img [src]="ad.imageUrl" [alt]="ad.title" />
+              } @else {
+                <div class="no-image">Sem banner</div>
+              }
+            </div>
+
+            <div class="g-data-cell g-cell-content">
+              <h4 class="title">{{ ad.title }}</h4>
+              @if (ad.description) {
+                <p class="subtitle">{{ ad.description }}</p>
+              }
+            </div>
+
+            <div class="g-data-cell ads-meta-cell">
+              <div class="ads-meta">
+                <span class="item"><b>Posição:</b> {{ getPositionName(ad.position) }}</span>
+                <span class="item"><b>Página:</b> {{ getPlacementName(ad.placement) }}</span>
+                <span class="item"><b>Prioridade:</b> {{ ad.priority }}</span>
+                <span class="status-badge" [class.active]="ad.isActive">
+                  {{ ad.isActive ? 'ATIVO' : 'INATIVO' }}
+                </span>
+              </div>
+            </div>
+
+            <div class="g-data-cell g-cell-actions">
+              <button class="btn-action" (click)="toggleStatus(ad)" [title]="ad.isActive ? 'Desativar' : 'Ativar'">
+                <span class="material-icons">{{ ad.isActive ? 'pause' : 'play_arrow' }}</span>
+              </button>
+              <button class="btn-action" (click)="editAdvertisement(ad)" title="Configurações">
+                <span class="material-icons">settings</span>
+              </button>
+              <button class="btn-action btn-delete" (click)="confirmDelete(ad)" title="Excluir">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <div class="ads-empty">
+            <p>{{ isLoading() ? 'Carregando anúncios...' : 'Nenhum anúncio encontrado.' }}</p>
+          </div>
+        }
+      </div>
+
+      <!-- Paginação -->
+      <div class="g-pagination">
+        <button class="btn-prev" [disabled]="currentPage() === 1" (click)="prevPage()">
+          <span class="material-icons">chevron_left</span> Anterior
+        </button>
+        <div class="page-info">
+          Página <strong>{{ currentPage() }}</strong> de {{ lastPage() }}
+        </div>
+        <button class="btn-next" [disabled]="currentPage() >= lastPage()" (click)="nextPage()">
+          Próxima <span class="material-icons">chevron_right</span>
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- Modal de Confirmação de Exclusão -->
 @if (showDeleteConfirm()) {
-  <div class="modal-overlay" (click)="cancelDelete()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <span class="material-icons warning">warning</span>
+  <div class="g-modal-overlay" (click)="cancelDelete()">
+    <div class="g-modal-content g-modal-delete" (click)="$event.stopPropagation()">
+      <div class="g-modal-header">
+        <span class="material-icons">warning</span>
         <h3>Confirmar Exclusão</h3>
       </div>
       
-      <div class="modal-body">
+      <div class="g-modal-body">
         <p>Tem certeza que deseja excluir o anúncio <strong>"{{ adToDelete()?.title }}"</strong>?</p>
-        <p class="warning-text">Esta ação não pode ser desfeita e o anúncio será permanentemente removido.</p>
+        <p class="warning-text">Esta ação não pode ser desfeita.</p>
       </div>
       
-      <div class="modal-actions">
+      <div class="g-modal-actions">
         <button type="button" class="btn-cancel" (click)="cancelDelete()">
-          <span class="material-icons">close</span>
-          Cancelar
+          <span class="material-icons">close</span> Cancelar
         </button>
-        <button type="button" class="btn-delete" (click)="deleteAdvertisement()">
-          <span class="material-icons">delete_forever</span>
-          Excluir
+        <button type="button" class="btn-confirm" (click)="deleteAdvertisement()">
+          <span class="material-icons">delete_forever</span> Excluir
         </button>
       </div>
     </div>
   </div>
 }
+
+

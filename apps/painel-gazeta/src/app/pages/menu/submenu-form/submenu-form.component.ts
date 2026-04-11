@@ -30,8 +30,8 @@ export class SubmenuFormComponent {
   parentMenu = input.required<Menu>();
   existingMenus = input<Menu[]>([]);
   allMenus = input.required<Menu[]>(); // Lista completa de menus para calcular ordem
-  onSave = output<Menu>();
-  onCancel = output<void>();
+  saveEvent = output<Menu>();
+  cancelEvent = output<void>();
 
   // Signals
   menuForm!: FormGroup;
@@ -152,15 +152,9 @@ export class SubmenuFormComponent {
     return 1;
   }
 
-  onCategoriesChange(categories: Category[]): void {
-    console.log('📦 Categorias recebidas do multi-select (submenu):', categories);
-    // Validar que todas as categorias têm name e slug
-    const validCategories = categories.filter(cat => {
-      const isValid = cat && cat.name && cat.slug;
-      if (!isValid) {
-        console.warn('⚠️ Categoria inválida ignorada:', cat);
-      }
-      return isValid;
+  onCategoriesChange(categories: unknown[]): void {
+    const validCategories = categories.filter((c: unknown): c is Category => {
+      return !!(c && (c as Category).name && (c as Category).slug);
     });
     this.selectedCategories.set(validCategories);
     console.log('✅ Categorias validadas (submenu):', validCategories);
@@ -227,10 +221,10 @@ export class SubmenuFormComponent {
       next: (menu) => {
         this.isLoading.set(false);
         this.alertService.success('Sucesso', 'Submenu criado com sucesso!');
-        this.onSave.emit(menu as Menu);
+        this.saveEvent.emit(menu as Menu);
         this.resetForm();
         // Fechar o modal após sucesso
-        this.onCancel.emit();
+        this.cancelEvent.emit();
       },
       error: (err) => {
         this.isLoading.set(false);
@@ -289,11 +283,11 @@ export class SubmenuFormComponent {
             : `${count} submenus criados com sucesso!`
         );
         if (menus.length > 0) {
-          this.onSave.emit(menus[menus.length - 1] as Menu);
+          this.saveEvent.emit(menus[menus.length - 1] as Menu);
         }
         this.resetForm();
         // Fechar o modal após sucesso
-        this.onCancel.emit();
+        this.cancelEvent.emit();
       },
       error: (err) => {
         this.isLoading.set(false);
@@ -318,9 +312,9 @@ export class SubmenuFormComponent {
     this.selectedCategories.set([]);
   }
 
-  cancel(): void {
+  onCancel(): void {
     this.resetForm();
-    this.onCancel.emit();
+    this.cancelEvent.emit();
   }
 
   // Getters para validação

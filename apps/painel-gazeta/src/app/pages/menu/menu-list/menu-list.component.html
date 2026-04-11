@@ -1,4 +1,4 @@
-<div class="menu-list">
+<div class="menu-list-wrapper">
 
   <lib-drag-and-drop 
     [items]="menus()" 
@@ -6,19 +6,19 @@
     listId="main-menu-list"
   >
     
-    <!-- Header -->
+    <!-- Custom Header -->
     <ng-template #headerTemplate>
-      <div class="list-header">
-        <h3>
-          <span class="material-icons">list</span>
-          Menus Cadastrados
-        </h3>
-        <div class="list-info">
-          <span class="badge">{{ menus().length }} {{ menus().length === 1 ? 'item' : 'itens' }}</span>
+      <div class="list-section-header">
+        <div class="title">
+          <span class="material-icons text-primary lg">reorder</span>
+          <h3>Estrutura do Menu</h3>
+        </div>
+        <div class="info">
+          <span class="g-badge accent">{{ menus().length }} itens</span>
           @if (isReordering()) {
-            <span class="reordering-badge">
-              <span class="material-icons spinning">sync</span>
-              Salvando ordem...
+            <span class="status-sync">
+              <span class="material-icons sm spinning">sync</span>
+              Sincronizando...
             </span>
           }
         </div>
@@ -27,118 +27,93 @@
 
     <!-- Item Template -->
     <ng-template #itemTemplate let-item let-isExpanded="isExpanded" let-toggle="toggle">
-      <div class="menu-item-main">
+      <div class="menu-item-row" [class.is-submenu]="item.type === 'submenu'">
         <!-- Drag Handle -->
-        <div class="drag-handle" cdkDragHandle>
-          <span class="material-icons">drag_indicator</span>
+        <div class="drag-handle-container" cdkDragHandle>
+          <span class="material-icons text-muted sm">drag_indicator</span>
         </div>
 
-        <!-- Menu Info -->
-        <div class="menu-info">
-          <div class="menu-header">
-            <div class="menu-title">
+        <!-- Info Principal -->
+        <div class="item-content">
+          <div class="main-info">
+            <div class="title-area">
               @if (item.type === 'submenu') {
                 <button 
                   type="button" 
-                  class="expand-btn" 
+                  class="toggle-btn" 
                   (click)="toggle()"
-                  title="{{ isExpanded ? 'Recolher' : 'Expandir' }}"
+                  [class.expanded]="isExpanded"
                 >
-                  <span class="material-icons">
-                    {{ isExpanded ? 'expand_more' : 'chevron_right' }}
-                  </span>
+                  <span class="material-icons sm">chevron_right</span>
                 </button>
               }
-              <span class="material-icons menu-icon">{{ getMenuTypeIcon(item.type) }}</span>
-              <h4>{{ item.name }}</h4>
+              <span class="material-icons type-icon text-primary sm">{{ getMenuTypeIcon(item.type) }}</span>
+              <span class="name">{{ item.name }}</span>
             </div>
-            <span class="menu-type-badge">{{ getMenuTypeLabel(item.type) }}</span>
+            <span class="g-badge light mini">{{ getMenuTypeLabel(item.type) }}</span>
           </div>
           
-          <div class="menu-details">
-            <div class="menu-detail">
-              <span class="material-icons">arrow_forward</span>
+          <div class="meta-info">
+            <div class="meta-item">
+              <span class="material-icons text-muted xs">link</span>
               <span>{{ getMenuDestination(item) }}</span>
-            </div>
-            <div class="menu-detail">
-              <span class="material-icons">sort</span>
-              <span>Ordem: {{ item.order }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Actions -->
-        <div class="menu-actions">
+        <!-- Ações -->
+        <div class="g-manage-actions">
           @if (item.type === 'submenu') {
-            <button 
-              type="button" 
-              class="action-btn submenu-btn" 
-              (click)="openSubmenuModal(item)"
-              title="Gerenciar submenu"
-            >
-              <span class="material-icons">settings</span>
+            <button class="g-action-btn config" (click)="openSubmenuModal(item)" title="Configurar Submenu">
+              <span class="material-icons sm">settings</span>
             </button>
           }
-          <button 
-            type="button" 
-            class="action-btn edit-btn" 
-            (click)="editMenu(item)"
-            title="Editar menu"
-          >
-            <span class="material-icons">edit</span>
+          <button class="g-action-btn edit" (click)="editMenu(item)" title="Editar">
+            <span class="material-icons sm">edit</span>
           </button>
-          <button 
-            type="button" 
-            class="action-btn delete-btn" 
-            (click)="confirmDelete(item)"
-            title="Deletar menu"
-          >
-            <span class="material-icons">delete</span>
+          <button class="g-action-btn delete" (click)="confirmDelete(item)" title="Excluir">
+            <span class="material-icons sm">delete</span>
           </button>
         </div>
       </div>
     </ng-template>
 
-    <!-- Child Template -->
+    <!-- Child Template (Subitens) -->
     <ng-template #childTemplate let-child>
-      <span class="material-icons child-icon">{{ getMenuTypeIcon(child.type) }}</span>
-      <div class="child-info">
-        <span class="child-name">{{ child.name }}</span>
-        <span class="child-type">{{ getMenuTypeLabel(child.type) }}</span>
+      <div class="sub-item-row">
+        <span class="material-icons sub-icon">{{ getMenuTypeIcon(child.type) }}</span>
+        <div class="sub-info">
+          <span class="sub-name">{{ child.name }}</span>
+          <span class="sub-dest">{{ getMenuDestination(child) }}</span>
+        </div>
+        <button class="sub-delete-btn" (click)="confirmDelete(child)" title="Remover subitem">
+          <span class="material-icons">close</span>
+        </button>
       </div>
-      <button 
-        type="button" 
-        class="delete-child-btn" 
-        (click)="confirmDelete(child)"
-        title="Deletar submenu permanentemente"
-      >
-        <span class="material-icons">delete</span>
-      </button>
     </ng-template>
 
     <!-- Empty State -->
     <ng-template #emptyTemplate>
-      <div class="empty-state">
+      <div class="g-empty-state mini">
         <span class="material-icons">menu_open</span>
-        <h4>Nenhum menu cadastrado</h4>
-        <p>Crie seu primeiro item de menu usando o formulário acima</p>
+        <p>Nenhum menu cadastrado ainda.</p>
       </div>
     </ng-template>
 
     <!-- Children Empty State -->
     <ng-template #childrenEmptyTemplate>
-      <div class="submenu-empty">
-        <span class="material-icons">info</span>
-        <p>Use o botão de configurações para gerenciar os itens deste submenu</p>
+      <div class="sub-empty-state">
+        <span class="material-icons">south_east</span>
+        <p>Submenu vazio. Use as configurações para adicionar itens.</p>
       </div>
     </ng-template>
 
-    <!-- Footer (Dica) -->
+    <!-- Footer Tooltip -->
     <ng-template #footerTemplate>
       @if (menus().length > 0) {
-        <div class="drag-tip">
+        <div class="drag-hint">
           <span class="material-icons">info</span>
-          <p>Arraste os itens para reordenar. Use o botão de configurações nos submenus para gerenciar seus itens.</p>
+          <p>Arraste para reordenar a prioridade de exibição no site.</p>
         </div>
       }
     </ng-template>
@@ -147,44 +122,45 @@
 
 </div>
 
-<!-- Modal de Confirmação de Exclusão -->
-<modal 
-  [(isOpen)]="showDeleteConfirm"
-  (closed)="cancelDelete()">
-  <div class="delete-modal-content">
-    <div class="modal-header">
-      <span class="material-icons warning">warning</span>
-      <h3>Confirmar Exclusão</h3>
+<!-- Modal de Confirmação - Padronizado -->
+<modal [(isOpen)]="showDeleteConfirm" (closed)="cancelDelete()">
+  <div class="g-modal-confirm-container">
+    <div class="g-modal-confirm-header danger">
+      <div class="header-icon">
+        <span class="material-icons">delete_forever</span>
+      </div>
+      <div class="header-text">
+        <h3>Confirmação de Exclusão</h3>
+        <p>Esta ação é <strong>irreversível</strong></p>
+      </div>
     </div>
     
-    <div class="delete-modal-body">
+    <div class="g-modal-confirm-body">
       @if (menuToDelete()?.parentId) {
-        <p>Tem certeza que deseja <strong>deletar permanentemente</strong> o submenu <strong>"{{ menuToDelete()?.name }}"</strong>?</p>
-        <div class="warning-box">
-          <span class="material-icons">warning</span>
-          <p>Este submenu será <strong>completamente removido</strong> e não voltará para a lista de menus principais.</p>
+        <p>Deseja remover o item <strong>"{{ menuToDelete()?.name }}"</strong> deste submenu?</p>
+        <div class="warning-highlight">
+          <span class="material-icons">info</span>
+          <p>O item deixará de ser exibido na navegação do site.</p>
         </div>
       } @else {
         <p>Tem certeza que deseja excluir o menu <strong>"{{ menuToDelete()?.name }}"</strong>?</p>
         @if (menuToDelete()?.type === 'submenu' && menuToDelete()?.children?.length) {
-          <div class="warning-box">
-            <span class="material-icons">info</span>
-            <p>Este menu possui {{ menuToDelete()?.children?.length }} subitem(ns). Eles também serão excluídos.</p>
+          <div class="warning-highlight danger">
+            <span class="material-icons">report_problem</span>
+            <p>Atenção: Este item possui <strong>{{ menuToDelete()?.children?.length }} subitens</strong> que também serão removidos!</p>
           </div>
         }
       }
-      <p class="warning-text">Esta ação não pode ser desfeita.</p>
     </div>
     
-    <div class="modal-actions">
+    <div class="g-modal-confirm-footer">
       <button type="button" class="btn-cancel" (click)="cancelDelete()">
-        <span class="material-icons">close</span>
         Cancelar
       </button>
-      <button type="button" class="btn-delete" (click)="deleteMenu()">
-        <span class="material-icons">delete_forever</span>
-        Excluir
+      <button type="button" class="btn-confirm danger" (click)="deleteMenu()">
+        Sim, Excluir
       </button>
     </div>
   </div>
 </modal>
+

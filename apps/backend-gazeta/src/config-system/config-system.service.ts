@@ -128,8 +128,8 @@ export class ConfigSystemService {
           randomMode: config.randomMode,
           categories: randomCategories.map(cat => this.formatCategoryBasic(cat)),
           categoryIds: randomCategories.map(cat => cat.id),
-          createdAt: config.createdAt.toISOString(),
-          updatedAt: config.updatedAt.toISOString(),
+          createdAt: config.createdAt ? new Date(config.createdAt).toISOString() : new Date().toISOString(),
+          updatedAt: config.updatedAt ? new Date(config.updatedAt).toISOString() : new Date().toISOString(),
           createdBy: config.createdBy,
         };
       }
@@ -632,8 +632,8 @@ export class ConfigSystemService {
       randomMode: config.randomMode,
       categories: validCategories.map((category) => this.formatCategoryBasic(category)),
       categoryIds: validCategories.map((category) => category.id),
-      createdAt: config.createdAt.toISOString(),
-      updatedAt: config.updatedAt.toISOString(),
+      createdAt: config.createdAt ? new Date(config.createdAt).toISOString() : new Date().toISOString(),
+      updatedAt: config.updatedAt ? new Date(config.updatedAt).toISOString() : new Date().toISOString(),
       createdBy: config.createdBy,
     };
   }
@@ -658,8 +658,8 @@ export class ConfigSystemService {
       order: section.order,
       showTitle: section.showTitle,
       icon: section.icon,
-      createdAt: section.createdAt.toISOString(),
-      updatedAt: section.updatedAt.toISOString(),
+      createdAt: section.createdAt ? new Date(section.createdAt).toISOString() : new Date().toISOString(),
+      updatedAt: section.updatedAt ? new Date(section.updatedAt).toISOString() : new Date().toISOString(),
       createdBy: section.createdBy,
     };
   }

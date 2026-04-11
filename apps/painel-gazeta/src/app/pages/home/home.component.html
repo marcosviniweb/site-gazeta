@@ -1,7 +1,7 @@
-<lib-sidebar class="desktop" [type]="'static'" [opened]="true" [menuItems]="menuItems">
+<lib-sidebar class="desktop" [type]="'static'" [opened]="true" [menuItems]="menuItems" [adminMode]="true">
     <button auth class="auth_button" (click)="logout()" >sair</button>
   </lib-sidebar>
-  <lib-sidebar class="mobile" [type]="'overlay'"  #mobileSidebar [opened]="false" [menuItems]="menuItems">
+  <lib-sidebar class="mobile" [type]="'overlay'"  #mobileSidebar [opened]="false" [menuItems]="menuItems" [adminMode]="true">
     <button auth class="auth_button" (click)="logout()" >sair</button>
   </lib-sidebar>
   <div class="content">

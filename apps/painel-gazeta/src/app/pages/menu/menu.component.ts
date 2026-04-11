@@ -70,7 +70,7 @@ export class MenuComponent implements OnInit {
     });
   }
 
-  handleSave(menu: Menu): void {
+  handleSave(): void {
     this.loadMenus();
     this.state.update(state => ({
       ...state,
@@ -85,7 +85,7 @@ export class MenuComponent implements OnInit {
     }));
   }
 
-  handleDelete(menuId: number): void {
+  handleDelete(): void {
     // Recarregar do backend após deletar para garantir consistência
     // (especialmente se for um submenu com children)
     this.loadMenus();

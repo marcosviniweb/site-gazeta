@@ -66,6 +66,9 @@ model News {
   contentMedia        NewsContentMedia[]
 
   @@index([authorId], map: "news_author_id_fkey")
+  @@index([status, published, createdAt])
+  @@index([isEmphasis, status])
+  @@index([slug])
   @@map("news")
 }
 

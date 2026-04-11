@@ -1,0 +1,36 @@
+// ─── List Info Bar ───────────────────────────────────
+// Barra de informações e resumo acima das listagens.
+
+@mixin list-info-container {
+  background: white;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+  border-radius: var(--radius);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+@mixin list-info-text {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  
+  .value {
+    color: var(--accent-blue);
+    font-weight: 700;
+    margin-left: 0.5rem;
+  }
+}
+
+// ─── Classes Globais ─────────────────────────────────
+.g-list-info {
+  @include list-info-container;
+  
+  .total-count, .pagination-summary {
+    @include list-info-text;
+  }
+}

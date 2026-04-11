@@ -39,26 +39,27 @@
     </section>
   }
 
-  @defer (on viewport(latestPh)) {
-    <section class="home-block" appScrollReveal="left">
-      <lib-latest-news></lib-latest-news>
-    </section>
-  } @placeholder {
-    <div #latestPh class="loading-container loading-container--latest"></div>
-  }
-
-  @if (centerAd()['200x200']) {
-    <section class="home-block" appScrollReveal="right">
-      <lib-ads [announcements]="centerAd()['200x200']"></lib-ads>
-    </section>
-  }
-
   @defer (on viewport(videoPh)) {
     <section class="home-block" appScrollReveal="right">
       <lib-video-manager></lib-video-manager>
     </section>
   } @placeholder {
     <div #videoPh class="loading-container loading-container--video"></div>
+  }
+
+ 
+  @if (centerAd()['200x200']) {
+    <section class="home-block" appScrollReveal="right">
+      <lib-ads [announcements]="centerAd()['200x200']"></lib-ads>
+    </section>
+  }
+
+  @defer (on viewport(latestPh)) {
+    <section class="home-block" appScrollReveal="left">
+      <lib-latest-news></lib-latest-news>
+    </section>
+  } @placeholder {
+    <div #latestPh class="loading-container loading-container--latest"></div>
   }
 
   @defer (on viewport(mostViewedPh)) {

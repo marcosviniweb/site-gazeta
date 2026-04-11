@@ -2,12 +2,14 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterModule } from '@angular/router';
 import { Component, input, signal, OnInit, computed, inject, effect } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Category, News } from '@site-gazeta/models';
+import { Category, News, PaginationMeta } from '@site-gazeta/models';
+import { EventEmitter, Output } from '@angular/core';
 import { ApiConfigService, HomeNewsOrchestratorService } from '@site-gazeta/api';
 import { PLATFORM_ID } from '@angular/core';
 
 @Component({
   selector: 'lib-more-news',
+  standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './more-news.component.html',
   styleUrl: './more-news.component.scss',
@@ -35,10 +37,13 @@ export class MoreNewsComponent implements OnInit{
   private readonly platformId = inject(PLATFORM_ID);
   $moreNews = toSignal(this.homeOrchestrator.getFilteredMoreNews(), { initialValue: [] as News[] });
   moreNews = input<News[] | undefined>(undefined);
+  paginationMeta = input<PaginationMeta | null>(null);
   category = input<Category>();
   slice = input<number>(0);
   showNews = signal<number>(0);
   title = input<string>('Mais notícias');
+  
+  @Output() loadMoreRequested = new EventEmitter<void>();
   protected imageLoadingState = signal<Record<number, boolean>>({});
   protected isLoadingNextBatch = signal<boolean>(false);
 
@@ -53,6 +58,13 @@ export class MoreNewsComponent implements OnInit{
   );
 
   protected canLoadMore = computed(() => {
+    // Se temos meta de paginação, usamos para decidir se pode carregar mais do backend
+    const meta = this.paginationMeta();
+    if (meta) {
+      return meta.page < meta.lastPage;
+    }
+
+    // Caso contrário, cai na lógica antiga de slice local
     const total = (this.newsChecked() || []).length;
     return this.slice() > 0 && this.showNews() < total;
   });
@@ -79,7 +91,14 @@ export class MoreNewsComponent implements OnInit{
       this.showNews.set(sliceValue);
     }
   }
-  async showMoreNews(){
+  async showMoreNews() {
+    // Se temos meta de paginação, emitimos o evento para carregar mais do backend
+    if (this.paginationMeta()) {
+      this.loadMoreRequested.emit();
+      return;
+    }
+
+    // Lógica antiga para slice local
     if (this.hasPendingVisibleImages()) {
       return;
     }

@@ -1,10 +1,10 @@
 <div class="video-files-container">
   <!-- Upload de Vídeo -->
   <div class="form-group">
-    <label>
+    <span class="g-label">
       <span class="material-icons">video_library</span>
       Arquivo de Vídeo *
-    </label>
+    </span>
     
     @if (!videoPreviewUrl()) {
       <!-- Área de Drag & Drop -->
@@ -67,10 +67,10 @@
 
   <!-- Upload de Thumbnail (Opcional) -->
   <div class="form-group">
-    <label>
+    <span class="g-label">
       <span class="material-icons">image</span>
       Thumbnail (Opcional)
-    </label>
+    </span>
     
     @if (!thumbnailPreviewUrl() && !isExtractingThumbnail()) {
       <!-- Área de Drag & Drop -->

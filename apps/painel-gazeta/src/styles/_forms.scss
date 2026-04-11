@@ -1,0 +1,226 @@
+@use 'variables' as vars;
+@use 'mixins' as m;
+
+// Design System - Formulários (Global)
+
+// Mixin para Group de formulário (Label + Input + Error)
+@mixin form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+
+  label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--secondary);
+    letter-spacing: -0.01em;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="number"],
+  input[type="url"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background-color: white;
+    color: var(--text-main);
+    transition: all 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 4px rgba(var(--accent-blue-rgb), 0.1);
+    }
+
+    &:disabled {
+      background-color: var(--light);
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    &.ng-invalid.ng-touched {
+      border-color: var(--accent-red);
+      &:focus {
+        box-shadow: 0 0 0 4px rgba(var(--accent-red-rgb), 0.1);
+      }
+    }
+  }
+
+  textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+}
+
+// Classes Utilitárias Globais
+.g-form-group {
+  @include form-group;
+}
+
+.g-form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.g-form-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 0.85rem;
+}
+
+
+
+.g-field-error {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent-red);
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  &::before {
+    content: 'error';
+    font-family: 'Material Icons';
+    font-size: 14px;
+  }
+}
+
+.g-field-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+// Toggle Switch Global
+.g-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+
+  input { display: none; }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 22px;
+    background-color: #d0d5dd;
+    border-radius: 22px;
+    transition: all 0.25s ease;
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      background-color: white;
+      border-radius: 50%;
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  input:checked + .switch {
+    background-color: var(--success);
+    &::after {
+      transform: translateX(22px);
+    }
+  }
+
+  .label {
+    font-weight: 600;
+    color: var(--text-main);
+    font-size: 0.85rem;
+  }
+}
+
+// Rótulo visual para componentes sem ID nativo ou labels de seção
+.g-label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  color: var(--secondary);
+  margin-bottom: 0.4rem;
+  letter-spacing: -0.01em;
+
+  .required {
+    color: var(--accent-red);
+    margin-left: 0.25rem;
+  }
+
+  .material-icons {
+    font-size: 18px;
+    vertical-align: text-bottom;
+    margin-right: 0.25rem;
+  }
+}
+
+// Utilitário para Abas (Força ocultamento sem remover do DOM)
+.g-tab-hidden {
+  display: none !important;
+}
+
+// Texto de Ajuda / Dicas em Formulários
+.g-help-text {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm);
+  line-height: 1.4;
+  border-left: 3px solid transparent;
+  transition: all var(--transition);
+
+  .material-icons {
+    font-size: 18px;
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+
+  &.info {
+    background-color: rgba(10, 128, 196, 0.06);
+    color: #3e5b77;
+    border-left-color: var(--secondary);
+
+    .material-icons {
+      color: var(--secondary);
+    }
+  }
+
+  &.accent {
+    background-color: rgba(235, 50, 55, 0.04);
+    color: #6e3a3a;
+    border-left-color: var(--primary);
+
+    .material-icons {
+      color: var(--primary);
+    }
+  }
+
+  &:hover {
+    filter: brightness(0.98);
+    transform: translateX(2px);
+  }
+
+  &.no-margin { margin-top: 0; }
+  &.shadow-none { box-shadow: none; }
+}
+

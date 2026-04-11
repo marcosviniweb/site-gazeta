@@ -8,6 +8,10 @@ import { Menu } from '@site-gazeta/models';
   imports: [CommonModule, RouterModule],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
+  host: {
+    '[class.is-static]': 'type() === "static"',
+    '[class.sidebar_opened]': 'isOpened_()',
+  }
 })
 export class SidebarComponent implements OnDestroy {
   private readonly renderer = inject(Renderer2);
@@ -19,6 +23,7 @@ export class SidebarComponent implements OnDestroy {
   type = input<'overlay' | 'static'>('overlay');
   opened = model<boolean>(false);
   menuItems = input< Menu[]>([]);
+  adminMode = input<boolean>(false);
   painelItems = input();
 
   isOpened_ = signal<boolean>(false);

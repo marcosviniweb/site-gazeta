@@ -29,8 +29,8 @@ export class MenuFormComponent {
   // Inputs & Outputs
   menuToEdit = input<Menu | null>(null);
   existingMenus = input<Menu[]>([]);
-  onSave = output<Menu>();
-  onCancel = output<void>();
+  saveEvent = output<Menu>();
+  cancelEvent = output<void>();
 
   // Signals
   menuForm!: FormGroup;
@@ -180,18 +180,17 @@ export class MenuFormComponent {
     return this.categories().find(c => c.id === categoryId) || null;
   }
 
-  onCategoriesChange(categories: Category[]): void {
+  onCategoriesChange(categories: unknown[]): void {
     console.log('📦 Categorias recebidas do multi-select:', categories);
     // Validar que todas as categorias têm name e slug
-    const validCategories = categories.filter(cat => {
-      const isValid = cat && cat.name && cat.slug;
+    const validCategories = categories.filter((c: unknown): c is Category => {
+      const isValid = !!(c && (c as Category).name && (c as Category).slug);
       if (!isValid) {
-        console.warn('⚠️ Categoria inválida ignorada:', cat);
+        console.warn('⚠️ Categoria inválida ignorada:', c);
       }
       return isValid;
     });
     this.selectedCategories.set(validCategories);
-    console.log('✅ Categorias validadas:', validCategories);
   }
 
   submitForm(): void {
@@ -244,7 +243,7 @@ export class MenuFormComponent {
 
     const menuToEdit = this.menuToEdit();
     const apiCall = menuToEdit 
-      ? this.menuService.update(menuToEdit.id!, menuData)
+      ? this.menuService.update(menuToEdit?.id ?? 0, menuData)
       : this.menuService.create(menuData);
 
     apiCall.subscribe({
@@ -252,7 +251,7 @@ export class MenuFormComponent {
         this.isLoading.set(false);
         const action = menuToEdit ? 'atualizado' : 'criado';
         this.alertService.success('Sucesso', `Menu ${action} com sucesso!`);
-        this.onSave.emit(menu as Menu);
+        this.saveEvent.emit(menu as Menu);
         this.resetForm();
       },
       error: (err) => {
@@ -309,7 +308,7 @@ export class MenuFormComponent {
         );
         // Emitir o último menu criado (ou poderia emitir todos)
         if (menus.length > 0) {
-          this.onSave.emit(menus[menus.length - 1] as Menu);
+          this.saveEvent.emit(menus[menus.length - 1] as Menu);
         }
         this.resetForm();
       },
@@ -334,9 +333,9 @@ export class MenuFormComponent {
     this.showCategoryDropdown.set(false);
   }
 
-  cancel(): void {
+  onCancel(): void {
     this.resetForm();
-    this.onCancel.emit();
+    this.cancelEvent.emit();
   }
 
   // Getters para validação

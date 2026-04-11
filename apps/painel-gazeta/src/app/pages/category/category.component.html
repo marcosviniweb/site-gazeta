@@ -1,20 +1,35 @@
-<div class="category-container">
-    <div class="category-card">
-        <div class="category-header">
-            <h2>Gerenciar Categorias</h2>
-            <p>Crie e gerencie as categorias de notícias</p>
+<div class="g-page-container">
+  <div class="g-page-card">
+    <!-- Header Padronizado -->
+    <header class="g-page-header">
+      <div class="header-left">
+        <div class="header-text">
+          <h2>Gerenciar Categorias</h2>
+          <p>Crie e gerencie as categorias de notícias</p>
         </div>
-        <div class="category-form-container-wrapper">
-            <div class="category-form-container">
-                <app-category-form 
-                    [editingCategory]="editingCategory()!" 
-                    [usedColors]="usedColors()"
-                    (categorySubmit)="onCategorySubmit($event)"
-                    (cancelEdit)="onCancelEdit()" />
-            </div>
-            <div class="category-list-container">
-                <app-category-list [categories]="categories()" (editCategory)="onEditCategory($event)"
-                    (deleteCategory)="onDeleteCategory($event)" (toggleStatus)="onToggleStatus($event)" />
-            </div>
+      </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <div class="g-page-content no-padding no-scroll">
+      <div class="category-layout">
+        <!-- Formulário Lateral -->
+        <div class="category-form-section">
+          <app-category-form 
+            [editingCategory]="editingCategory()" 
+            [usedColors]="usedColors()"
+            (categorySubmit)="onCategorySubmit($event)"
+            (cancelEdit)="onCancelEdit()" />
         </div>
+
+        <!-- Lista de Categorias (Rolável) -->
+        <div class="category-list-section g-scroll-container">
+          <div class="list-inner-wrapper">
+            <app-category-list [categories]="categories()" (editCategory)="onEditCategory($event)"
+              (deleteCategory)="onDeleteCategory($event)" (toggleStatus)="onToggleStatus($event)" />
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+</div>

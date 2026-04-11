@@ -23,6 +23,7 @@ import { CreateNewsDto } from '../dto/create-news.dto';
 import { UpdateNewsDto } from '../dto/update-news.dto';
 import { NewsResponseDto } from '../dto/news-response.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { BulkToggleEmphasisDto, BulkDeleteDto } from '../dto/bulk-news.dto';
 import { NewsErrorInterceptor } from '../interceptors/news-error.interceptor';
 
 @ApiTags('Notícias - CRUD')
@@ -92,6 +93,36 @@ export class NewsCoreController {
   async remove(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
     await this.newsCoreService.remove(id);
     return { message: 'Notícia excluída com sucesso' };
+  }
+
+  @Patch('bulk/emphasis')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ 
+    summary: 'Atualizar destaque em lote',
+    description: 'Permite definir como destaque ou remover o destaque de múltiplas notícias de uma só vez.'
+  })
+  @ApiResponse({ status: 200, description: 'Destaque das notícias atualizado com sucesso' })
+  @ApiResponse({ status: 401, description: 'Não autorizado' })
+  async bulkUpdateEmphasis(
+    @Body() bulkDto: BulkToggleEmphasisDto
+  ): Promise<{ count: number }> {
+    return await this.newsCoreService.bulkUpdateEmphasis(bulkDto.ids, bulkDto.isEmphasis);
+  }
+
+  @Delete('bulk/delete')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ 
+    summary: 'Exclusão permanente em lote',
+    description: 'Remove permanentemente múltiplas notícias e seus arquivos físicos.'
+  })
+  @ApiResponse({ status: 200, description: 'Notícias excluídas com sucesso' })
+  @ApiResponse({ status: 401, description: 'Não autorizado' })
+  async bulkRemove(
+    @Body() bulkDto: BulkDeleteDto
+  ): Promise<{ count: number }> {
+    return await this.newsCoreService.bulkRemove(bulkDto.ids);
   }
 }
 

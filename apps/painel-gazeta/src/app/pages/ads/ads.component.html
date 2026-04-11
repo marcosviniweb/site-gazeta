@@ -1,21 +1,27 @@
-<div class="ads-container">
-  <div class="ads-card">
-    @if (isEdit()) {
-      <button class="back-btn" [routerLink]="['/adsList']">
-        <span class="material-icons">arrow_back</span>
-        Voltar
-      </button>
-    }
-    
-    <div class="ads-header">
-      <h2>Gerenciar Anúncios</h2>
-      <p>Crie e edite seus anúncios</p>
+<div class="page-container">
+  <div class="page-card">
+    <!-- Header escuro -->
+    <div class="page-header">
+      <div class="header-left">
+        @if (isEdit()) {
+          <a class="back-btn" [routerLink]="['/adsList']">
+            <span class="material-icons">arrow_back</span>
+          </a>
+        }
+        <div class="header-text">
+          <h2>Gerenciar Anúncios</h2>
+          <p>Crie e edite seus anúncios</p>
+        </div>
+      </div>
     </div>
 
-    <app-ads-form 
-      [adToEdit]="adToEdit()"
-      (formSubmitted)="handleSubmit()"
-      (formCancelled)="handleCancel()">
-    </app-ads-form>
+    <!-- Conteúdo -->
+    <div class="page-content">
+      <app-ads-form 
+        [adToEdit]="adToEdit()"
+        (formSubmitted)="handleSubmit()"
+        (formCancelled)="handleCancel()">
+      </app-ads-form>
+    </div>
   </div>
 </div>

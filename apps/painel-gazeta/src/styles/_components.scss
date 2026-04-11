@@ -1,0 +1,51 @@
+// ─── Classes Globais de Componentes ─────────────────
+// Classes CSS prontas para uso direto em templates HTML.
+// Geradas a partir dos partials modulares.
+
+@forward 'page-layout';
+@forward 'data-list';
+@forward 'overlays';
+@forward 'modals';
+@forward 'pagination';
+@forward 'bulk-actions';
+@forward 'filters';
+@forward 'list-info';
+@forward 'forms';
+@forward 'crud-layout';
+
+@use 'mixins' as m;
+
+// ─── Botões ─────────────────────────────────────────
+.btn-primary {
+  @include m.btn-primary;
+}
+
+.btn-secondary {
+  @include m.btn-secondary;
+}
+
+.btn-danger {
+  @include m.btn-danger;
+}
+
+// ─── Badges ─────────────────────────────────────────
+.required-badge {
+  padding: 0.25rem 0.75rem;
+  background: linear-gradient(135deg, var(--accent-red) 0%, #d63031 100%);
+  color: white;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+// ─── Skeleton Loading ───────────────────────────────
+.skeleton-line {
+  @include m.skeleton-line;
+
+  &.skeleton-sm { height: 20px; width: 40%; }
+  &.skeleton-md { height: 44px; width: 100%; }
+  &.skeleton-lg { height: 44px; width: 70%; }
+  &.skeleton-xl { height: 200px; width: 100%; }
+}

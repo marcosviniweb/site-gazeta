@@ -25,7 +25,36 @@ export class NewsCoreService {
   ) {}
 
   /**
+   * Seletor de campos para detalhes (Completo - Com o campo 'content')
+   */
+  private getNewsDetailSelect() {
+    return {
+      id: true,
+      title: true,
+      subtitle: true,
+      content: true,
+      slug: true,
+      status: true,
+      published: true,
+      views: true,
+      author: true,
+      isEmphasis: true,
+      validity: true,
+      createdAt: true,
+      updateAt: true,
+      newsCategories: {
+        include: {
+          category: true
+        }
+      },
+      mediaNews: true,
+      videoNews: true
+    };
+  }
+
+  /**
    * Inclui padrão para queries de notícias
+   * @deprecated Use getNewsDetailSelect para consultas que requerem payload específico
    */
   private getNewsInclude() {
     return {
@@ -43,7 +72,7 @@ export class NewsCoreService {
    * Valida se o slug já existe
    */
   async validateSlug(slug: string, excludeId?: number): Promise<void> {
-    const where: any = { slug };
+    const where: { slug: string; id?: { not: number } } = { slug };
     if (excludeId) {
       where.id = { not: excludeId };
     }
@@ -135,7 +164,7 @@ export class NewsCoreService {
   async findOne(id: number): Promise<NewsResponseDto> {
     const news = await this.prisma.news.findFirst({
       where: { id },
-      include: this.getNewsInclude()
+      select: this.getNewsDetailSelect()
     });
 
     if (!news) {
@@ -151,7 +180,7 @@ export class NewsCoreService {
   async findBySlug(slug: string): Promise<NewsResponseDto> {
     const news = await this.prisma.news.findFirst({
       where: { slug },
-      include: this.getNewsInclude()
+      select: this.getNewsDetailSelect()
     });
 
     if (!news) {
@@ -187,7 +216,7 @@ export class NewsCoreService {
     const { categoryId, mediaNews, videoNews, ...newsData } = updateNewsDto;
 
     // Atualizar a notícia em transação
-    const updatedNews = await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx) => {
       // Atualizar dados da notícia
       await tx.news.update({
         where: { id },
@@ -309,7 +338,7 @@ export class NewsCoreService {
             
             // Extrair timestamp do caminho para deletar pasta depois
             const originalPath = fileSystemPaths.original;
-            const timestampMatch = originalPath.match(/uploads[\\\/](\d{13})/);
+            const timestampMatch = originalPath.match(/uploads[\\/](\d{13})/);
             if (timestampMatch) {
               deletedTimestamps.add(timestampMatch[1]);
             }
@@ -329,15 +358,16 @@ export class NewsCoreService {
             if (files.length === 0) {
               // Pasta vazia, deletar
               try {
-                if (typeof (fs as any).rm === 'function') {
-                  await promisify((fs as any).rm)(timestampDir, { recursive: true, force: true });
+                if (typeof fs.rm === 'function') {
+                  await promisify(fs.rm)(timestampDir, { recursive: true, force: true });
                 } else {
                   await promisify(fs.rmdir)(timestampDir);
                 }
                 this.logger.log(`Pasta vazia deletada: ${timestampDir}`);
-              } catch (rmError: any) {
-                if (rmError.code !== 'ENOTEMPTY' && rmError.code !== 'ENOENT') {
-                  this.logger.warn(`Erro ao deletar pasta ${timestampDir}:`, rmError.message);
+              } catch (rmError: unknown) {
+                const error = rmError as { code?: string; message?: string };
+                if (error.code !== 'ENOTEMPTY' && error.code !== 'ENOENT') {
+                  this.logger.warn(`Erro ao deletar pasta ${timestampDir}:`, error.message);
                 }
               }
             }
@@ -357,6 +387,36 @@ export class NewsCoreService {
     // Limpar ContentMedia órfãos após deletar notícia
     // (arquivos que não estão mais referenciados por nenhuma notícia)
     await this.contentMediaService.cleanupOrphanedContentMedia();
+  }
+
+  /**
+   * Atualiza o destaque de múltiplas notícias (Bulk)
+   */
+  async bulkUpdateEmphasis(ids: number[], isEmphasis: boolean): Promise<{ count: number }> {
+    const result = await this.prisma.news.updateMany({
+      where: {
+        id: { in: ids }
+      },
+      data: { isEmphasis }
+    });
+
+    return { count: result.count };
+  }
+
+  /**
+   * Remove múltiplas notícias permanentemente (Bulk)
+   */
+  async bulkRemove(ids: number[]): Promise<{ count: number }> {
+    let count = 0;
+    for (const id of ids) {
+      try {
+        await this.remove(id);
+        count++;
+      } catch (error) {
+        this.logger.error(`Erro ao remover notícia ${id} em lote:`, error);
+      }
+    }
+    return { count };
   }
 
   /**
@@ -389,7 +449,7 @@ export class NewsCoreService {
       }
       
       return filePath;
-    } catch (error) {
+    } catch {
       // Se não for URL válida, assumir que já é um caminho e tentar decodificar
       try {
         return decodeURIComponent(url.replace(/^\/+/, ''));

@@ -1,8 +1,9 @@
 import { inject, Injectable } from '@angular/core';
-import { Category, News, Video, Menu, Ads,SectionOrderConfig, SectionOrderConfigMap } from '@site-gazeta/models';
+import { Category, News, Video, Menu, Ads,SectionOrderConfig, SectionOrderConfigMap, PaginatedResponse, PaginationParams } from '@site-gazeta/models';
 import {  map, Observable } from 'rxjs';
 import { environment } from '../env/env';
 import { HttpClient } from '@angular/common/http';
+import { toHttpParams } from '@site-gazeta/api';
 @Injectable({
   providedIn: 'root'
 })
@@ -101,8 +102,9 @@ export class ApiService {
     return this.http.get<Video>(`${this.apiUrl}/videos/${id}`);
   }
 
-  getNews(){
-    return this.http.get<News[]>(`${this.apiUrl}/news`);
+  getNews(params?: PaginationParams): Observable<PaginatedResponse<News>> {
+    const httpParams = toHttpParams(params);
+    return this.http.get<PaginatedResponse<News>>(`${this.apiUrl}/news`, { params: httpParams });
   }
 
   getNewsById(id: number){
@@ -137,7 +139,9 @@ export class ApiService {
   }
 
   getNewsBySlug(slug: string): Observable<News | undefined> {
-    return this.http.get<News>(`${this.apiUrl}/news/slug/${slug}`);
+    return this.http.get<News | PaginatedResponse<News>>(`${this.apiUrl}/news/slug/${slug}`).pipe(
+      map(response => 'data' in response ? response.data[0] : response)
+    );
   }
 
   getCategoryBySlug(slug: string): Observable<Category | undefined> {
@@ -145,24 +149,28 @@ export class ApiService {
   }
 
 
-  getNewsByCategory(categoryId: number): Observable<News[]> {
-    return this.http.get<News[]>(`${this.apiUrl}/news`).pipe(
-      map((news) => news.filter((news) => news.categoryId.includes(categoryId)))
-    )
+  getNewsByCategory(categoryId: number, params?: PaginationParams): Observable<PaginatedResponse<News>> {
+    const httpParams = toHttpParams(params);
+    return this.http.get<PaginatedResponse<News>>(`${this.apiUrl}/news/category/${categoryId}`, { params: httpParams });
   }
 
   getRelatedNews(categoryId: number[], newsId: number): Observable<News[]> {
     // Usa o endpoint correto /news/related-news/:id
     // Este endpoint não suporta exclude (notícias relacionadas devem mostrar todas)
-    return this.http.get<News[]>(`${this.apiUrl}/news/related-news/${newsId}`);
+    return this.http.get<News[] | PaginatedResponse<News>>(`${this.apiUrl}/news/related-news/${newsId}`).pipe(
+      map(response => Array.isArray(response) ? response : response.data)
+    );
   }
 
 
 
-  getNewsForCategory(categoryId: number): Observable<News[]> {
-    return this.http.get<News[]>(`${this.apiUrl}/news/category/${categoryId}`);
+  getNewsForCategory(categoryId: number, params?: PaginationParams): Observable<PaginatedResponse<News>> {
+    const httpParams = toHttpParams(params);
+    return this.http.get<PaginatedResponse<News>>(`${this.apiUrl}/news/category/${categoryId}`, { params: httpParams });
   }
-  getBySearch(search: string, limit?: number): Observable<News[]> {
-    return this.http.get<News[]>(`${this.apiUrl}/news/search?search=${search}&limit=${limit}`);
+
+  getBySearch(search: string, limit = 12): Observable<PaginatedResponse<News>> {
+    const params = toHttpParams({ search, limit });
+    return this.http.get<PaginatedResponse<News>>(`${this.apiUrl}/news/search`, { params });
   }
 }

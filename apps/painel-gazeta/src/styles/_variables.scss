@@ -17,14 +17,41 @@
   
   // Dimensões
   --radius: 0.375rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 10px;
+  --radius-xl: 16px;
+  --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 1rem;
   --space-lg: 1.5rem;
   --space-xl: 2rem;
+  --space-2xl: 3rem;
   
   // Animações
   --transition: 0.15s ease-in-out;
   --transition-slow: 0.3s ease-in-out;
+
+  // Sombras
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+  --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.15);
+
+  // Tipografia
+  --font-xs: 0.75rem;
+  --font-sm: 0.825rem;
+  --font-base: 0.9375rem;
+  --font-md: 1rem;
+  --font-lg: 1.125rem;
+  --font-xl: 1.35rem;
+  --font-2xl: 1.875rem;
+
+  // Gradientes
+  --gradient-primary: linear-gradient(135deg, var(--accent-red) 0%, var(--accent-blue) 100%);
+  --gradient-header: linear-gradient(135deg, var(--accent-blue) 0%, #063a5c 60%, #0a2540 100%);
+  --gradient-subtle: linear-gradient(135deg, rgba(235, 50, 55, 0.03) 0%, rgba(10, 128, 196, 0.03) 100%);
 }
 
 // Variáveis SCSS para compatibilidade
@@ -107,6 +134,19 @@ $large: 1200px;
 
 @mixin desktop {
   @media (min-width: #{$desktop}) { @content; }
+}
+
+@mixin text-truncate($lines: 1) {
+  @if $lines == 1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  } @else {
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
 
 // Classes utilitárias

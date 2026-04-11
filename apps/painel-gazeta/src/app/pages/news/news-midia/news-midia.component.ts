@@ -121,7 +121,7 @@ export class NewsMidiaComponent implements OnInit {
     if (files && files.length > 0) {
       const filesArray = Array.from(files);
 
-      filesArray.forEach((file, index) => {
+      filesArray.forEach((file) => {
         const reader = new FileReader();
         reader.onload = (e) => {
           const newMedia: MediaItem = {
@@ -240,7 +240,7 @@ export class NewsMidiaComponent implements OnInit {
   }
 
   // Função para PATCH (API)
-  patchMediaInfo(id:number,media:any) {
+  patchMediaInfo(id: number, media: Partial<MediaItem>) {
     console.log(`Editando mídia com ID: ${id}`, media);
     if(media.imgSize){
       firstValueFrom(this.newsService.updateMedia(id,media))

@@ -20,8 +20,17 @@ import { AdvertisementService } from './advertisement.service';
 import { CreateAdvertisementDto } from './dto/create-advertisement.dto';
 import { UpdateAdvertisementDto } from './dto/update-advertisement.dto';
 import { AdvertisementResponseDto } from './dto/advertisement-response.dto';
-import { AdvertisementQueryDto } from './dto/advertisement-query.dto';
+import { AdsQueryDto } from './dto/ads-query.dto';
+import { AdsPaginatedResponse } from './dto/ads-paginated-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+
+interface UserRequest extends Request {
+  user: {
+    id: number;
+    email: string;
+    role: string;
+  };
+}
 
 @ApiTags('Anúncios')
 @Controller('advertisements')
@@ -59,8 +68,8 @@ export class AdvertisementController {
   @ApiResponse({ status: 401, description: 'Não autorizado' })
   async create(
     @Body() createAdvertisementDto: CreateAdvertisementDto,
-    @UploadedFile() file: any,
-    @Request() req: any,
+    @UploadedFile() file: Express.Multer.File,
+    @Request() req: UserRequest,
   ): Promise<AdvertisementResponseDto> {
     if (!file) {
       throw new BadRequestException('Imagem é obrigatória');
@@ -70,13 +79,13 @@ export class AdvertisementController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Listar todos os anúncios com filtros' })
+  @ApiOperation({ summary: 'Listar todos os anúncios com filtros e paginação' })
   @ApiQuery({ name: 'placement', required: false, enum: ['home', 'news'] })
   @ApiQuery({ name: 'position', required: false, enum: ['top', 'bottom', 'sidebar', 'header', 'footer', 'content', 'lateral'] })
-  @ApiQuery({ name: 'isActive', required: false, type: 'boolean' })
+  @ApiQuery({ name: 'active', required: false, type: 'boolean' })
   @ApiQuery({ name: 'search', required: false, type: 'string' })
-  @ApiResponse({ status: 200, description: 'Lista de anúncios', type: [AdvertisementResponseDto] })
-  async findAll(@Query() query: AdvertisementQueryDto): Promise<AdvertisementResponseDto[]> {
+  @ApiResponse({ status: 200, description: 'Lista paginada de anúncios', type: AdsPaginatedResponse })
+  async findAll(@Query() query: AdsQueryDto): Promise<AdsPaginatedResponse> {
     return this.advertisementService.findAll(query);
   }
 
@@ -138,8 +147,8 @@ export class AdvertisementController {
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateAdvertisementDto: UpdateAdvertisementDto,
-    @UploadedFile() file: any,
-    @Request() req: any,
+    @UploadedFile() file: Express.Multer.File,
+    @Request() req: UserRequest,
   ): Promise<AdvertisementResponseDto> {
     return this.advertisementService.update(id, updateAdvertisementDto, file, req.user.id);
   }
@@ -151,7 +160,7 @@ export class AdvertisementController {
   @ApiResponse({ status: 200, description: 'Anúncio deletado com sucesso' })
   @ApiResponse({ status: 404, description: 'Anúncio não encontrado' })
   @ApiResponse({ status: 401, description: 'Não autorizado' })
-  async remove(@Param('id', ParseIntPipe) id: number, @Request() req: any): Promise<{ message: string }> {
+  async remove(@Param('id', ParseIntPipe) id: number, @Request() req: UserRequest): Promise<{ message: string }> {
     await this.advertisementService.remove(id, req.user.id);
     return { message: 'Anúncio deletado com sucesso' };
   }
@@ -165,8 +174,7 @@ export class AdvertisementController {
   @ApiResponse({ status: 401, description: 'Não autorizado' })
   async toggleActive(
     @Param('id', ParseIntPipe) id: number,
-    @Request() req: any,
   ): Promise<AdvertisementResponseDto> {
-    return this.advertisementService.toggleActive(id, req.user.id);
+    return this.advertisementService.toggleActive(id);
   }
 }

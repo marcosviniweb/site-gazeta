@@ -59,8 +59,8 @@ export class NewsFormatterService {
           }))
         : [],
       published: news.published,
-      createdAt: news.createdAt.toISOString(),
-      updateAt: news.updateAt.toISOString(),
+      createdAt: news.createdAt ? new Date(news.createdAt).toISOString() : new Date().toISOString(),
+      updateAt: news.updateAt ? new Date(news.updateAt).toISOString() : new Date().toISOString(),
       views: news.views,
       status: news.status,
       validity: news.validity,

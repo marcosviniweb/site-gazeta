@@ -1,4 +1,4 @@
-import { Component, inject, signal, input, output, computed } from '@angular/core';
+import { Component, inject, signal, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DragDropModule, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { DragAndDropComponent, DraggableListConfig } from '@site-gazeta/drag-and-drop';
@@ -20,10 +20,10 @@ export class MenuListComponent {
 
   // Inputs & Outputs
   menus = input.required<Menu[]>();
-  onEdit = output<Menu>();
-  onDelete = output<number>();
-  onReorder = output<Menu[]>();
-  onSubmenuClick = output<Menu>();
+  edit = output<Menu>();
+  delete = output<number>();
+  reorder = output<Menu[]>();
+  submenuClick = output<Menu>();
 
   // Signals
   isReordering = signal(false);
@@ -32,12 +32,12 @@ export class MenuListComponent {
 
   // Configuração do Drag and Drop
   config: DraggableListConfig<Menu> = {
-    getItemId: (item: Menu) => item.id!,
-    getItemOrder: (item: Menu) => item.order || 1,
+    getItemId: (item: Menu) => item.id ?? 0,
+    getItemOrder: (item: Menu) => item.order ?? 1,
     isItemExpandable: (item: Menu) => item.type === 'submenu',
     canDropInParent: () => false, // Desabilitado: não permite mais drop em submenus
     onReorder: (items: Menu[]) => this.saveOrder(items),
-    onMoveToParent: () => {}, // Desabilitado
+    onMoveToParent: () => { /* Desabilitado */ },
     onRemoveFromParent: (childId: number | string) => 
       this.removeFromSubmenu(childId as number),
   };
@@ -45,13 +45,13 @@ export class MenuListComponent {
   private saveOrder(menus: Menu[]): void {
     this.isReordering.set(true);
     const orderData = {
-      menus: menus.map(m => ({ id: m.id!, order: m.order || 1 }))
+      menus: menus.map(m => ({ id: m.id ?? 0, order: m.order ?? 1 }))
     };
 
     this.menuService.reorder(orderData).subscribe({
       next: () => {
         this.isReordering.set(false);
-        this.onReorder.emit(menus);
+        this.reorder.emit(menus);
       },
       error: (err) => {
         this.isReordering.set(false);
@@ -65,7 +65,7 @@ export class MenuListComponent {
     this.menuService.moveToSubmenu(menuId, parentId).subscribe({
       next: () => {
         this.isReordering.set(false);
-        this.onReorder.emit([]);
+        this.reorder.emit([]);
       },
       error: (err) => {
         this.isReordering.set(false);
@@ -79,7 +79,7 @@ export class MenuListComponent {
     this.menuService.moveToSubmenu(childId, null).subscribe({
       next: () => {
         this.isReordering.set(false);
-        this.onReorder.emit([]);
+        this.reorder.emit([]);
       },
       error: (err) => {
         this.isReordering.set(false);
@@ -89,7 +89,7 @@ export class MenuListComponent {
   }
 
   editMenu(menu: Menu): void {
-    this.onEdit.emit(menu);
+    this.edit.emit(menu);
   }
 
   confirmDelete(menu: Menu): void {
@@ -114,7 +114,7 @@ export class MenuListComponent {
           : 'Menu deletado com sucesso!';
         
         this.alertService.success('Sucesso', message);
-        this.onDelete.emit(menu.id!);
+        this.delete.emit(menu.id ?? 0);
         this.cancelDelete();
       },
       error: (err) => {
@@ -162,7 +162,7 @@ export class MenuListComponent {
 
   openSubmenuModal(menu: Menu): void {
     if (menu.type === 'submenu') {
-      this.onSubmenuClick.emit(menu);
+      this.submenuClick.emit(menu);
     }
   }
 }

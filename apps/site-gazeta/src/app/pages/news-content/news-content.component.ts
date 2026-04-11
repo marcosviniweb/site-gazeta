@@ -220,8 +220,8 @@ export class NewsContentComponent implements OnInit, OnDestroy {
 
   getMoreNews() {
     this.apiService.getNews()
-      .subscribe((news: News[]) => {
-        const moreNews = news
+      .subscribe((response) => {
+        const moreNews = response.data
         .filter((news) => {return !this.relatedNews().includes(news) && news.id !== this.news()?.id})
         .sort(() => Math.random() - 0.5); // Embaralha a ordem aleatoriamente
         this.moreNews.set(moreNews);

@@ -18,6 +18,8 @@ import {
 import { NewsQueryService } from './news-query.service';
 import { NewsResponseDto } from '../dto/news-response.dto';
 import { NewsQueryDto } from '../dto/news-query.dto';
+import { NewsPaginatedResponseDto } from '../dto/news-paginated-response.dto';
+import { NewsPaginatedResponse } from './news-query.service';
 import { NewsErrorInterceptor } from '../interceptors/news-error.interceptor';
 
 @ApiTags('Notícias - Consultas')
@@ -43,8 +45,12 @@ export class NewsQueryController {
     required: false,
     description: 'Incluir itens do lixo na consulta. Se true, retorna todas as notícias (ACTIVE, INACTIVE, TRASH). Ignorado se status for fornecido.'
   })
-  @ApiResponse({ status: 200, description: 'Lista de notícias', type: [NewsResponseDto] })
-  async findAll(@Query() query: NewsQueryDto): Promise<NewsResponseDto[]> {
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Lista de notícias paginada', 
+    type: NewsPaginatedResponseDto
+  })
+  async findAll(@Query() query: NewsQueryDto): Promise<NewsPaginatedResponse> {
     return await this.newsQueryService.findAll(query);
   }
 
@@ -55,12 +61,16 @@ export class NewsQueryController {
   })
   @ApiQuery({ name: 'search', type: 'string', required: true, example: 'tecnologia' })
   @ApiQuery({ name: 'limit', type: 'number', required: false, example: 20 })
-  @ApiResponse({ status: 200, description: 'Lista de notícias encontradas', type: [NewsResponseDto] })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Lista de notícias encontradas com paginação', 
+    type: NewsPaginatedResponseDto
+  })
   @ApiResponse({ status: 400, description: 'Termo de busca inválido' })
   async search(
     @Query('search') search: string,
-    @Query('limit') limit?: number
-  ): Promise<NewsResponseDto[]> {
+    @Query() query: NewsQueryDto
+  ): Promise<NewsPaginatedResponse> {
     if (!search || search.trim().length < 2) {
       throw new HttpException(
         {
@@ -72,8 +82,7 @@ export class NewsQueryController {
       );
     }
 
-    const limitNumber = limit ? parseInt(limit.toString(), 10) : 50;
-    return await this.newsQueryService.search(search, limitNumber);
+    return await this.newsQueryService.search({ ...query, search });
   }
 
   @Get('featured')

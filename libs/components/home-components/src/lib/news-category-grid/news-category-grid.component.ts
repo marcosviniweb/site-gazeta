@@ -4,6 +4,7 @@ import { News, Category } from '@site-gazeta/models';
 import { RouterModule } from '@angular/router';
 import { HomeCategoryGridItem, HomeNewsOrchestratorService } from '@site-gazeta/api';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { tap } from 'rxjs';
 
 @Component({
   selector: 'lib-news-category-grid',
@@ -14,7 +15,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 export class NewsCategoryGridComponent {
   private homeOrchestrator = inject(HomeNewsOrchestratorService);
 
-  $news = toSignal(this.homeOrchestrator.getCategoryGrid(), {
+  $news = toSignal(this.homeOrchestrator.getCategoryGrid().pipe(tap(news => console.log('News Category Grid', news))), {
     initialValue: [] as HomeCategoryGridItem[],
 
   });

@@ -1,7 +1,7 @@
 <div class="midia-content">
   <div class="media-main-container">
-    <div class="form-group featured-image-group">
-      <label for="featuredImage">Imagem de Destaque</label>
+    <div class="g-form-group featured-image-group">
+      <span class="g-label">Imagem de Destaque</span>
       <div class="image-preview-container">
         <div class="image-preview" [class.has-image]="featuredImage()">
           @if (featuredImage(); as featured) {
@@ -18,52 +18,51 @@
     </div>
 
     <div class="secondary-media-controls">
-      <label for="secondaryMedia">Mídias</label>
+      <span class="g-label">Gerenciamento de Mídias</span>
       <div class="media-buttons">
         <button type="button" class="btn-add-photo" (click)="addPhoto()">
           <span class="material-icons">photo_camera</span>
           Adicionar Foto
         </button>
-        <!-- <button type="button" class="btn-add-video" (click)="addVideo()">
-          <span class="material-icons">videocam</span>
-          Adicionar Vídeo
-        </button> -->
       </div>
-      <small>Adicione fotos que serão exibidos no carrossel da notícia. A primeira foto será automaticamente definida como imagem de destaque.</small>
+      <small class="g-field-hint">Adicione fotos que serão exibidos no carrossel da notícia. A primeira foto será automaticamente definida como imagem de destaque.</small>
 
       @if (selectedMediaIndex() !== null) {
-        <div class="media-edit-form">
-          @if (selectedMedia()?.type === 'photo') {
-            <div class="photo-edit-form">
-              <div class="form-group">
-                <label for="mediaAuthor">Autor da Foto</label>
-                <input
-                  type="text"
-                  id="mediaAuthor"
-                  [value]="editingMedia().author || ''"
-                  (input)="updateEditingAuthor($any($event.target).value)"
-                  placeholder="Digite o nome do autor"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="mediaDate">Data da Foto</label>
-                <input
-                  type="date"
-                  id="mediaDate"
-                  [value]="editingMedia().date || ''"
-                  (input)="updateEditingDate($any($event.target).value)"
-                />
-              </div>
+        <div class="media-edit-card">
+          <header>
+            <span class="material-icons">edit</span>
+            <h5>Editar Metadados</h5>
+          </header>
+          
+          <div class="g-form-row">
+            <div class="g-form-group">
+              <label for="mediaAuthor">Autor da Foto</label>
+              <input
+                type="text"
+                id="mediaAuthor"
+                [value]="editingMedia().author || ''"
+                (input)="updateEditingAuthor($any($event.target).value)"
+                placeholder="Nome do autor"
+              />
             </div>
-          }
 
-          <div class="form-actions">
-            <button type="button" class="btn-save" (click)="saveMediaInfo()">
-              Salvar
+            <div class="g-form-group">
+              <label for="mediaDate">Data da Foto</label>
+              <input
+                type="date"
+                id="mediaDate"
+                [value]="editingMedia().date || ''"
+                (input)="updateEditingDate($any($event.target).value)"
+              />
+            </div>
+          </div>
+
+          <div class="edit-actions">
+            <button type="button" class="btn-confirm" (click)="saveMediaInfo()">
+              <span class="material-icons">check</span> Salvar
             </button>
             <button type="button" class="btn-cancel" (click)="cancelMediaEdit()">
-              Cancelar
+               Cancelar
             </button>
           </div>
         </div>
@@ -78,33 +77,25 @@
         @for (media of previewMidias(); track $index) {
           <div
             class="media-item"
-            [class.photo]="media.type === 'photo'"
-            [class.video]="media.type === 'video'"
             [class.featured]="media.emphasis"
             [class.selected]="selectedMediaIndex() === $index"
             (click)="selectMedia($index)"
-            tabindex="0"
             (keydown.enter)="selectMedia($index)"
+            tabindex="0"
           >
             @if (media.type === 'photo') {
-              <div class="featured-star"
+              <button type="button" class="featured-star"
                    [class.active]="media.emphasis"
                    (click)="toggleFeatured($index, $event)"
-                   tabindex="0"
-                   (keydown.enter)="toggleFeatured($index, $event)">
+                   title="Alternar Destaque">
                 <span class="material-icons">{{ media.emphasis ? 'star' : 'star_border' }}</span>
-              </div>
+              </button>
 
               <div class="photo-preview">
-                @if(media.imgSize){
-                  <img [src]="media.imgSize.medium"
-                       [alt]="'Foto ' + ($index + 1)" />
-                }@else{
-                  <img [src]="media.preview"
-                       [alt]="'Foto ' + ($index + 1)" />
-                }
+                <img [src]="media.imgSize ? media.imgSize.medium : media.preview"
+                     [alt]="'Foto ' + ($index + 1)" />
 
-                <button type="button" class="remove-media-btn top-left" (click)="removeMedia($index, $event)">
+                <button type="button" class="remove-media-btn" (click)="removeMedia($index, $event)" title="Remover">
                   <span class="material-icons">delete</span>
                 </button>
 
@@ -112,13 +103,13 @@
                   @if (media.author) {
                     <div class="info-item">
                       <span class="material-icons">person</span>
-                      <small>{{ media.author }}</small>
+                      <span>{{ media.author }}</span>
                     </div>
                   }
                   @if (media.date) {
                     <div class="info-item">
                       <span class="material-icons">calendar_today</span>
-                      <small>{{ media.date | date:'dd/MM/yyyy' }}</small>
+                      <span>{{ media.date | date:'dd/MM/yyyy' }}</span>
                     </div>
                   }
                 </div>
@@ -161,3 +152,4 @@
     style="display: none;"
   />
 </div>
+

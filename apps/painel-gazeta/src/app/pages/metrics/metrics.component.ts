@@ -140,4 +140,13 @@ export class MetricsComponent implements OnInit {
     ];
     return tooltips[index] || '';
   }
+
+  /**
+   * Retorna o ícone Material Icons correspondente ao KPI
+   */
+  getKpiMaterialIcon(index: number): string {
+    const icons = ['people', 'description', 'visibility', 'schedule'];
+    return icons[index] || 'info';
+  }
 }
+

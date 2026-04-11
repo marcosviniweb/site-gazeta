@@ -113,5 +113,19 @@ export class NewsStatusService {
       where: { id }
     });
   }
+
+  /**
+   * Atualiza o status de múltiplas notícias (Bulk)
+   */
+  async bulkUpdateStatus(ids: number[], status: NewsStatus): Promise<{ count: number }> {
+    const result = await this.prisma.news.updateMany({
+      where: {
+        id: { in: ids }
+      },
+      data: { status }
+    });
+
+    return { count: result.count };
+  }
 }
 

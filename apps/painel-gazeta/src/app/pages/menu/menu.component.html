@@ -1,65 +1,77 @@
-<div class="menu-container">
-  <div class="menu-card">
-    <!-- Header com título -->
-    <div class="page-header">
-      <h1 class="page-title">Gerenciamento de Menu</h1>
-      <p class="page-subtitle">Crie e organize os itens do menu de navegação do site</p>
-    </div>
-
-    <!-- Layout: Lista à esquerda, Formulário à direita -->
-    <div class="menu-layout">
-      <!-- Lista de Menus (Esquerda) -->
-      <div class="menu-list-section">
-        @if (isLoading()) {
-          <div class="loading-state">
-            <span class="material-icons spinning">refresh</span>
-            <p>Carregando menus...</p>
-          </div>
-        } @else {
-          <app-menu-list
-            [menus]="menus()"
-            (onEdit)="handleEdit($event)"
-            (onDelete)="handleDelete($event)"
-            (onReorder)="handleReorder($event)"
-            (onSubmenuClick)="openSubmenuModal($event)">
-          </app-menu-list>
-        }
+<div class="g-page-container">
+  <div class="g-page-card">
+    <!-- Header Padronizado -->
+    <header class="g-page-header">
+      <div class="header-left">
+        <div class="header-text">
+          <h2>Gerenciamento de Menu</h2>
+          <p>Crie e organize os itens do menu de navegação do site</p>
+        </div>
       </div>
+    </header>
 
-      <!-- Formulário (Direita - Menu Lateral) -->
-      <div class="menu-form-section">
-        <app-menu-form
-          [menuToEdit]="state().menuToEdit"
-          [existingMenus]="menus()"
-          (onSave)="handleSave($event)"
-          (onCancel)="handleCancel()">
-        </app-menu-form>
+    <!-- Conteúdo Principal -->
+    <div class="g-page-content no-padding">
+      <div class="menu-crud-layout">
+        <!-- Coluna: Lista de Menus (Agora Rolável) -->
+        <section class="menu-list-column g-scroll-container">
+          @if (isLoading()) {
+            <div class="g-loading-overlay position-relative">
+              <div class="spinner"></div>
+              <p>Carregando estrutura de menus...</p>
+            </div>
+          } @else {
+            <div class="list-inner-wrapper">
+              <app-menu-list
+                [menus]="menus()"
+                (edit)="handleEdit($event)"
+                (delete)="handleDelete()"
+                (reorder)="handleReorder($event)"
+                (submenuClick)="openSubmenuModal($event)">
+              </app-menu-list>
+            </div>
+          }
+        </section>
+
+        <!-- Coluna: Formulário Lateral -->
+        <aside class="menu-form-sidebar">
+          <div class="sidebar-sticky">
+            <app-menu-form
+              [menuToEdit]="state().menuToEdit"
+              [existingMenus]="menus()"
+              (saveEvent)="handleSave()"
+              (cancelEvent)="handleCancel()">
+            </app-menu-form>
+          </div>
+        </aside>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal para Gerenciar Submenu -->
-<modal 
-  [(isOpen)]="isSubmenuModalOpen"
-  (closed)="closeSubmenuModal()">
-  <div class="submenu-modal-content">
-    <div class="submenu-modal-header">
-      <h2>Gerenciar Submenu: {{ selectedSubmenu()?.name }}</h2>
-      <p class="submenu-info">
-        <span class="material-icons">info</span>
-        Adicione itens de menu a este submenu.
-      </p>
-    </div>
+<!-- Modal para Gerenciar Submenu - Padronizado -->
+<modal [(isOpen)]="isSubmenuModalOpen" (closed)="closeSubmenuModal()">
+  <div class="g-modal-form-container">
+    <header class="g-modal-header">
+      <div class="header-icon">
+        <span class="material-icons">account_tree</span>
+      </div>
+      <div class="header-text">
+        <h3>Gerenciar Submenu</h3>
+        <p>Configurando subitens para: <strong>{{ selectedSubmenu()?.name }}</strong></p>
+      </div>
+    </header>
     
-    <div class="submenu-form-wrapper">
-      <app-submenu-form
-        [parentMenu]="selectedSubmenu()!"
-        [existingMenus]="selectedSubmenu()?.children || []"
-        [allMenus]="menus()"
-        (onSave)="handleSubmenuSave()"
-        (onCancel)="closeSubmenuModal()">
-      </app-submenu-form>
+    <div class="g-modal-body">
+      @if (selectedSubmenu()) {
+        <app-submenu-form
+          [parentMenu]="selectedSubmenu()!"
+          [existingMenus]="selectedSubmenu()?.children || []"
+          [allMenus]="menus()"
+          (saveEvent)="handleSubmenuSave()"
+          (cancelEvent)="closeSubmenuModal()">
+        </app-submenu-form>
+      }
     </div>
   </div>
 </modal>

@@ -19,11 +19,12 @@ export class VideoManagerComponent implements OnInit {
 
   ngOnInit(): void {
     this.apiConfigService.getVideos().subscribe({
-      next: (videos) => {
-        this.videos.set(videos);
+      next: (response) => {
+        const videosData = response.data;
+        this.videos.set(videosData);
         // Auto-seleciona o primeiro vídeo se houver
-        if (videos.length > 0 && !this.currentVideo()) {
-          this.currentVideo.set(videos[0]);
+        if (videosData.length > 0 && !this.currentVideo()) {
+          this.currentVideo.set(videosData[0]);
         }
       },
       error: (error) => {

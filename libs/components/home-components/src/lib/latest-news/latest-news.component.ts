@@ -7,6 +7,7 @@ import { Observable } from 'rxjs';
 
 @Component({
   selector: 'lib-latest-news',
+  standalone: true,
   imports: [CommonModule, RouterModule, NgOptimizedImage],
   templateUrl: './latest-news.component.html',
   styleUrl: './latest-news.component.scss',

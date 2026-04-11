@@ -77,10 +77,10 @@ export class MediaCleanupComponent implements OnInit, OnDestroy {
     // Carrega notícias e categorias em paralelo
     this.categoryService.getAll().pipe(takeUntil(this.destroy$)).subscribe(cats => this.categories.set(cats));
     
-    this.newsService.getAll({ includeTrash: true })
+    this.newsService.getAll({ includeTrash: true, limit: 1000 })
       .pipe(takeUntil(this.destroy$), finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (news) => this.allNews.set(news as News[]),
+        next: (response) => this.allNews.set(response.data),
         error: () => this.alertService.error('Erro', 'Falha ao carregar notícias.')
       });
   }

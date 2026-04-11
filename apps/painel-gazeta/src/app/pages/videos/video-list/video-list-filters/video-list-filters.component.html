@@ -1,10 +1,9 @@
-<div class="video-list-filters">
+<div class="g-filters-container">
   <div class="filter-group">
     <label for="filter-date">Data de criação</label>
     <input 
       id="filter-date" 
       type="date" 
-      class="filter-input" 
       [value]="filterDate()" 
       (input)="onDateChange($any($event.target).value)" 
     />
@@ -14,7 +13,6 @@
     <label for="filter-order">Ordem</label>
     <select 
       id="filter-order" 
-      class="filter-input" 
       [value]="filterOrder() ?? ''" 
       (change)="onOrderChange($any($event.target).value)">
       <option value="">Todos</option>
@@ -27,7 +25,6 @@
     <label for="filter-views">Visualizações</label>
     <select 
       id="filter-views" 
-      class="filter-input" 
       [value]="filterViews()" 
       (change)="onViewsChange($any($event.target).value)">
       <option value="">Todos</option>
@@ -40,7 +37,6 @@
     <label for="filter-category">Categoria</label>
     <select 
       id="filter-category" 
-      class="filter-input" 
       [value]="filterCategory() ?? ''" 
       (change)="onCategoryChange($any($event.target).value)">
       <option value="">Todos</option>
@@ -54,7 +50,6 @@
     <label for="filter-featured">Destaque</label>
     <select 
       id="filter-featured" 
-      class="filter-input" 
       [value]="filterFeatured() === null ? '' : filterFeatured() ? 'true' : 'false'" 
       (change)="onFeaturedChange($any($event.target).value)">
       <option value="">Todos</option>
@@ -68,11 +63,11 @@
     <input 
       id="filter-search" 
       type="text" 
-      class="filter-input search-input" 
       placeholder="Pesquisar vídeo..." 
       [value]="filterSearch()" 
       (input)="onSearchChange($any($event.target).value)" 
     />
   </div>
 </div>
+
 

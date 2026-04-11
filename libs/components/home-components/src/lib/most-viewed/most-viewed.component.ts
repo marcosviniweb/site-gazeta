@@ -7,6 +7,7 @@ import { ApiConfigService } from '@site-gazeta/api';
 import { toSignal } from '@angular/core/rxjs-interop';
 @Component({
   selector: 'lib-most-viewed',
+  standalone: true,
   imports: [CommonModule, RouterModule, NgOptimizedImage],
   templateUrl: './most-viewed.component.html',
   styleUrl: './most-viewed.component.scss',

@@ -6,6 +6,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'lib-news-highligths',
+  standalone: true,
   imports: [RouterModule, CommonModule],
   templateUrl: './news-highligths.component.html',
   styleUrl: './news-highligths.component.scss',

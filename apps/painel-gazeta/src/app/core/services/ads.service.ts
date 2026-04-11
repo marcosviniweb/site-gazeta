@@ -4,10 +4,25 @@ import { environment } from '../env/env';
 import { Ads } from '@site-gazeta/models';
 import { Observable } from 'rxjs';
 
-interface AdsQueryParams {
-  placement?: string;
+export interface AdsPaginatedResponse {
+  data: Ads[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    lastPage: number;
+  };
+}
+
+export interface AdsQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
   position?: string;
-  isActive?: boolean;
+  placement?: string;
+  active?: boolean | null;
+  date?: string;
+  order?: 'asc' | 'desc';
 }
 
 @Injectable({
@@ -25,21 +40,21 @@ export class AdsService {
   }
 
   /**
-   * Listar todos os anúncios
+   * Listar todos os anúncios (Paginado)
    */
-  getAll(params?: AdsQueryParams): Observable<Ads[]> {
+  getAll(params?: AdsQueryParams): Observable<AdsPaginatedResponse> {
     let httpParams = new HttpParams();
     
     if (params) {
       Object.keys(params).forEach(key => {
-        const value = params[key as keyof AdsQueryParams];
+        const value = (params as Record<string, unknown>)[key];
         if (value !== undefined && value !== null) {
-          httpParams = httpParams.set(key, value.toString());
+          httpParams = httpParams.set(key, String(value));
         }
       });
     }
 
-    return this.http.get<Ads[]>(this.apiUrl, { params: httpParams });
+    return this.http.get<AdsPaginatedResponse>(this.apiUrl, { params: httpParams });
   }
 
   /**

@@ -1,141 +1,220 @@
-<div class="video-list-container">
-  <app-video-list-filters
-    [filterDate]="filterDate()"
-    [filterOrder]="filterOrder()"
-    [filterViews]="filterViews()"
-    [filterCategory]="filterCategory()"
-    [filterSearch]="filterSearch()"
-    [filterFeatured]="filterFeatured()"
-    (filterDateChange)="setFilterDate($event)"
-    (filterOrderChange)="setFilterOrder($event)"
-    (filterViewsChange)="setFilterViews($event)"
-    (filterCategoryChange)="setFilterCategory($event)"
-    (filterSearchChange)="setFilterSearch($event)"
-    (filterFeaturedChange)="setFilterFeatured($event)">
-  </app-video-list-filters>
-
-  <div class="video-list-info">
-    <div class="video-count">
-      <span class="count-label">Total de vídeos:</span>
-      <span class="count-value">{{ filteredVideos().length }}</span>
-    </div>
-  </div>
-
-  <div class="video-list">
-    <div class="video-list-header">
-      <div class="header-cell header-featured"></div>
-      <div class="header-cell header-thumbnail"></div>
-      <div class="header-cell header-content">Conteúdo</div>
-      <div class="header-cell header-meta">Metadados</div>
-      <div class="header-cell header-actions">Ações</div>
-    </div>
-    
-    @for(video of filteredVideos(); track video.id){
-      <div class="video-row" [class.playing]="isPlaying(video.id)">
-        <div class="video-cell video-featured-cell">
-          @if(video.featured) {
-            <span class="featured-star material-icons" title="Vídeo em destaque">star</span>
-          }
+<div class="g-page-container">
+  <div class="g-page-card">
+    <div class="g-page-header">
+      <div class="header-left">
+        <div class="header-text">
+          <h2>Lista de Vídeos</h2>
+          <p>Gerencie todos os vídeos cadastrados</p>
         </div>
-        
-        <div class="video-cell video-thumbnail-cell">
-          <div class="video-thumbnail" (click)="togglePlayVideo(video.id)">
-            @if (!isPlaying(video.id)) {
-              @if (video.thumbnail) {
-                <img [src]="video.thumbnail" [alt]="video.title" />
-              } @else {
-                <div class="no-thumbnail">
-                  <span class="material-icons">video_library</span>
-                </div>
-              }
-              <div class="play-overlay">
-                <span class="material-icons">play_circle_filled</span>
-              </div>
-              @if (video.duration) {
-                <div class="duration-badge">{{ formatDuration(video.duration) }}</div>
-              }
-            } @else {
-              <video [src]="video.url" controls autoplay></video>
-            }
+      </div>
+      <div class="header-actions">
+        <a class="btn-primary" [routerLink]="['/videos']">
+          <span class="material-icons">add</span>
+          Criar Vídeo
+        </a>
+      </div>
+    </div>
+
+    <div class="g-page-content">
+      <!-- Barra de Carregamento e Progresso -->
+      @if (isProcessing()) {
+        <div class="g-processing-overlay">
+          <div class="g-progress-container">
+            <p>Processando {{ processingProgress().current }} de {{ processingProgress().total }} vídeos...</p>
+            <div class="g-progress-bar">
+              <div class="fill" [style.width.%]="(processingProgress().current / processingProgress().total) * 100"></div>
+            </div>
           </div>
         </div>
-        
-        <div class="video-cell video-content-cell">
-          <div class="video-title-wrapper">
-            <h3 class="video-title">{{video.title}}</h3>
-          </div>
-          @if (video.description) {
-            <p class="video-description">{{video.description}}</p>
-          }
+      }
+
+      @if (isLoading()) {
+        <div class="g-loading-overlay">
+          <div class="spinner"></div>
         </div>
-        
-        <div class="video-cell video-meta-cell">
-          <div class="video-meta">
-            @if (video.createdAt) {
-              <span class="video-date">{{video.createdAt | date:'dd/MM/yyyy - HH:mm'}}</span>
-            }
-            @if (video.categories && video.categories.length > 0) {
-              <span class="video-categories">
-                @for (category of video.categories; track category.id) {
-                  <span class="category-chip">{{category.name}}</span>
+      }
+
+      <app-video-list-filters
+        [filterDate]="filterDate()"
+        [filterOrder]="filterOrder()"
+        [filterViews]="filterViews()"
+        [filterCategory]="filterCategory()"
+        [filterSearch]="filterSearch()"
+        [filterFeatured]="filterFeatured()"
+        (filterDateChange)="setFilterDate($event)"
+        (filterOrderChange)="setFilterOrder($event)"
+        (filterViewsChange)="setFilterViews($event)"
+        (filterCategoryChange)="setFilterCategory($event)"
+        (filterSearchChange)="setFilterSearch($event)"
+        (filterFeaturedChange)="setFilterFeatured($event)">
+      </app-video-list-filters>
+
+      <!-- Ações em Massa -->
+      <div class="g-bulk-actions" [class.active]="selectedIds().size > 0">
+        <div class="selection-info">
+          <span class="count">{{ selectedIds().size }}</span> selecionados
+        </div>
+        <div class="actions-group">
+          <button (click)="bulkToggleFeatured(true)" title="Destacar selecionados">
+            <span class="material-icons">star</span>
+          </button>
+          <button (click)="bulkToggleFeatured(false)" title="Remover destaque">
+            <span class="material-icons">star_outline</span>
+          </button>
+          <button class="danger" (click)="bulkDelete()" title="Excluir selecionados">
+            <span class="material-icons">delete_forever</span>
+          </button>
+          <button class="btn-clear" (click)="clearSelection()" title="Limpar seleção">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="g-list-info">
+        <div class="total-count">
+          <span class="label">Total encontrado:</span>
+          <span class="value">{{ totalItems() }}</span>
+        </div>
+        <div class="total-count">
+          <span class="label">Destaques ativos:</span>
+          <span class="value">{{ totalFeatured() }}</span>
+        </div>
+        <div class="pagination-summary">
+          Página {{ currentPage() }} de {{ lastPage() }}
+        </div>
+      </div>
+
+      <div class="g-data-list">
+        <div class="video-list-header">
+          <div class="header-cell header-select">
+            <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll($event)" />
+          </div>
+          <div class="header-cell header-featured"></div>
+          <div class="header-cell header-image">Vídeo</div>
+          <div class="header-cell header-content">Conteúdo</div>
+          <div class="header-cell header-meta">Metadados</div>
+          <div class="header-cell header-actions">Ações</div>
+        </div>
+
+        @for(video of videos(); track video.id){
+          <div class="video-row" [class.playing]="isPlaying(video.id)" [class.selected]="isSelected(video.id)">
+            <div class="g-data-cell g-cell-select">
+              <input type="checkbox" [checked]="isSelected(video.id)" (change)="toggleSelection(video.id)" />
+            </div>
+
+            <div class="g-data-cell video-featured-cell">
+              @if(video.featured) {
+                <span class="emphasis-star material-icons" title="Vídeo em destaque">star</span>
+              }
+            </div>
+
+            <div class="g-data-cell g-cell-image">
+              <div 
+                class="video-thumbnail-container" 
+                (click)="togglePlayVideo(video.id)"
+                (keydown.enter)="togglePlayVideo(video.id)"
+                (keydown.space)="togglePlayVideo(video.id)"
+                tabindex="0"
+                role="button">
+                @if (!isPlaying(video.id)) {
+                  @if (video.thumbnail) {
+                    <img [src]="video.thumbnail" [alt]="video.title" />
+                  } @else {
+                    <div class="no-image">
+                      <span class="material-icons">video_library</span>
+                    </div>
+                  }
+                  <div class="play-overlay">
+                    <span class="material-icons">play_circle_filled</span>
+                  </div>
+                  @if (video.duration) {
+                    <div class="duration-badge">{{ formatDuration(video.duration) }}</div>
+                  }
+                } @else {
+                  <video [src]="video.url" controls autoplay></video>
                 }
-              </span>
-            }
-            @if (video.duration) {
-              <span class="video-duration">
-                <span class="material-icons">schedule</span>
-                {{ formatDuration(video.duration) }}
-              </span>
-            }
-            <span class="video-views">{{video.views || 0}} visualizações</span>
+              </div>
+            </div>
+
+            <div class="g-data-cell g-cell-content">
+              <h4 class="title">{{video.title}}</h4>
+              @if (video.description) {
+                <p class="subtitle">{{video.description}}</p>
+              }
+            </div>
+
+            <div class="g-data-cell video-meta-cell">
+              <div class="video-meta">
+                @if (video.createdAt) {
+                  <span class="date">{{video.createdAt | date:'dd/MM/yyyy - HH:mm'}}</span>
+                }
+                @if (video.categories && video.categories.length > 0) {
+                  <div class="categories-inline">
+                    @for (category of video.categories; track category.id) {
+                      <span class="chip">{{category.name}}</span>
+                    }
+                  </div>
+                }
+                <span class="views"><b>Acessos:</b> {{video.views || 0}}</span>
+              </div>
+            </div>
+
+            <div class="g-data-cell g-cell-actions">
+              <button class="btn-action" (click)="editVideo(video)" title="Configurações">
+                <span class="material-icons">settings</span>
+              </button>
+              <button class="btn-action btn-delete" (click)="confirmDelete(video)" title="Excluir">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
           </div>
-        </div>
-        
-        <div class="video-cell video-actions-cell">
-          <div class="video-actions">
-            <button class="btn-action btn-edit" (click)="editVideo(video)" [attr.aria-label]="'Editar vídeo'" title="Editar">
-              <span class="material-icons">settings</span>
-            </button>
-            <button class="btn-action btn-delete" (click)="confirmDelete(video)" [attr.aria-label]="'Excluir vídeo'" title="Excluir">
-              <span class="material-icons">delete</span>
-            </button>
+        } @empty {
+          <div class="video-empty">
+            <p>{{ isLoading() ? 'Carregando vídeos...' : 'Nenhum vídeo encontrado.' }}</p>
           </div>
+        }
+      </div>
+
+      <!-- Paginação -->
+      <div class="g-pagination">
+        <button class="btn-prev" [disabled]="currentPage() === 1" (click)="prevPage()">
+          <span class="material-icons">chevron_left</span> Anterior
+        </button>
+        <div class="page-info">
+          Página <strong>{{ currentPage() }}</strong> de {{ lastPage() }}
         </div>
+        <button class="btn-next" [disabled]="currentPage() >= lastPage()" (click)="nextPage()">
+          Próxima <span class="material-icons">chevron_right</span>
+        </button>
       </div>
-    } @empty {
-      <div class="video-empty-state">
-        <span class="material-icons empty-icon">video_library</span>
-        <h3>Nenhum vídeo encontrado</h3>
-        <p>Não há vídeos cadastrados para os filtros atuais ou nesta seção.</p>
-      </div>
-    }
+    </div>
   </div>
 </div>
 
 <!-- Modal de Confirmação de Exclusão -->
 @if (showDeleteConfirm()) {
-  <div class="modal-overlay" (click)="cancelDelete()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <span class="material-icons warning">warning</span>
+  <div class="g-modal-overlay" (click)="cancelDelete()">
+    <div class="g-modal-content g-modal-delete" (click)="$event.stopPropagation()">
+      <div class="g-modal-header">
+        <span class="material-icons">warning</span>
         <h3>Confirmar Exclusão</h3>
       </div>
       
-      <div class="modal-body">
+      <div class="g-modal-body">
         <p>Tem certeza que deseja excluir o vídeo <strong>"{{ videoToDelete()?.title }}"</strong>?</p>
-        <p class="warning-text">Esta ação não pode ser desfeita e o arquivo será permanentemente removido.</p>
+        <p class="warning-text">Esta ação não pode ser desfeita.</p>
       </div>
       
-      <div class="modal-actions">
+      <div class="g-modal-actions">
         <button type="button" class="btn-cancel" (click)="cancelDelete()">
-          <span class="material-icons">close</span>
-          Cancelar
+          <span class="material-icons">close</span> Cancelar
         </button>
-        <button type="button" class="btn-delete" (click)="deleteVideo()">
-          <span class="material-icons">delete_forever</span>
-          Excluir
+        <button type="button" class="btn-confirm" (click)="deleteVideo()">
+          <span class="material-icons">delete_forever</span> Excluir
         </button>
       </div>
     </div>
   </div>
 }
+
+

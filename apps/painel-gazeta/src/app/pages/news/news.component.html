@@ -1,263 +1,302 @@
-<div class="news-container">
-  <div class="news-card">
-    @if (isEdit()) {
-      <button class="back-btn" [routerLink]="['/newsList']">
-        <span class="material-icons">arrow_back</span>
-        Voltar
-      </button>
-    }
-    <div class="news-header">
-      <h2>Gerenciar Notícias</h2>
-      <p>Crie e edite suas notícias</p>
-    </div>
+<div class="g-crud-container">
+  <div class="g-crud-card">
+    <!-- Header Contextual -->
+    <header class="g-crud-header">
+      <div class="header-left">
+        @if (isEdit()) {
+          <a class="back-btn" [routerLink]="['/newsList']">
+            <span class="material-icons">arrow_back</span>
+          </a>
+        }
+        <div class="header-text">
+          <h2>{{ headerTitle() }}</h2>
+          <p>{{ headerSubtitle() }}</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button
+          type="button"
+          class="sidebar-toggle-btn"
+          (click)="toggleSidebar()"
+          [title]="sidebarOpen() ? 'Ocultar painel' : 'Mostrar painel'">
+          <span class="material-icons">
+            {{ sidebarOpen() ? 'keyboard_double_arrow_right' : 'keyboard_double_arrow_left' }}
+          </span>
+        </button>
+      </div>
+    </header>
 
-    <form [formGroup]="form" (ngSubmit)="onSubmit()">
-      <div class="news-content-wrapper">
-        <div class="news-main-content" [class.sidebar-closed]="!sidebarOpen()">
+    <!-- Loading State -->
+    @if (isLoadingEdit()) {
+      <div class="g-loading-overlay">
+        <div class="spinner"></div>
+      </div>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="g-crud-main">
+        <div class="g-crud-body">
+          <!-- Tab Navigation com Badges -->
+          <nav class="g-crud-tabs" role="tablist">
+            <button
+              type="button"
+              class="tab-item"
+              role="tab"
+              [class.active]="activeTab === 'info'"
+              (click)="setActiveTab('info')">
+              <span class="material-icons">edit_note</span>
+              <span class="tab-label">Informações</span>
+              <span class="tab-badge"
+                [class.complete]="infoFieldsStatus().filled === infoFieldsStatus().total"
+                [class.partial]="infoFieldsStatus().filled > 0 && infoFieldsStatus().filled < infoFieldsStatus().total">
+                {{ infoFieldsStatus().filled }}/{{ infoFieldsStatus().total }}
+              </span>
+            </button>
 
-
-          <div class="tab-header">
-            <div class="tab-menu">
-              <button
-                type="button"
-                class="tab-button"
-                [class.active]="activeTab === 'info'"
-                (click)="setActiveTab('info')">
-                Informações
-              </button>
-              <button
-                type="button"
-                class="tab-button"
-                [class.active]="activeTab === 'content'"
-                (click)="setActiveTab('content')">
-                Conteúdo
-              </button>
-              <button
-                type="button"
-                class="tab-button"
-                [class.active]="activeTab === 'media'"
-                (click)="setActiveTab('media')">
-                Mídias
-              </button>
-            </div>
-
-            <div class="sidebar-toggle-container">
-              <button
-                type="button"
-                class="sidebar-toggle-btn"
-                (click)="toggleSidebar()"
-                [title]="sidebarOpen() ? 'Fechar painel' : 'Abrir painel'">
-                <span class="material-icons">
-                  {{ sidebarOpen() ? 'chevron_right' : 'chevron_left' }}
-                </span>
-              </button>
-            </div>
-          </div>
-
-          <div class="tab-content" [class.active]="activeTab === 'info'">
-            <div class="form-group">
-              <label for="categories">Categorias *</label>
-              <div class="category-selector">
-                <div class="selected-categories">
-                  @for (category of selectedCategories(); track category.id) {
-                    <div class="category-tag">
-                      <span>{{ category.name }}</span>
-                      <button type="button" class="remove-category" (click)="removeCategory(category.id!)">
-                        <span class="material-icons">close</span>
-                      </button>
-                    </div>
-                  }
-                  <button
-                    type="button"
-                    class="add-category-btn"
-                    (click)="toggleCategoryDropdown()"
-                    [class.active]="categoryDropdownOpen()">
-                    <span class="material-icons">add</span>
-                    Adicionar Categoria
-                  </button>
-                </div>
-
-                @if (categoryDropdownOpen()) {
-                  <div class="category-dropdown">
-                    @if (getAvailableCategories().length > 0) {
-                      @for (category of getAvailableCategories(); track category.id) {
-                        <div class="category-option"
-                          (click)="selectCategory(category)"
-                          (keyup.enter)="selectCategory(category)"
-                          (keyup.space)="selectCategory(category)"
-                          tabindex="0"
-                          role="button">
-                          <span class="category-name">{{ category.name }}</span>
-                          <small class="category-description">{{ category.description }}</small>
-                        </div>
-                      }
-                    } @else {
-                      <div class="no-categories">
-                        <span>Todas as categorias foram selecionadas</span>
-                      </div>
-                    }
-                  </div>
+            <button
+              type="button"
+              class="tab-item"
+              role="tab"
+              [class.active]="activeTab === 'content'"
+              (click)="setActiveTab('content')">
+              <span class="material-icons">article</span>
+              <span class="tab-label">Conteúdo</span>
+              <span class="tab-badge"
+                [class.complete]="contentFieldStatus().filled === contentFieldStatus().total">
+                @if (contentFieldStatus().filled === 1) {
+                  <span class="material-icons">check</span>
+                } @else {
+                  0/1
                 }
-              </div>
-              @if (selectedCategories().length === 0) {
-                <div class="error-message">
-                  Selecione pelo menos uma categoria
+              </span>
+            </button>
+
+            <button
+              type="button"
+              class="tab-item"
+              role="tab"
+              [class.active]="activeTab === 'media'"
+              (click)="setActiveTab('media')">
+              <span class="material-icons">photo_library</span>
+              <span class="tab-label">Mídias</span>
+              <span class="tab-badge"
+                [class.complete]="mediaFieldStatus().count > 0">
+                {{ mediaFieldStatus().count }}
+              </span>
+            </button>
+          </nav>
+
+          <!-- Tab Content -->
+          <div class="g-crud-content">
+            <div class="g-form-column" [class.g-tab-hidden]="activeTab !== 'info'">
+                <!-- Categorias -->
+                <div class="g-form-group full-width">
+                  <span class="g-label">
+                    <span class="material-icons">category</span> Categorias <span class="required">*</span>
+                  </span>
+                  <lib-multi-select
+                    formControlName="categoryId"
+                    [items]="availableCategories()"
+                    [config]="{ placeholder: 'Selecione as categorias' }"
+                    valueProp="id">
+                  </lib-multi-select>
+                  @if (displayError()?.['categoryId']) {
+                    <div class="g-field-error">{{ displayError()?.['categoryId'] }}</div>
+                  }
                 </div>
-              }
-            </div>
 
-            <div class="form-group">
-              <label for="title">Título *</label>
-              <input
-                type="text"
-                id="title"
-                formControlName="title"
-                placeholder="Digite o título da notícia"
-                (blur)="setSlug()"
-                [class.error]="form.get('title')?.invalid && form.get('title')?.touched">
-                <error-message [errorMessage]="displayError()!['title']"></error-message>
-              </div>
+                <!-- Título -->
+                <div class="g-form-group full-width">
+                  <label for="title">
+                    <span class="material-icons">title</span> Título <span class="required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="title"
+                    formControlName="title"
+                    placeholder="Digite o título da notícia"
+                    (blur)="setSlug()">
+                  <error-message [errorMessage]="displayError()!['title']"></error-message>
+                </div>
 
-              <div class="form-group">
-                <label for="subtitle">Subtítulo *</label>
-                <input
-                  type="text"
-                  id="subtitle"
-                  formControlName="subtitle"
-                  placeholder="Digite o subtítulo da notícia"
-                  [class.error]="form.get('subtitle')?.invalid && form.get('subtitle')?.touched">
+                <!-- Subtítulo -->
+                <div class="g-form-group full-width">
+                  <label for="subtitle">
+                    <span class="material-icons">short_text</span> Subtítulo <span class="required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="subtitle"
+                    formControlName="subtitle"
+                    placeholder="Digite o subtítulo da notícia">
                   <error-message [errorMessage]="displayError()!['subtitle']"></error-message>
                 </div>
 
-                <div class="form-group">
-                  <label for="slug">URL da Notícia*</label>
+                <!-- Slug + Preview -->
+                <div class="g-form-group full-width">
+                  <label for="slug">
+                    <span class="material-icons">link</span> URL da Notícia <span class="required">*</span>
+                  </label>
                   <input
                     type="text"
                     id="slug"
                     formControlName="slug"
-                    placeholder="url-da-noticia"
-                    [class.error]="form.get('slug')?.invalid && form.get('slug')?.touched">
-                    @if(urlDisplay()){
-                      <span class="url-preview"><b>URL:</b> www.site.exemplo.com/<b>{{urlDisplay()}}</b></span>
-                    }
-                    <error-message [errorMessage]="displayError()!['slug']"></error-message>
-                  </div>
-                  <div class="form-group">
-                    <label for="author">Autor *</label>
-                    <input
-                      type="text"
-                      id="author"
-                      formControlName="author"
-                      placeholder="Digite o nome do autor"
-                      [class.error]="form.get('author')?.invalid && form.get('author')?.touched">
-                      <error-message [errorMessage]="displayError()!['author']"></error-message>
+                    placeholder="url-da-noticia">
+                  @if (urlDisplay()) {
+                    <div class="url-preview-pill">
+                      <span class="material-icons language">language</span>
+                      <span>gazetadopara.com/<strong>{{ urlDisplay() }}</strong></span>
                     </div>
-                  </div>
-
-                  <div class="tab-content" [class.active]="activeTab === 'content'">
-                    <div class="form-group">
-                      <label for="content">Conteúdo da Notícia *</label>
-                      <lib-text-editor
-                        (ready)="onReady($event)"
-                        formControlName="content"
-                        [apiUrl]="apiUrl"
-                        [newsId]="newsId || undefined">
-                      </lib-text-editor>
-                      @if (form.get('content')?.invalid && form.get('content')?.touched) {
-                        <div class="error-message">
-                          Conteúdo é obrigatório
-                        </div>
-                      }
-                    </div>
-                  </div>
-
-                  <div class="tab-content" [class.active]="activeTab === 'media'">
-                    <app-news-midia (formValue)="onFormValue($event)"
-                    [newsMedia]="this.exportEditNewsMedia()?.newsMedia"
-                    [newsVideo]="this.exportEditNewsMedia()?.newsVideos"
-                    ></app-news-midia>
-                  </div>
+                  }
+                  <error-message [errorMessage]="displayError()!['slug']"></error-message>
                 </div>
 
-                <div class="news-sidebar" [class.sidebar-hidden]="!sidebarOpen()">
-                  <div class="sidebar-content">
-                    <h3>Configurações</h3>
-
-                    <div class="sidebar-section">
-                      <div class="form-group">
-                        <label for="published">Data e Hora de Publicação *</label>
-                        <input
-                          type="datetime-local"
-                          id="published"
-                          formControlName="published"
-                          [class.error]="form.get('published')?.invalid && form.get('published')?.touched"
-                          (click)="$event.stopPropagation()"
-                          (focus)="$event.stopPropagation()">
-                          <small>Defina quando a notícia será publicada</small>
-                          <error-message [errorMessage]="displayError()!['published']"></error-message>
-                        </div>
-
-                        <div class="toggle-group">
-                          <span class="toggle-label">Notícia Destaque</span>
-                          <div class="toggle-container">
-                            <input
-                              type="checkbox"
-                              id="isEmphasis"
-                              formControlName="isEmphasis"
-                              class="toggle-input">
-                              <label for="isEmphasis" class="toggle-switch">
-                                <span class="toggle-slider"></span>
-                              </label>
-                              <span class="toggle-text">
-                                {{ form.get('isEmphasis')?.value ? 'Sim' : 'Não' }}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div class="form-group">
-                            <label for="validity">Data de Validade</label>
-                            <input
-                              type="date"
-                              id="validity"
-                              formControlName="validity">
-
-                              <small>Até quando a notícia será exibida</small>
-                            </div>
-
-                            <div class="form-group">
-                              <label for="status">Status *</label>
-                              <select
-                                id="status"
-                                formControlName="status"
-                                [class.error]="form.get('status')?.invalid && form.get('status')?.touched">
-                                @for (option of statusOptions; track option) {
-                                  <option [value]="option.value">
-                                    {{ option.label }}
-                                  </option>
-                                }
-                              </select>
-                            </div>
-                          </div>
-
-                          <div class="sidebar-actions">
-                            <button type="submit" class="btn-primary" [disabled]="form.invalid || isUploadingMedia() || isSavingNews()" >
-                            @if (isUploadingMedia()) {
-                              <span class="material-icons spinning">refresh</span>
-                              <span>Enviando mídias... ({{ mediaUploadProgress().current }}/{{ mediaUploadProgress().total }})</span>
-                            } @else if (isSavingNews()) {
-                              <span class="material-icons spinning">refresh</span>
-                              <span>Salvando notícia...</span>
-                            } @else {
-                              {{isEdit() ? 'Atualizar Notícia' : 'Criar Notícia'}}
-                            }
-                          </button>
-                            <button type="button" class="btn-secondary" (click)="onReset()" [disabled]="isUploadingMedia()">
-                              Limpar
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </form>
+                <!-- Autor -->
+                <div class="g-form-group full-width">
+                  <label for="author">
+                    <span class="material-icons">person</span> Autor <span class="required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="author"
+                    formControlName="author"
+                    placeholder="Digite o nome do autor">
+                  <error-message [errorMessage]="displayError()!['author']"></error-message>
                 </div>
+            </div>
+
+            <div class="g-form-group" [class.g-tab-hidden]="activeTab !== 'content'">
+              <div class="g-form-group">
+                <span class="g-label">
+                  <span class="material-icons">edit_note</span> Conteúdo da Notícia <span class="required">*</span>
+                </span>
+                <lib-text-editor
+                  (ready)="onReady($event)"
+                  formControlName="content"
+                  [apiUrl]="apiUrl"
+                  [newsId]="newsId">
+                </lib-text-editor>
+                @if (form.get('content')?.invalid && form.get('content')?.touched) {
+                  <div class="g-field-error">Conteúdo é obrigatório</div>
+                }
               </div>
+            </div>
+
+            <div [class.g-tab-hidden]="activeTab !== 'media'">
+              <app-news-midia
+                (formValue)="onFormValue($event)"
+                [newsMedia]="this.exportEditNewsMedia()?.newsMedia"
+                [newsVideo]="this.exportEditNewsMedia()?.newsVideos">
+              </app-news-midia>
+            </div>
+          </div>
+
+          <!-- Barra de Ações Sticky dentro do body para acompanhar o layout -->
+          <div class="g-crud-footer">
+            <div class="actions-left">
+              <button type="button" class="btn-secondary" (click)="onReset()" [disabled]="isUploadingMedia()">
+                <span class="material-icons">restart_alt</span> Limpar
+              </button>
+            </div>
+
+            <div class="actions-center">
+              @if (isUploadingMedia()) {
+                <div class="g-progress-container mini">
+                  <div class="g-progress-bar">
+                    <div class="fill" [style.width.%]="(mediaUploadProgress().current / mediaUploadProgress().total) * 100"></div>
+                  </div>
+                  <span class="progress-text">Mídias {{ mediaUploadProgress().current }}/{{ mediaUploadProgress().total }}</span>
+                </div>
+              }
+            </div>
+
+            <div class="actions-right">
+              <button
+                type="submit"
+                class="btn-primary"
+                [disabled]="form.invalid || isUploadingMedia() || isSavingNews()">
+                @if (isSavingNews() && !isUploadingMedia()) {
+                  <span class="material-icons spinning">sync</span>
+                  <span>Salvando...</span>
+                } @else if (!isUploadingMedia()) {
+                  <span class="material-icons">{{ isEdit() ? 'save' : 'publish' }}</span>
+                  <span>{{ isEdit() ? 'Atualizar' : 'Publicar' }}</span>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="g-crud-sidebar" [class.active]="sidebarOpen()">
+          <div class="sidebar-header">
+            <span class="material-icons">tune</span> Configurações
+          </div>
+
+          <div class="sidebar-body">
+            <!-- Seção: Publicação -->
+            <div class="sidebar-section">
+              <div class="section-title">
+                <span class="material-icons">schedule</span> Publicação
+              </div>
+              <div class="g-form-group">
+                <label for="published">Data e Hora <span class="required">*</span></label>
+                <input
+                  type="datetime-local"
+                  id="published"
+                  formControlName="published"
+                  (click)="$event.stopPropagation()">
+                <small class="g-field-hint">Defina quando a notícia será publicada</small>
+                <error-message [errorMessage]="displayError()!['published']"></error-message>
+              </div>
+            </div>
+
+            <!-- Seção: Destaque -->
+            <div class="sidebar-section">
+              <div class="section-title">
+                <span class="material-icons">star</span> Destaque
+              </div>
+              <label class="g-toggle">
+                <input type="checkbox" formControlName="isEmphasis">
+                <span class="switch"></span>
+                <span class="label">{{ form.get('isEmphasis')?.value ? 'Ativo' : 'Inativo' }}</span>
+              </label>
+              <small class="g-field-hint">Máximo de 6 destaques simultâneos</small>
+            </div>
+
+            <!-- Seção: Status -->
+            <div class="sidebar-section">
+              <div class="section-title">
+                <span class="material-icons">toggle_on</span> Status
+              </div>
+              <div class="status-options-grid">
+                @for (option of statusOptions; track option.value) {
+                  <button
+                    type="button"
+                    class="status-option-btn"
+                    [class.active]="form.get('status')?.value === option.value"
+                    [attr.data-status]="option.value"
+                    (click)="form.patchValue({ status: option.value })">
+                    <span class="material-icons">
+                      {{ option.value === 'ACTIVE' ? 'check_circle' : 'pause_circle' }}
+                    </span>
+                    {{ option.label }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- Seção: Validade -->
+            <div class="sidebar-section">
+              <div class="section-title">
+                <span class="material-icons">event_available</span> Validade
+              </div>
+              <div class="g-form-group">
+                <input type="date" id="validity" formControlName="validity">
+                <small class="g-field-hint">Até quando a notícia será exibida</small>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </form>
+    }
+  </div>
+</div>

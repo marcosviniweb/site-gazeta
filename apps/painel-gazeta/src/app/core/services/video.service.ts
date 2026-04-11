@@ -1,8 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../env/env';
-import { Video } from '@site-gazeta/models';
+import { Video, PaginatedResponse, PaginationParams } from '@site-gazeta/models';
+import { toHttpParams } from '@site-gazeta/api';
 import { Observable } from 'rxjs';
+
+// Interface local removida
 
 @Injectable({
   providedIn: 'root'
@@ -19,10 +22,11 @@ export class VideoService {
   }
 
   /**
-   * Listar todos os vídeos
+   * Listar todos os vídeos (Paginado / Filtrado)
    */
-  getAll(): Observable<Video[]> {
-    return this.http.get<Video[]>(this.apiUrl);
+  getAll(params?: PaginationParams): Observable<PaginatedResponse<Video>> {
+    const httpParams = toHttpParams(params);
+    return this.http.get<PaginatedResponse<Video>>(this.apiUrl, { params: httpParams });
   }
 
   /**

@@ -1,143 +1,29 @@
-@use '../../../styles/variables' as vars;
+@use '../../../styles/mixins' as m;
 
-.config-container {
-  height: 100%;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--accent-red) 0%, var(--accent-blue) 100%);
-  padding: 1rem 1rem;
+.page-container { @include m.page-container; }
+.page-card { @include m.page-card; }
+.page-header { @include m.page-header; }
+.page-tabs { @include m.page-tabs; }
+.page-content { @include m.page-content; }
+
+.header-text {
+  h2 { font-size: 1.35rem; font-weight: 700; color: white; letter-spacing: -0.02em; }
+  p { font-size: 0.8rem; color: rgba(255, 255, 255, 0.6); margin-top: 0.15rem; }
 }
 
-.config-card {
-  position: relative;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.363);
-  padding: 1rem;
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  animation: slideUp 0.6s ease-out;
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.config-header {
-  text-align: center;
-  margin-bottom: 2rem;
-  
-  h2 { 
-    color: var(--accent-blue); 
-    font-size: 2rem; 
-    font-weight: 700; 
-    margin-bottom: 0.5rem; 
-  }
-  
-  p { 
-    color: var(--text-muted); 
-    font-size: 1rem; 
-    margin: 0; 
-  }
-}
-
-.config-content-wrapper {
-  display: flex;
-  gap: 2rem;
-  height: calc(100% - 120px);
-  transition: all var(--transition-slow);
-}
-
-.config-main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  transition: all var(--transition-slow);
-}
-
-.tab-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  border-bottom: 2px solid var(--border);
-  margin-bottom: 1rem;
-}
-
-.tab-menu {
-  display: flex;
-  flex: 1;
-}
-
-.tab-button {
-  padding: 1rem 2rem;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition);
-  border-bottom: 3px solid transparent;
-  
-  &:hover {
-    color: var(--accent-blue);
-    background: rgba(10, 128, 196, 0.05);
-  }
-  
-  &.active {
-    color: var(--accent-blue);
-    border-bottom-color: var(--accent-blue);
-    background: rgba(10, 128, 196, 0.05);
-  }
-}
-
+// Tab content visibility
 .tab-content {
   display: none;
-  flex: 1;
-  overflow-y: auto;
-  padding: 1rem;
-  
-  &.active {
-    display: block;
-  }
+  &.active { display: block; }
 }
 
-// Responsividade
-@include vars.mobile {
-  .config-container {
-    padding: 1rem;
-  }
-  
-  .config-card {
-    padding: 1.5rem;
-  }
-  
-  .config-content-wrapper {
-    flex-direction: column;
-  }
-  
-  .tab-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
-  }
-  
-  .tab-menu {
-    flex-direction: column;
-  }
-  
-  .tab-button {
-    padding: 0.75rem 1rem;
-    text-align: left;
+@media (max-width: 768px) {
+  .page-container { padding: 0.5rem; }
+  .page-content { padding: 1rem; }
+  .page-header { padding: 1rem 1.25rem; }
+  .page-tabs {
+    padding: 0 1rem;
+    overflow-x: auto;
+    .tab-button { white-space: nowrap; font-size: 0.8rem; padding: 0.75rem 1rem; }
   }
 }
-
-@include vars.tablet {
-  .tab-button {
-    padding: 0.875rem 1.5rem;
-  }
-}
-

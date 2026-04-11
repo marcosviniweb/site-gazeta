@@ -27,6 +27,7 @@ import {
   CreateSocialMediaConfigDto,
 } from './config.model';
 import { HomeData } from './homeData.model';
+import { PaginatedResponse, PaginationMeta, PaginationParams } from './pagination.model';
 export {
   Category,
   News,
@@ -53,4 +54,7 @@ export {
   CreateSectionOrderDto,
   CreateSocialMediaConfigDto,
   HomeData,
+  PaginatedResponse,
+  PaginationMeta,
+  PaginationParams,
 };

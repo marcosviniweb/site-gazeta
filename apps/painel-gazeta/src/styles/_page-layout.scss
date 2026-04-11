@@ -1,0 +1,88 @@
+// ─── Page Layout Design System ───────────────────────
+// Contém a estrutura macro das páginas do painel.
+
+@mixin page-container {
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--accent-red) 0%, var(--accent-blue) 100%);
+  padding: 1.25rem;
+  
+  @media (max-width: 768px) {
+    padding: 0.75rem;
+  }
+}
+
+@mixin page-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 20px 50px -12px rgba(0, 0, 0, 0.25);
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.5s ease-out;
+}
+
+@mixin page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 2rem;
+  background: linear-gradient(135deg, var(--accent-blue) 0%, #063a5c 60%, #0a2540 100%);
+  color: white;
+  flex-shrink: 0;
+
+  h1, h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  p {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0.15rem 0 0 0;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 1rem 1.25rem;
+    
+    h1, h2 {
+      font-size: 1.15rem;
+    }
+  }
+}
+
+@mixin page-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  
+  @media (max-width: 768px) {
+    padding: 1.25rem;
+  }
+}
+
+// ─── Classes Globais (Uso Direto no HTML) ────────────
+.g-page-container { @include page-container; }
+.g-page-card      { @include page-card; }
+.g-page-header    { @include page-header; }
+.g-page-content   { @include page-content; }
+
+// Modificadores Utilitários
+.g-page-content.no-scroll {
+  overflow: hidden !important;
+}
+
+.g-page-content.no-padding {
+  padding: 0 !important;
+}

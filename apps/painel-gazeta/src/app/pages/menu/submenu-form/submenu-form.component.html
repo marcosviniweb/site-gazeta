@@ -1,135 +1,147 @@
-<form [formGroup]="menuForm" (ngSubmit)="submitForm($event)" class="submenu-form" novalidate>
-  
-  <!-- Tipo de Menu -->
-  <div class="form-group">
-    <label for="type">Tipo de Submenu</label>
-    <select id="type" formControlName="type" class="form-control">
-      <option value="internal">Página Interna</option>
-      <option value="external">Link Externo</option>
-      <option value="category">Categoria</option>
-    </select>
-    <small class="type-info">
-      <span class="material-icons">info</span>
-      @if (selectedType() === 'internal') {
-        Link para uma página dentro do site
-      } @else if (selectedType() === 'external') {
-        Link para um site externo
-      } @else if (selectedType() === 'category') {
-        Link para notícias de uma ou mais categorias
-      }
-    </small>
-  </div>
-
-  <!-- Nome do Menu (sempre visível exceto para category) -->
-  @if (selectedType() !== 'category') {
-    <div class="form-group">
-      <label for="name">Nome do Menu</label>
-      <input 
-        type="text" 
-        id="name" 
-        formControlName="name"
-        placeholder="Digite o nome do menu"
-        [class.error]="nameControl?.invalid && nameControl?.touched"
-      />
-      @if (nameControl?.invalid && nameControl?.touched) {
-        <small class="error-message">
-          @if (nameControl?.errors?.['required']) {
-            Nome é obrigatório
-          }
-          @if (nameControl?.errors?.['minlength']) {
-            Nome deve ter no mínimo 2 caracteres
-          }
-        </small>
-      }
+<div class="submenu-form-container">
+  <!-- Header Interno Moderno -->
+  <header class="g-section-header">
+    <div class="header-icon">
+      <span class="material-icons">account_tree</span>
     </div>
-  }
+    <div class="header-text">
+      <h4>{{ menuForm.get('id')?.value ? 'Editar Subitem' : 'Novo Subitem' }}</h4>
+      <p>Vincular item ao menu: <strong>{{ parentMenu().name }}</strong></p>
+    </div>
+  </header>
 
-  <!-- Campos específicos para Internal -->
-  @if (selectedType() === 'internal') {
-    <div class="form-group">
-      <label for="routerLink">Rota Interna</label>
-      <select 
-        id="routerLink" 
-        formControlName="routerLink"
-        [class.error]="routerLinkControl?.invalid && routerLinkControl?.touched"
-      >
-        <option value="">Selecione uma rota</option>
-        @for (route of internalRoutes; track route.path) {
-          <option [value]="route.path">{{ route.label }} ({{ route.path }})</option>
-        }
+  <form [formGroup]="menuForm" (ngSubmit)="submitForm($event)" class="form-card" novalidate>
+    
+    <!-- Tipo de Menu -->
+    <div class="g-form-group">
+      <label for="type">Tipo de Submenu <span class="required">*</span></label>
+      <select id="type" formControlName="type">
+        <option value="internal">Página Interna</option>
+        <option value="external">Link Externo</option>
+        <option value="category">Categoria</option>
       </select>
-      @if (routerLinkControl?.invalid && routerLinkControl?.touched) {
-        <small class="error-message">Selecione uma rota interna</small>
-      }
-    </div>
-  }
-
-  <!-- Campos específicos para External Link -->
-  @if (selectedType() === 'external') {
-    <div class="form-group">
-      <label for="externalLink">URL do Link Externo</label>
-      <input 
-        type="url" 
-        id="externalLink" 
-        formControlName="externalLink"
-        placeholder="https://exemplo.com"
-        [class.error]="externalLinkControl?.invalid && externalLinkControl?.touched"
-      />
-      @if (externalLinkControl?.invalid && externalLinkControl?.touched) {
-        <small class="error-message">
-          @if (externalLinkControl?.errors?.['required']) {
-            URL é obrigatória
-          }
-          @if (externalLinkControl?.errors?.['pattern']) {
-            URL inválida (deve começar com http:// ou https://)
-          }
-        </small>
-      }
-    </div>
-  }
-
-  <!-- Campos específicos para Category -->
-  @if (selectedType() === 'category') {
-    <div class="form-group">
-      <label for="categories">Categorias</label>
-      <multi-select
-        id="categories"
-        [items]="categories()"
-        [selectedItems]="selectedCategories()"
-        (selectedItemsChange)="onCategoriesChange($event)"
-      />
-
       
-      @if (selectedCategories().length > 0) {
-        <small class="success-message">
-          <span class="material-icons">check_circle</span>
-          {{ selectedCategories().length }} categoria(s) selecionada(s)
-        </small>
-      } @else if (menuForm.get('type')?.touched) {
-        <small class="error-message">
-          <span class="material-icons">error</span>
-          Selecione pelo menos uma categoria
-        </small>
-      }
+      <div class="g-help-text info shadow-none no-margin">
+        <span class="material-icons">info</span>
+        @if (selectedType() === 'internal') {
+          Link para uma página dentro do site
+        } @else if (selectedType() === 'external') {
+          Link para um site externo
+        } @else if (selectedType() === 'category') {
+          Link para notícias de uma ou mais categorias
+        }
+      </div>
     </div>
-  }
 
-  <!-- Botões de Ação -->
-  <div class="form-actions">
-    <button type="submit" class="btn-primary" [disabled]="isLoading()">
-      @if (isLoading()) {
-        <span class="material-icons spinning">refresh</span>
-        Salvando...
-      } @else {
-        <span class="material-icons">save</span>
-        Criar Menu
+    <!-- Grid de Dados Básicos -->
+    <div class="g-form-row">
+      <!-- Nome do Menu (sempre visível exceto para category) -->
+      @if (selectedType() !== 'category') {
+        <div class="g-form-group">
+          <label for="name">Nome do Menu <span class="required">*</span></label>
+          <input 
+            type="text" 
+            id="name" 
+            formControlName="name"
+            placeholder="Ex: Sub-página, Link Especial..."
+          />
+          @if (nameControl?.invalid && nameControl?.touched) {
+            <div class="g-help-text error shadow-none no-margin">
+              <span class="material-icons">error_outline</span>
+              @if (nameControl?.errors?.['required']) { Nome é obrigatório }
+              @if (nameControl?.errors?.['minlength']) { Mínimo de 2 caracteres }
+            </div>
+          }
+        </div>
       }
-    </button>
-    <button type="button" class="btn-secondary" (click)="cancel()" [disabled]="isLoading()">
-      <span class="material-icons">close</span>
-      Cancelar
-    </button>
-  </div>
 
-</form>
+      <!-- Ordem - Agora integrado ao grid para visual moderno -->
+      <div class="g-form-group">
+        <label for="order">Ordem de Exibição <span class="required">*</span></label>
+        <input type="number" id="order" formControlName="order" min="1" />
+      </div>
+    </div>
 
+    <!-- Campos específicos para Internal -->
+    @if (selectedType() === 'internal') {
+      <div class="g-form-group">
+        <label for="routerLink">Rota Interna <span class="required">*</span></label>
+        <select id="routerLink" formControlName="routerLink">
+          <option value="">Selecione uma rota</option>
+          @for (route of internalRoutes; track route.path) {
+            <option [value]="route.path">{{ route.label }} ({{ route.path }})</option>
+          }
+        </select>
+        @if (routerLinkControl?.invalid && routerLinkControl?.touched) {
+          <div class="g-help-text error shadow-none no-margin">
+            <span class="material-icons">error_outline</span>
+            Selecione uma rota válida
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Campos específicos para External Link -->
+    @if (selectedType() === 'external') {
+      <div class="g-form-group">
+        <label for="externalLink">URL Externa <span class="required">*</span></label>
+        <input 
+          type="url" 
+          id="externalLink" 
+          formControlName="externalLink"
+          placeholder="https://exemplo.com"
+        />
+        @if (externalLinkControl?.invalid && externalLinkControl?.touched) {
+          <div class="g-help-text error shadow-none no-margin">
+            <span class="material-icons">error_outline</span>
+            @if (externalLinkControl?.errors?.['required']) { URL é obrigatória }
+            @if (externalLinkControl?.errors?.['pattern']) { URL inválida (use http:// ou https://) }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Campos específicos para Category -->
+    @if (selectedType() === 'category') {
+      <div class="g-form-group">
+        <label for="categories">Vincular Categorias <span class="required">*</span></label>
+        <lib-multi-select
+          id="categories"
+          [items]="categories()"
+          [selectedItems]="selectedCategories()"
+          (selectedItemsChange)="onCategoriesChange($event)"
+        />
+        
+        @if (selectedCategories().length > 0) {
+          <div class="g-field-info success">
+            <span class="material-icons">check_circle</span>
+            {{ selectedCategories().length }} categoria(s) selecionada(s)
+          </div>
+        } @else if (menuForm.get('type')?.touched) {
+          <div class="g-help-text error shadow-none no-margin">
+            <span class="material-icons">error_outline</span>
+            Selecione ao menos uma categoria
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Botões de Ação -->
+    <div class="form-actions">
+      <div class="g-crud-footer no-padding border-none">
+        <div class="actions-right full-width column-gap">
+          <button type="submit" class="btn-primary full-width" [disabled]="isLoading() || menuForm.invalid">
+            <span class="material-icons spinning" *ngIf="isLoading()">sync</span>
+            <span class="material-icons" *ngIf="!isLoading()">save</span>
+            {{ menuForm.get('id')?.value ? 'Salvar Alterações' : 'Criar Subitem' }}
+          </button>
+          
+          <button type="button" class="btn-secondary full-width" (click)="onCancel()" [disabled]="isLoading()">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </form>
+</div>

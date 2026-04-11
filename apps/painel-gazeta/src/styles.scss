@@ -1,10 +1,75 @@
 @use './styles/variables';
+@use './styles/animations';
+@use './styles/components';
+@use './styles/page-layout';
+@use './styles/data-list';
+@use './styles/overlays';
+@use './styles/modals';
+@use './styles/pagination';
+@use './styles/bulk-actions';
+@use './styles/filters';
+@use './styles/list-info';
 
 /* You can add global styles to this file, and also import other style files */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 @import 'primeicons/primeicons.css';
 @import 'primeflex/primeflex.css';
+
+// ─── Estilização Global de Ícones (Material Icons Rounded) ───
+.material-icons {
+  font-family: 'Material Icons Rounded';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+
+  // Renderização suave
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'liga';
+
+  // Fix para Layout Shift
+  width: 24px;
+  height: 24px;
+  overflow: hidden;
+  vertical-align: middle;
+
+  // Utilitários de ícones
+  &.xs { font-size: 14px; width: 14px; height: 14px; }
+  &.sm { font-size: 18px; width: 18px; height: 18px; }
+  &.md { font-size: 24px; width: 24px; height: 24px; }
+  &.lg { font-size: 32px; width: 32px; height: 32px; }
+  &.xl { font-size: 48px; width: 48px; height: 48px; }
+
+  &.text-muted { color: var(--text-muted); opacity: 0.7; }
+  &.text-primary { color: var(--accent-blue); }
+  &.text-danger { color: var(--danger); }
+  &.text-success { color: var(--success); }
+  &.text-warning { color: var(--warning); }
+  &.text-white { color: white; }
+
+  &.spin { animation: spin 2s linear infinite; }
+}
+
+.material-symbols-outlined {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    overflow: hidden;
+    vertical-align: middle;
+    font-size: 24px;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+}
 html, body{
   display: block;
   height: 100%;
@@ -29,5 +94,27 @@ h1,h2,h3,h4,p,label,span,div,ul,li,ol,a{
   height: 1px;
   background-color: #ddd;
   margin: 1rem 0;
+}
+
+// ─── Utilitários de Scroll ──────────────────────────
+.g-scroll-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 100%;
+  
+  // Custom Scrollbar
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+  }
 }
 

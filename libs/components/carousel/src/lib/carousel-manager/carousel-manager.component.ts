@@ -8,6 +8,7 @@ import { combineLatest, map } from 'rxjs';
 
 @Component({
   selector: 'lib-carousel-manager',
+  standalone: true,
   imports: [CommonModule, CarouselComponent, CarouselSwipeComponent],
   templateUrl: './carousel-manager.component.html',
   styleUrl: './carousel-manager.component.scss',
