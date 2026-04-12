@@ -7,11 +7,12 @@ import { CategoryService } from '../../../core/services/category.service';
 import { VideoFilesComponent } from './video-files/video-files.component';
 import { VideoRelatedNewsComponent } from './video-related-news/video-related-news.component';
 import { AlertService } from '@site-gazeta/alert';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-video-upload',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, VideoFilesComponent, VideoRelatedNewsComponent],
+  imports: [CommonModule, ReactiveFormsModule, VideoFilesComponent, VideoRelatedNewsComponent, MatIconModule],
   templateUrl: './video-upload.component.html',
   styleUrl: './video-upload.component.scss',
 })

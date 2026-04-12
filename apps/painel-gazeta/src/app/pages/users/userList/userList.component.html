@@ -24,14 +24,14 @@
               class="btn-edit" 
               (click)="editUser(user)"
               title="Editar usuário">
-              <i class="fas fa-edit"></i>
+              <mat-icon>edit</mat-icon>
               Editar
             </button>
             <button 
               class="btn-delete" 
               (click)="deleteUser(user.id)"
               title="Excluir usuário">
-              <i class="fas fa-trash"></i>
+              <mat-icon>delete</mat-icon>
               Excluir
             </button>
           </td>
@@ -42,7 +42,7 @@
 
   <div *ngIf="users.length === 0" class="empty-state">
     <div class="empty-icon">
-      <i class="fas fa-users"></i>
+      <mat-icon>group</mat-icon>
     </div>
     <h3>Nenhum usuário encontrado</h3>
     <p>Comece criando seu primeiro usuário</p>

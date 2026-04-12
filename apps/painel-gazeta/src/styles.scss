@@ -1,5 +1,6 @@
 @use './styles/variables';
 @use './styles/animations';
+@use './styles/utilities';
 @use './styles/components';
 @use './styles/page-layout';
 @use './styles/data-list';
@@ -14,9 +15,8 @@
 @import 'primeicons/primeicons.css';
 @import 'primeflex/primeflex.css';
 
-// ─── Estilização Global de Ícones (Material Icons Rounded) ───
-.material-icons {
-  font-family: 'Material Icons Rounded';
+.material-icons, .material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
   font-weight: normal;
   font-style: normal;
   font-size: 24px;
@@ -57,19 +57,6 @@
   &.spin { animation: spin 2s linear infinite; }
 }
 
-.material-symbols-outlined {
-    display: inline-block;
-    width: 24px;
-    height: 24px;
-    line-height: 24px;
-    overflow: hidden;
-    vertical-align: middle;
-    font-size: 24px;
-    white-space: nowrap;
-    word-wrap: normal;
-    direction: ltr;
-    -webkit-font-smoothing: antialiased;
-}
 html, body{
   display: block;
   height: 100%;

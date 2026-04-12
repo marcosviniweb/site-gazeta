@@ -2,12 +2,13 @@ import { Component, inject, signal, effect, input, output, OnDestroy } from '@an
 import { CommonModule } from '@angular/common';
 import { NewsService } from '../../../../core/services/news.service';
 import { News } from '@site-gazeta/models';
+import { MatIconModule } from '@angular/material/icon';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-video-related-news',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './video-related-news.component.html',
   styleUrl: './video-related-news.component.scss',
 })

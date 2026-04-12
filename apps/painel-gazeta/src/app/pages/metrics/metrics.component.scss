@@ -113,7 +113,7 @@
   & > div { flex: 1; min-height: 400px; }
   
   &.scrollable {
-    overflow-x: auto;
+    overflow-x: hidden; // Remover scroll horizontal e forçar ajuste
     padding-bottom: 0.5rem;
   }
 
@@ -147,7 +147,8 @@
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
-    border-color: var(--stat-color);
+    border-color: rgba(var(--stat-color-rgb), 0.5);
+    backdrop-filter: blur(8px); // Efeito Glassmorphism no hover
   }
 
   .stat-header {
@@ -301,9 +302,28 @@
     width: 100%;
     flex: 1;
     min-width: 0;
-    font-size: 0.85rem;
+    font-size: 0.825rem; // Ligeiramente menor para caber mais
     font-weight: 500;
     color: var(--text);
+  }
+}
+
+// ─── Controle de Colunas (Eliminar Scroll) ──────────
+th, td {
+  &.col-title {
+    width: auto;
+    max-width: 300px; // Limite para o título
+    @include vars.mobile { max-width: 150px; }
+  }
+  
+  &.col-views {
+    width: 110px;
+    flex-shrink: 0;
+  }
+  
+  &.col-access {
+    width: 90px;
+    flex-shrink: 0;
   }
 }
 
@@ -317,10 +337,26 @@ p-table {
 
 // ─── Colors p/ Stat Cards ───
 .g-stat-card {
-  &.color-0 { --stat-color: var(--accent-blue); --stat-color-rgb: var(--accent-blue-rgb); }
-  &.color-1 { --stat-color: #10b981; --stat-color-rgb: 16, 185, 129; } // Success Green
-  &.color-2 { --stat-color: #f59e0b; --stat-color-rgb: 245, 158, 11; } // Warning Amber
-  &.color-3 { --stat-color: var(--accent-red); --stat-color-rgb: var(--accent-red-rgb); }
+  &.color-0 { 
+    --stat-color: #0ea5e9; 
+    --stat-color-rgb: 14, 165, 233;
+    background: linear-gradient(135deg, white 0%, rgba(14, 165, 233, 0.05) 100%);
+  }
+  &.color-1 { 
+    --stat-color: #10b981; 
+    --stat-color-rgb: 16, 185, 129; 
+    background: linear-gradient(135deg, white 0%, rgba(16, 185, 129, 0.05) 100%);
+  }
+  &.color-2 { 
+    --stat-color: #f59e0b; 
+    --stat-color-rgb: 245, 158, 11; 
+    background: linear-gradient(135deg, white 0%, rgba(245, 158, 11, 0.05) 100%);
+  }
+  &.color-3 { 
+    --stat-color: #ef4444; 
+    --stat-color-rgb: 239, 68, 68;
+    background: linear-gradient(135deg, white 0%, rgba(239, 68, 68, 0.05) 100%);
+  }
 }
 
 // ─── Helpers ───────────────────────────────────────

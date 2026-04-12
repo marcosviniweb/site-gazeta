@@ -2,13 +2,14 @@ import { tap } from 'rxjs';
 import { Component,  inject, input, output, signal, computed, effect } from '@angular/core';
 
 import { NonNullableFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 import { Category, HexColor, isValidHexColor } from '@site-gazeta/models';
 import { CategoryService } from '../../../core/services/category.service';
 import { ColorPickerComponent } from '@site-gazeta/color-picker';
 
 @Component({
   selector: 'app-category-form',
-  imports: [ReactiveFormsModule, ColorPickerComponent],
+  imports: [ReactiveFormsModule, ColorPickerComponent, MatIconModule],
   templateUrl: './category-form.component.html',
   styleUrl: './category-form.component.scss',
 })

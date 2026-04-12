@@ -9,7 +9,7 @@
       </div>
       <div class="header-actions">
         <a class="btn-primary" [routerLink]="['/videos']">
-          <span class="material-icons">add</span>
+          <mat-icon>add</mat-icon>
           Criar Vídeo
         </a>
       </div>
@@ -56,16 +56,16 @@
         </div>
         <div class="actions-group">
           <button (click)="bulkToggleFeatured(true)" title="Destacar selecionados">
-            <span class="material-icons">star</span>
+            <mat-icon>star</mat-icon>
           </button>
           <button (click)="bulkToggleFeatured(false)" title="Remover destaque">
-            <span class="material-icons">star_outline</span>
+            <mat-icon>star_outline</mat-icon>
           </button>
           <button class="danger" (click)="bulkDelete()" title="Excluir selecionados">
-            <span class="material-icons">delete_forever</span>
+            <mat-icon>delete_forever</mat-icon>
           </button>
           <button class="btn-clear" (click)="clearSelection()" title="Limpar seleção">
-            <span class="material-icons">close</span>
+            <mat-icon>close</mat-icon>
           </button>
         </div>
       </div>
@@ -104,7 +104,7 @@
 
             <div class="g-data-cell video-featured-cell">
               @if(video.featured) {
-                <span class="emphasis-star material-icons" title="Vídeo em destaque">star</span>
+                <mat-icon class="emphasis-star" title="Vídeo em destaque">star</mat-icon>
               }
             </div>
 
@@ -121,11 +121,11 @@
                     <img [src]="video.thumbnail" [alt]="video.title" />
                   } @else {
                     <div class="no-image">
-                      <span class="material-icons">video_library</span>
+                      <mat-icon>video_library</mat-icon>
                     </div>
                   }
                   <div class="play-overlay">
-                    <span class="material-icons">play_circle_filled</span>
+                    <mat-icon>play_circle_filled</mat-icon>
                   </div>
                   @if (video.duration) {
                     <div class="duration-badge">{{ formatDuration(video.duration) }}</div>
@@ -161,10 +161,10 @@
 
             <div class="g-data-cell g-cell-actions">
               <button class="btn-action" (click)="editVideo(video)" title="Configurações">
-                <span class="material-icons">settings</span>
+                <mat-icon>settings</mat-icon>
               </button>
               <button class="btn-action btn-delete" (click)="confirmDelete(video)" title="Excluir">
-                <span class="material-icons">delete</span>
+                <mat-icon>delete</mat-icon>
               </button>
             </div>
           </div>
@@ -178,13 +178,13 @@
       <!-- Paginação -->
       <div class="g-pagination">
         <button class="btn-prev" [disabled]="currentPage() === 1" (click)="prevPage()">
-          <span class="material-icons">chevron_left</span> Anterior
+          <mat-icon>chevron_left</mat-icon> Anterior
         </button>
         <div class="page-info">
           Página <strong>{{ currentPage() }}</strong> de {{ lastPage() }}
         </div>
         <button class="btn-next" [disabled]="currentPage() >= lastPage()" (click)="nextPage()">
-          Próxima <span class="material-icons">chevron_right</span>
+          Próxima <mat-icon>chevron_right</mat-icon>
         </button>
       </div>
     </div>
@@ -196,7 +196,7 @@
   <div class="g-modal-overlay" (click)="cancelDelete()">
     <div class="g-modal-content g-modal-delete" (click)="$event.stopPropagation()">
       <div class="g-modal-header">
-        <span class="material-icons">warning</span>
+        <mat-icon>warning</mat-icon>
         <h3>Confirmar Exclusão</h3>
       </div>
       
@@ -207,10 +207,10 @@
       
       <div class="g-modal-actions">
         <button type="button" class="btn-cancel" (click)="cancelDelete()">
-          <span class="material-icons">close</span> Cancelar
+          <mat-icon>close</mat-icon> Cancelar
         </button>
         <button type="button" class="btn-confirm" (click)="deleteVideo()">
-          <span class="material-icons">delete_forever</span> Excluir
+          <mat-icon>delete_forever</mat-icon> Excluir
         </button>
       </div>
     </div>

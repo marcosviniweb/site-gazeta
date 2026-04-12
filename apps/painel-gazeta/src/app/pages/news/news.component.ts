@@ -18,6 +18,7 @@ import { CategoryService } from '../../core/services/category.service';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { environment } from '../../core/env/env';
 import { AlertService } from '@site-gazeta/alert';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-news',
@@ -28,7 +29,8 @@ import { AlertService } from '@site-gazeta/alert';
     NewsMidiaComponent,
     FormValidatorComponent,
     RouterModule,
-    MultiSelectComponent
+    MultiSelectComponent,
+    MatIconModule
 ],
   providers: [FormValidatorService],
   templateUrl: './news.component.html',

@@ -8,10 +8,11 @@ import { RouterModule } from '@angular/router';
 import { AlertService } from '@site-gazeta/alert';
 import { FormsModule } from '@angular/forms';
 import { NewsListFiltersComponent } from './news-list-filters/news-list-filters.component';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-news-list',
-  imports: [CommonModule, RouterModule, FormsModule, NewsListFiltersComponent],
+  imports: [CommonModule, RouterModule, FormsModule, NewsListFiltersComponent, MatIconModule],
   templateUrl: './news-list.component.html',
   styleUrl: './news-list.component.scss',
 })

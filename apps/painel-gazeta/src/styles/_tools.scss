@@ -1,0 +1,7 @@
+// ─── Tools & Abstracts ───────────────────────────────
+// Este arquivo contém APENAS ferramentas de abstração (variáveis, mixins).
+// É seguro importar este arquivo em qualquer componente via @use.
+// Ele nunca gerará output CSS duplicado por si só.
+
+@forward 'variables';
+@forward 'mixins';

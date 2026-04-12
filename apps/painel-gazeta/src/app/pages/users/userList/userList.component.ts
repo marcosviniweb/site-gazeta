@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AlertService } from '@site-gazeta/alert';
+import { MatIconModule } from '@angular/material/icon';
 
 interface User {
   id: number;
@@ -11,7 +12,7 @@ interface User {
 @Component({
   selector: 'app-user-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './userList.component.html',
   styleUrl: './userList.component.scss'
 })

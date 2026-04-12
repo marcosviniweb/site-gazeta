@@ -10,6 +10,7 @@ import { TimelineModule } from 'primeng/timeline';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ChartModule } from 'primeng/chart';
 import { TooltipModule } from 'primeng/tooltip';
+import { MatIconModule } from '@angular/material/icon';
 import { MetricsService } from './metrics.service';
 import { DateRange, Granularity, KpiMetric, LogEvent, TopNewsItem } from './models';
 import { forkJoin } from 'rxjs';
@@ -30,6 +31,7 @@ import type { ChartData, ChartOptions } from 'chart.js';
     SkeletonModule,
     ChartModule,
     TooltipModule,
+    MatIconModule
   ],
   templateUrl: './metrics.component.html',
   styleUrl: './metrics.component.scss',

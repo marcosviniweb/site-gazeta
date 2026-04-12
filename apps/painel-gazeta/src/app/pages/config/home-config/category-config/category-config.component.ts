@@ -12,6 +12,7 @@ import { CategoryService } from '../../../../core/services/category.service';
 import { ConfigService } from '../../../../core/services/config.service';
 import { Category } from '@site-gazeta/models';
 import { AlertService } from '@site-gazeta/alert';
+import { MatIconModule } from '@angular/material/icon';
 
 export interface CategoryConfig {
   destaquesCategoryIds: number[];
@@ -22,7 +23,8 @@ export interface CategoryConfig {
 
 @Component({
   selector: 'app-category-config',
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule],
   providers: [FormValidatorService],
   templateUrl: './category-config.component.html',
   styleUrl: './category-config.component.scss',

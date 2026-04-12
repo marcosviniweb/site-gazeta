@@ -1,7 +1,7 @@
 <div class="category-config-content">
   <div class="form-section">
     <div class="section-title">
-      <span class="material-icons">category</span>
+      <mat-icon>category</mat-icon>
       <h4>Top Categorias - Destaques</h4>
     </div>
     <p class="section-description">
@@ -29,10 +29,10 @@
       </div>
       <small class="random-mode-description">
         @if (destaquesRandomMode()) {
-          <span class="material-icons">shuffle</span>
+          <mat-icon>shuffle</mat-icon>
           As categorias serão escolhidas aleatoriamente pelo sistema
         } @else {
-          <span class="material-icons">select_all</span>
+          <mat-icon>select_all</mat-icon>
           Selecione manualmente as categorias abaixo
         }
       </small>
@@ -46,13 +46,13 @@
         <div class="selected-categories" [class.disabled]="destaquesRandomMode()">
           @if (destaquesRandomMode()) {
             <div class="random-mode-active">
-              <span class="material-icons">shuffle</span>
+              <mat-icon>shuffle</mat-icon>
               <span>Modo aleatório ativo - As categorias serão escolhidas automaticamente</span>
             </div>
           } @else {
             @if (selectedCategories().length === 0) {
               <div class="empty-state">
-                <span class="material-icons">add_circle_outline</span>
+                <mat-icon>add_circle_outline</mat-icon>
                 <span>Nenhuma categoria selecionada</span>
               </div>
             }
@@ -60,7 +60,7 @@
               <div class="category-tag">
                 <span>{{ category.name }}</span>
                 <button type="button" class="remove-category" (click)="removeCategory(category.id!)">
-                  <span class="material-icons">close</span>
+                  <mat-icon>close</mat-icon>
                 </button>
               </div>
             }
@@ -70,7 +70,7 @@
               (click)="toggleCategoryDropdown()"
               [class.active]="categoryDropdownOpen()"
               [disabled]="selectedCategories().length >= MAX_CATEGORIES">
-              <span class="material-icons">add</span>
+              <mat-icon>add</mat-icon>
               {{ selectedCategories().length >= MAX_CATEGORIES ? 'Limite atingido' : 'Adicionar Categoria' }}
             </button>
           }
@@ -79,7 +79,7 @@
         @if (categoryDropdownOpen()) {
           <div class="category-dropdown">
             <div class="dropdown-search">
-              <span class="material-icons">search</span>
+              <mat-icon>search</mat-icon>
               <input
                 type="text"
                 placeholder="Buscar categoria..."
@@ -107,7 +107,7 @@
               } @else {
                 <div class="no-categories">
                   @if (searchTerm()) {
-                    <span class="material-icons">search_off</span>
+                    <mat-icon>search_off</mat-icon>
                     <span>Nenhuma categoria encontrada para "{{ searchTerm() }}"</span>
                   } @else {
                     <span>Todas as categorias foram selecionadas</span>
@@ -133,10 +133,10 @@
         (click)="saveDestaques()"
         [disabled]="destaquesLoading()">
         @if (destaquesLoading()) {
-          <span class="material-icons spinning">sync</span>
+          <mat-icon class="spinning">sync</mat-icon>
           Salvando...
         } @else {
-          <span class="material-icons">save</span>
+          <mat-icon>save</mat-icon>
           Salvar Destaques
         }
       </button>
@@ -145,7 +145,7 @@
 
   <div class="form-section">
     <div class="section-title">
-      <span class="material-icons">trending_up</span>
+      <mat-icon>trending_up</mat-icon>
       <h4>Top Categorias - Secundárias</h4>
     </div>
     <p class="section-description">
@@ -173,10 +173,10 @@
       </div>
       <small class="random-mode-description">
         @if (topGazetaRandomMode()) {
-          <span class="material-icons">shuffle</span>
+          <mat-icon>shuffle</mat-icon>
           As categorias serão escolhidas aleatoriamente pelo sistema
         } @else {
-          <span class="material-icons">select_all</span>
+          <mat-icon>select_all</mat-icon>
           Selecione manualmente as categorias abaixo
         }
       </small>
@@ -190,13 +190,13 @@
         <div class="selected-categories" [class.disabled]="topGazetaRandomMode()">
           @if (topGazetaRandomMode()) {
             <div class="random-mode-active">
-              <span class="material-icons">shuffle</span>
+              <mat-icon>shuffle</mat-icon>
               <span>Modo aleatório ativo - As categorias serão escolhidas automaticamente</span>
             </div>
           } @else {
             @if (topGazetaCategories().length === 0) {
               <div class="empty-state">
-                <span class="material-icons">add_circle_outline</span>
+                <mat-icon>add_circle_outline</mat-icon>
                 <span>Nenhuma categoria selecionada</span>
               </div>
             }
@@ -204,7 +204,7 @@
               <div class="category-tag">
                 <span>{{ category.name }}</span>
                 <button type="button" class="remove-category" (click)="removeTopGazetaCategory(category.id!)">
-                  <span class="material-icons">close</span>
+                  <mat-icon>close</mat-icon>
                 </button>
               </div>
             }
@@ -214,7 +214,7 @@
               (click)="toggleTopGazetaCategoryDropdown()"
               [class.active]="topGazetaDropdownOpen()"
               [disabled]="topGazetaCategories().length >= MAX_CATEGORIES">
-              <span class="material-icons">add</span>
+              <mat-icon>add</mat-icon>
               {{ topGazetaCategories().length >= MAX_CATEGORIES ? 'Limite atingido' : 'Adicionar Categoria' }}
             </button>
           }
@@ -223,7 +223,7 @@
         @if (topGazetaDropdownOpen() && !topGazetaRandomMode()) {
           <div class="category-dropdown">
             <div class="dropdown-search">
-              <span class="material-icons">search</span>
+              <mat-icon>search</mat-icon>
               <input
                 type="text"
                 placeholder="Buscar categoria..."
@@ -251,7 +251,7 @@
               } @else {
                 <div class="no-categories">
                   @if (topGazetaSearchTerm()) {
-                    <span class="material-icons">search_off</span>
+                    <mat-icon>search_off</mat-icon>
                     <span>Nenhuma categoria encontrada para "{{ topGazetaSearchTerm() }}"</span>
                   } @else {
                     <span>Todas as categorias foram selecionadas</span>
@@ -277,10 +277,10 @@
         (click)="saveTopGazeta()"
         [disabled]="topGazetaLoading()">
         @if (topGazetaLoading()) {
-          <span class="material-icons spinning">sync</span>
+          <mat-icon class="spinning">sync</mat-icon>
           Salvando...
         } @else {
-          <span class="material-icons">save</span>
+          <mat-icon>save</mat-icon>
           Salvar Top Gazeta
         }
       </button>

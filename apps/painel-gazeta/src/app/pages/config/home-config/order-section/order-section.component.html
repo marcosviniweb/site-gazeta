@@ -1,7 +1,7 @@
 <div class="order-section-content">
   <div class="form-section">
     <div class="section-title">
-      <span class="material-icons">reorder</span>
+      <mat-icon>reorder</mat-icon>
       <h4>Ordenação de Seções</h4>
     </div>
     <p class="section-description">
@@ -17,7 +17,7 @@
           </div>
 
           <div class="section-icon">
-            <span class="material-icons" [style.color]="'var(--accent-blue)'">{{ section.icon }}</span>
+            <mat-icon [style.color]="'var(--accent-blue)'">{{ section.icon }}</mat-icon>
           </div>
 
           <div class="section-info">
@@ -54,7 +54,7 @@
               (click)="moveSection(i, 'up')"
               [disabled]="i === 0"
               title="Mover para cima">
-              <span class="material-icons">arrow_upward</span>
+              <mat-icon>arrow_upward</mat-icon>
             </button>
             <button
               type="button"
@@ -62,7 +62,7 @@
               (click)="moveSection(i, 'down')"
               [disabled]="i === getSortedSections().length - 1"
               title="Mover para baixo">
-              <span class="material-icons">arrow_downward</span>
+              <mat-icon>arrow_downward</mat-icon>
             </button>
           </div>
         </div>
@@ -77,10 +77,10 @@
         (click)="saveSections()"
         [disabled]="loading()">
         @if (loading()) {
-          <span class="material-icons spinning">sync</span>
+          <mat-icon class="spinning">sync</mat-icon>
           Salvando...
         } @else {
-          <span class="material-icons">save</span>
+          <mat-icon>save</mat-icon>
           Salvar Ordenação
         }
       </button>

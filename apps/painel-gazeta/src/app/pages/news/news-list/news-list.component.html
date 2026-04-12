@@ -9,7 +9,7 @@
       </div>
       <div class="header-actions">
         <a class="btn-primary" [routerLink]="['/news']">
-          <span class="material-icons">add</span>
+          <mat-icon>add</mat-icon>
           Criar Notícia
         </a>
       </div>
@@ -56,25 +56,25 @@
         </div>
         <div class="actions-group">
           <button (click)="bulkUpdateStatus('ACTIVE')" title="Ativar selecionadas">
-            <span class="material-icons">visibility</span>
+            <mat-icon>visibility</mat-icon>
           </button>
           <button (click)="bulkUpdateStatus('INACTIVE')" title="Desativar selecionadas">
-            <span class="material-icons">visibility_off</span>
+            <mat-icon>visibility_off</mat-icon>
           </button>
           <button (click)="bulkToggleEmphasis(true)" title="Adicionar aos destaques">
-            <span class="material-icons">star</span>
+            <mat-icon>star</mat-icon>
           </button>
           <button (click)="bulkToggleEmphasis(false)" title="Remover dos destaques">
-            <span class="material-icons">star_outline</span>
+            <mat-icon>star_outline</mat-icon>
           </button>
           <button class="danger" (click)="bulkUpdateStatus('TRASH')" title="Mover para lixeira">
-            <span class="material-icons">delete_outline</span>
+            <mat-icon>delete_outline</mat-icon>
           </button>
           <button class="danger" (click)="bulkDelete()" title="Excluir permanentemente">
-            <span class="material-icons">delete_forever</span>
+            <mat-icon>delete_forever</mat-icon>
           </button>
           <button class="btn-clear" (click)="clearSelection()" title="Limpar seleção">
-            <span class="material-icons">close</span>
+            <mat-icon>close</mat-icon>
           </button>
         </div>
       </div>
@@ -113,7 +113,7 @@
 
             <div class="g-data-cell news-featured-cell">
               @if(item.isEmphasis) {
-                <span class="emphasis-star material-icons" title="Notícia em destaque">star</span>
+                <mat-icon class="emphasis-star" title="Notícia em destaque">star</mat-icon>
               }
             </div>
 
@@ -144,13 +144,13 @@
 
             <div class="g-data-cell g-cell-actions">
               <button class="btn-action" (click)="openNewsInSite(item.slug)" title="Ver no site">
-                <span class="material-icons">description</span>
+                <mat-icon>description</mat-icon>
               </button>
               <button class="btn-action" [routerLink]="['/news', item.id]" title="Editar">
-                <span class="material-icons">edit</span>
+                <mat-icon>edit</mat-icon>
               </button>
               <button class="btn-action btn-delete" (click)="toggleSelection(item.id); bulkUpdateStatus('TRASH')" title="Lixeira">
-                <span class="material-icons">delete</span>
+                <mat-icon>delete</mat-icon>
               </button>
             </div>
           </div>
@@ -164,13 +164,13 @@
       <!-- Paginação -->
       <div class="g-pagination">
         <button class="btn-prev" [disabled]="currentPage() === 1" (click)="prevPage()">
-          <span class="material-icons">chevron_left</span> Anterior
+          <mat-icon>chevron_left</mat-icon> Anterior
         </button>
         <div class="page-info">
           Página <strong>{{ currentPage() }}</strong> de {{ lastPage() }}
         </div>
         <button class="btn-next" [disabled]="currentPage() >= lastPage()" (click)="nextPage()">
-          Próxima <span class="material-icons">chevron_right</span>
+          Próxima <mat-icon>chevron_right</mat-icon>
         </button>
       </div>
     </div>

@@ -68,14 +68,14 @@
         type="button" 
         class="btn-secondary"
         (click)="resetForm()">
-        <i class="fas fa-times"></i>
+        <mat-icon>close</mat-icon>
         Limpar
       </button>
       <button 
         type="submit" 
         class="btn-primary"
         [disabled]="userForm.invalid">
-        <i class="fas fa-save"></i>
+        <mat-icon>save</mat-icon>
         {{ editingUser ? 'Atualizar Usuário' : 'Criar Usuário' }}
       </button>
     </div>

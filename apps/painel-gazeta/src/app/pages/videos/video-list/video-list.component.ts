@@ -7,11 +7,12 @@ import { concatMap, debounceTime, distinctUntilChanged, finalize, from, Subject,
 import { Router, RouterModule } from '@angular/router';
 import { VideoListFiltersComponent } from './video-list-filters/video-list-filters.component';
 import { AlertService } from '@site-gazeta/alert';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-video-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, VideoListFiltersComponent],
+  imports: [CommonModule, RouterModule, VideoListFiltersComponent, MatIconModule],
   templateUrl: './video-list.component.html',
   styleUrl: './video-list.component.scss',
 })

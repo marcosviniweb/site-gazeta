@@ -6,6 +6,7 @@ import { CategoryService } from '../../../core/services/category.service';
 import { Category, Menu } from '@site-gazeta/models';
 import { AlertService } from '@site-gazeta/alert';
 import { MultiSelectComponent } from '@site-gazeta/multi-select';
+import { MatIconModule } from '@angular/material/icon';
 type MenuType = 'external' | 'internal' | 'category' | 'submenu';
 
 interface InternalRoute {
@@ -16,7 +17,7 @@ interface InternalRoute {
 @Component({
   selector: 'app-menu-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule , MultiSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule , MultiSelectComponent, MatIconModule],
   templateUrl: './menu-form.component.html',
   styleUrl: './menu-form.component.scss',
 })

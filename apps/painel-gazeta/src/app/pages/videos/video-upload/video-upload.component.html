@@ -5,7 +5,7 @@
       <!-- Campo de Título -->
       <div class="form-group">
         <label for="title">
-          <span class="material-icons">title</span>
+          <mat-icon>title</mat-icon>
           Título do Vídeo *
         </label>
         <input 
@@ -30,7 +30,7 @@
       <!-- Campo de Descrição -->
       <div class="form-group">
         <label for="description">
-          <span class="material-icons">description</span>
+          <mat-icon>description</mat-icon>
           Descrição do Vídeo
         </label>
         <textarea 
@@ -45,7 +45,7 @@
       <!-- Campo de Categorias -->
       <div class="form-group">
         <label for="categories">
-          <span class="material-icons">category</span>
+          <mat-icon>category</mat-icon>
           Categorias
         </label>
         <div class="category-selector">
@@ -54,7 +54,7 @@
               <div class="category-tag">
                 <span>{{ category.name }}</span>
                 <button type="button" class="remove-category" (click)="removeCategory(category.id!)">
-                  <span class="material-icons">close</span>
+                  <mat-icon>close</mat-icon>
                 </button>
               </div>
             }
@@ -63,7 +63,7 @@
               class="add-category-btn"
               (click)="toggleCategoryDropdown()"
               [class.active]="categoryDropdownOpen()">
-              <span class="material-icons">add</span>
+              <mat-icon>add</mat-icon>
               Adicionar Categoria
             </button>
           </div>
@@ -97,7 +97,7 @@
       <!-- Campo de Tags -->
       <div class="form-group">
         <label for="tags">
-          <span class="material-icons">label</span>
+          <mat-icon>label</mat-icon>
           Tags
         </label>
         <div class="tags-container">
@@ -106,7 +106,7 @@
               <div class="tag-item">
                 <span>{{ tag }}</span>
                 <button type="button" class="remove-tag" (click)="removeTag(tag)">
-                  <span class="material-icons">close</span>
+                  <mat-icon>close</mat-icon>
                 </button>
               </div>
             }
@@ -115,7 +115,7 @@
                 type="button"
                 class="add-tag-btn"
                 (click)="showTagInput()">
-                <span class="material-icons">add</span>
+                <mat-icon>add</mat-icon>
                 Adicionar Tag
               </button>
             }
@@ -143,7 +143,7 @@
           <span class="toggle-label">Vídeo em Destaque</span>
           @if (featuredControl?.value) {
             <small class="featured-warning">
-              <span class="material-icons">info</span>
+              <mat-icon>info</mat-icon>
               Apenas 3 vídeos podem estar em destaque simultaneamente. Se já houver 3 vídeos em destaque, o mais antigo perderá o destaque automaticamente.
             </small>
           }
@@ -187,7 +187,7 @@
   @if (isUploading()) {
     <div class="upload-progress">
       <div class="progress-info">
-        <span class="material-icons spinning">cloud_upload</span>
+        <mat-icon class="spinning">cloud_upload</mat-icon>
         <span>Enviando vídeo... {{ uploadProgress() }}%</span>
       </div>
       <div class="progress-bar">
@@ -199,7 +199,7 @@
   <!-- Aviso de campos obrigatórios -->
   @if (!isFormValid && !isUploading()) {
     <div class="validation-info">
-      <span class="material-icons">info</span>
+      <mat-icon>info</mat-icon>
       <div class="validation-messages">
         @if (uploadForm.get('title')?.invalid) {
           <p>• Digite o título do vídeo</p>
@@ -219,7 +219,7 @@
       [disabled]="isUploading() || !isFormValid"
       [title]="!isFormValid ? 'Preencha todos os campos obrigatórios' : ''"
     >
-      <span class="material-icons">{{ videoToEdit() ? 'save' : 'cloud_upload' }}</span>
+      <mat-icon>{{ videoToEdit() ? 'save' : 'cloud_upload' }}</mat-icon>
       {{ videoToEdit() ? 'Atualizar Vídeo' : 'Enviar Vídeo' }}
     </button>
     
@@ -229,7 +229,7 @@
       (click)="cancel()"
       [disabled]="isUploading()"
     >
-      <span class="material-icons">close</span>
+      <mat-icon>close</mat-icon>
       Cancelar
     </button>
   </div>

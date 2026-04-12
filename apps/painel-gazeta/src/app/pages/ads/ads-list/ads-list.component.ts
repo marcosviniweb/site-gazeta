@@ -6,11 +6,12 @@ import { Ads } from '@site-gazeta/models';
 import { AlertService } from '@site-gazeta/alert';
 import { Router, RouterModule } from '@angular/router';
 import { AdsListFiltersComponent } from './ads-list-filters/ads-list-filters.component';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-ads-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, AdsListFiltersComponent],
+  imports: [CommonModule, RouterModule, AdsListFiltersComponent, MatIconModule],
   templateUrl: './ads-list.component.html',
   styleUrls: ['./ads-list.component.scss']
 })

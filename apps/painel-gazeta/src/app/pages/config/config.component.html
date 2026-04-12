@@ -15,7 +15,7 @@
         class="tab-button"
         [class.active]="activeTab === 'social-media'"
         (click)="setActiveTab('social-media')">
-        <span class="material-icons">share</span>
+        <mat-icon>share</mat-icon>
         Redes Sociais
       </button>
       <button
@@ -23,7 +23,7 @@
         class="tab-button"
         [class.active]="activeTab === 'home-config'"
         (click)="setActiveTab('home-config')">
-        <span class="material-icons">home</span>
+        <mat-icon>home</mat-icon>
         Configuração Home
       </button>
       <button
@@ -31,7 +31,7 @@
         class="tab-button"
         [class.active]="activeTab === 'maintenance'"
         (click)="setActiveTab('maintenance')">
-        <span class="material-icons">build</span>
+        <mat-icon>build</mat-icon>
         Manutenção
       </button>
       @if(user === 'admin'){
@@ -40,7 +40,7 @@
           class="tab-button"
           [class.active]="activeTab === 'media-cleanup'"
           (click)="setActiveTab('media-cleanup')">
-          <span class="material-icons">cleaning_services</span>
+          <mat-icon>cleaning_services</mat-icon>
           Limpeza de Mídias
         </button>
       }

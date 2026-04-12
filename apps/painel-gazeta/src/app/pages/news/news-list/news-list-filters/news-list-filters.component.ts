@@ -1,5 +1,6 @@
 import { Component, input, output, signal, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
 import { CategoryService } from '../../../../core/services/category.service';
 import { Category } from '@site-gazeta/models';
 import { firstValueFrom } from 'rxjs';
@@ -7,7 +8,7 @@ import { firstValueFrom } from 'rxjs';
 @Component({
   selector: 'app-news-list-filters',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './news-list-filters.component.html',
   styleUrl: './news-list-filters.component.scss',
 })

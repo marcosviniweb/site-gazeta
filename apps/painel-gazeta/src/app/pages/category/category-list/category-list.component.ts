@@ -1,11 +1,12 @@
 import { Component, input, output, computed, signal } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 import { Category } from '@site-gazeta/models';
 
 @Component({
   selector: 'app-category-list',
-  imports: [FormsModule],
+  imports: [FormsModule, MatIconModule],
   templateUrl: './category-list.component.html',
   styleUrl: './category-list.component.scss',
 })

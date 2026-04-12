@@ -1,0 +1,21 @@
+// ─── Utilitários Globais ──────────────────────────────
+// Classes CSS de uso geral. Devem ser importadas apenas uma vez no styles.scss.
+
+.text-center { text-align: center; }
+.text-muted { color: var(--text-muted); }
+.text-danger { color: var(--danger); }
+.text-success { color: var(--success); }
+
+.mb-0 { margin-bottom: 0; }
+.mb-1 { margin-bottom: var(--space-sm); }
+.mb-2 { margin-bottom: var(--space-md); }
+.mb-3 { margin-bottom: var(--space-lg); }
+
+.d-flex { display: flex; }
+.d-none { display: none; }
+
+// Mobile helpers
+@media (max-width: 575px) {
+  .d-md-none { display: none !important; }
+  .d-md-block { display: block !important; }
+}

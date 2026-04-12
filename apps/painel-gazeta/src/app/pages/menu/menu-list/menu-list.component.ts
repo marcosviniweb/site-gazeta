@@ -6,11 +6,12 @@ import { MenuService } from '../../../core/services/menu.service';
 import { Menu } from '@site-gazeta/models';
 import { AlertService } from '@site-gazeta/alert';
 import { ModalComponent } from '@site-gazeta/modal';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-menu-list',
   standalone: true,
-  imports: [CommonModule, DragDropModule, DragAndDropComponent, CdkDragHandle, ModalComponent],
+  imports: [CommonModule, DragDropModule, DragAndDropComponent, CdkDragHandle, ModalComponent, MatIconModule],
   templateUrl: './menu-list.component.html',
   styleUrl: './menu-list.component.scss',
 })

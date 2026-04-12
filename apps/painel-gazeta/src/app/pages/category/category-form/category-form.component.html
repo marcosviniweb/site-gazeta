@@ -51,7 +51,7 @@
   <div class="g-crud-footer no-padding border-none margin-top-lg">
     <div class="actions-right full-width">
       <button type="submit" class="btn-primary full-width" [disabled]="form.invalid || !isColorAvailable()">
-        <span class="material-icons">{{ isEditing() ? 'save' : 'add_circle' }}</span>
+        <mat-icon>{{ isEditing() ? 'save' : 'add_circle' }}</mat-icon>
         {{ isEditing() ? 'Atualizar Categoria' : 'Criar Categoria' }}
       </button>
       

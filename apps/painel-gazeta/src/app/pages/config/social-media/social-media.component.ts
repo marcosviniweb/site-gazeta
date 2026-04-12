@@ -6,14 +6,15 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { FormValidatorComponent, FormValidatorService } from '@site-gazeta/form-validator';
+import { MatIconModule } from '@angular/material/icon';
 import { Subject, takeUntil } from 'rxjs';
 import { AlertService } from '@site-gazeta/alert';
 import { ConfigService } from '../../../core/services/config.service';
 
-
 @Component({
   selector: 'app-social-media',
-  imports: [CommonModule, ReactiveFormsModule, FormValidatorComponent],
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, FormValidatorComponent, MatIconModule],
   providers: [FormValidatorService],
   templateUrl: './social-media.component.html',
   styleUrl: './social-media.component.scss',

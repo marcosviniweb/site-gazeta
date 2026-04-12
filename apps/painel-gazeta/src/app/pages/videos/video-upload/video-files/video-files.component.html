@@ -2,7 +2,7 @@
   <!-- Upload de Vídeo -->
   <div class="form-group">
     <span class="g-label">
-      <span class="material-icons">video_library</span>
+      <mat-icon>video_library</mat-icon>
       Arquivo de Vídeo *
     </span>
     
@@ -15,7 +15,7 @@
         (dragleave)="onVideoDragLeave($event)"
         (drop)="onVideoDrop($event)"
       >
-        <span class="material-icons">cloud_upload</span>
+        <mat-icon>cloud_upload</mat-icon>
         <p>Arraste o vídeo aqui ou clique para selecionar</p>
         <small>Formatos: MP4, AVI, MOV, WEBM, MKV (Máx: 500MB)</small>
         
@@ -32,7 +32,7 @@
           class="select-btn"
           (click)="videoInput.click()"
         >
-          <span class="material-icons">folder_open</span>
+          <mat-icon>folder_open</mat-icon>
           Selecionar Arquivo
         </button>
       </div>
@@ -48,13 +48,13 @@
               (click)="removeVideo()"
               title="Remover vídeo"
             >
-              <span class="material-icons">close</span>
+              <mat-icon>close</mat-icon>
             </button>
           }
         </div>
         @if (selectedVideoFile()) {
           <div class="file-info">
-            <span class="material-icons">movie</span>
+            <mat-icon>movie</mat-icon>
             <div class="file-details">
               <span class="file-name">{{ selectedVideoFile()!.name }}</span>
               <span class="file-size">{{ formatFileSize(selectedVideoFile()!.size) }}</span>
@@ -68,7 +68,7 @@
   <!-- Upload de Thumbnail (Opcional) -->
   <div class="form-group">
     <span class="g-label">
-      <span class="material-icons">image</span>
+      <mat-icon>image</mat-icon>
       Thumbnail (Opcional)
     </span>
     
@@ -81,7 +81,7 @@
         (dragleave)="onThumbnailDragLeave($event)"
         (drop)="onThumbnailDrop($event)"
       >
-        <span class="material-icons">add_photo_alternate</span>
+        <mat-icon>add_photo_alternate</mat-icon>
         <p>Arraste a imagem aqui ou clique para selecionar</p>
         <small>Formatos: JPG, PNG, WEBP (Máx: 5MB)</small>
         
@@ -98,14 +98,14 @@
           class="select-btn"
           (click)="thumbnailInput.click()"
         >
-          <span class="material-icons">folder_open</span>
+          <mat-icon>folder_open</mat-icon>
           Selecionar Imagem
         </button>
       </div>
     } @else if (isExtractingThumbnail()) {
       <!-- Feedback de extração de thumbnail -->
       <div class="drop-zone thumbnail-zone extracting">
-        <span class="material-icons spinning">refresh</span>
+        <mat-icon class="spinning">refresh</mat-icon>
         <p>Extraindo thumbnail do vídeo...</p>
         <small>Aguarde enquanto processamos o vídeo</small>
       </div>
@@ -121,13 +121,13 @@
               (click)="removeThumbnail()"
               title="Remover thumbnail"
             >
-              <span class="material-icons">close</span>
+              <mat-icon>close</mat-icon>
             </button>
           }
         </div>
         @if (selectedThumbnailFile()) {
           <div class="file-info">
-            <span class="material-icons">image</span>
+            <mat-icon>image</mat-icon>
             <div class="file-details">
               <span class="file-name">{{ selectedThumbnailFile()!.name }}</span>
               <span class="file-size">{{ formatFileSize(selectedThumbnailFile()!.size) }}</span>
@@ -149,7 +149,7 @@
           (click)="thumbnailReplaceInput.click()"
           title="Trocar thumbnail"
         >
-          <span class="material-icons">swap_horiz</span>
+          <mat-icon>swap_horiz</mat-icon>
           Trocar Thumbnail
         </button>
       </div>

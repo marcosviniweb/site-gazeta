@@ -1,7 +1,7 @@
 <div class="social-media-content">
   <div class="content-header">
     <div class="header-icon">
-      <span class="material-icons">share</span>
+      <mat-icon>share</mat-icon>
     </div>
     <div class="header-text">
       <h3>Redes Sociais</h3>
@@ -14,7 +14,7 @@
       @for (field of socialMediaFields; track field.name) {
         <div class="form-group" [attr.data-social]="field.name">
           <label [for]="field.name">
-            <span class="material-icons" [style.color]="field.color">{{ field.icon }}</span>
+            <mat-icon [style.color]="field.color">{{ field.icon }}</mat-icon>
             {{ field.label }}
           </label>
           <input
@@ -30,11 +30,11 @@
 
     <div class="form-actions">
       <button type="submit" class="btn-primary" [disabled]="form.invalid">
-        <span class="material-icons">save</span>
+        <mat-icon>save</mat-icon>
         Salvar Configurações
       </button>
       <button type="button" class="btn-secondary" (click)="onReset()">
-        <span class="material-icons">refresh</span>
+        <mat-icon>refresh</mat-icon>
         Limpar
       </button>
     </div>

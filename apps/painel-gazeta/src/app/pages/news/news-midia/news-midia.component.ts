@@ -16,6 +16,7 @@ import { NewsMedia, NewsVideo } from '@site-gazeta/models';
 import { NewsService } from '../../../core/services/news.service';
 import { firstValueFrom } from 'rxjs';
 import { AlertService } from '@site-gazeta/alert';
+import { MatIconModule } from '@angular/material/icon';
 
 interface MediaItem {
   type: 'photo' | 'video';
@@ -40,7 +41,7 @@ interface MediaItem {
 
 @Component({
   selector: 'app-news-midia',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatIconModule],
   templateUrl: './news-midia.component.html',
   styleUrl: './news-midia.component.scss',
 })

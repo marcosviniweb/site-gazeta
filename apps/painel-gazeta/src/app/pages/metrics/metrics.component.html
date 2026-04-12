@@ -11,7 +11,7 @@
       <div class="header-actions">
         @if (lastUpdate) {
           <div class="last-update-pill" title="Última atualização dos dados">
-            <span class="material-icons">history</span>
+            <mat-icon>history</mat-icon>
             <span>Última atualização: {{ lastUpdate | date:'dd/MM/yyyy HH:mm:ss' }}</span>
           </div>
         }
@@ -24,7 +24,7 @@
         <div class="filters-main">
           <div class="filter-group">
             <label for="filterPeriod">
-              <span class="material-icons">calendar_today</span>
+              <mat-icon>calendar_today</mat-icon>
               Período de Análise
             </label>
             <p-datepicker [(ngModel)]="period" selectionMode="range" [showIcon]="true" dateFormat="dd/mm/yy" inputId="filterPeriod"></p-datepicker>
@@ -32,7 +32,7 @@
 
           <div class="filter-group">
             <label for="filterGranularity">
-              <span class="material-icons">visibility</span>
+              <mat-icon>visibility</mat-icon>
               Visualização
             </label>
             <p-select [(ngModel)]="selectedGranularity" [options]="granularityOptions" optionLabel="label"
@@ -41,7 +41,7 @@
 
           <div class="filter-actions">
             <button type="button" class="btn-primary" (click)="applyFilters()" [disabled]="loading">
-              <span class="material-icons">refresh</span>
+              <mat-icon>refresh</mat-icon>
               Atualizar
             </button>
           </div>
@@ -55,10 +55,10 @@
             <ng-container *ngIf="!loading; else kpiSkeleton">
               <div class="stat-header">
                 <div class="stat-icon">
-                  <span class="material-icons">{{ getKpiMaterialIcon(i) }}</span>
+                  <mat-icon>{{ getKpiMaterialIcon(i) }}</mat-icon>
                 </div>
                 <div class="stat-delta" [ngClass]="{ up: (k.deltaPercent || 0) >= 0, down: (k.deltaPercent || 0) < 0 }">
-                  <span class="material-icons">{{ (k.deltaPercent || 0) >= 0 ? 'trending_up' : 'trending_down' }}</span>
+                  <mat-icon>{{ (k.deltaPercent || 0) >= 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
                   <span>{{ k.deltaPercent }}%</span>
                 </div>
               </div>
@@ -85,7 +85,7 @@
           <div class="g-crud-card">
             <header class="g-crud-header mini soft-accent">
               <div class="header-text">
-                <h3><span class="material-icons">show_chart</span> Acessos ao Site</h3>
+                <h3><mat-icon>show_chart</mat-icon> Acessos ao Site</h3>
               </div>
             </header>
             <div class="card-content chart-box">
@@ -101,7 +101,7 @@
           <div class="g-crud-card">
             <header class="g-crud-header mini soft-success">
               <div class="header-text">
-                <h3><span class="material-icons">analytics</span> Páginas Vistas</h3>
+                <h3><mat-icon>analytics</mat-icon> Páginas Vistas</h3>
               </div>
             </header>
             <div class="card-content chart-box">
@@ -121,7 +121,7 @@
           <div class="g-crud-card flex-2">
             <header class="g-crud-header mini soft-info">
               <div class="header-text">
-                <h3><span class="material-icons">star</span> Conteúdos em Destaque</h3>
+                <h3><mat-icon>star</mat-icon> Conteúdos em Destaque</h3>
               </div>
             </header>
             <div class="card-content no-padding">
@@ -130,23 +130,23 @@
                   <p-table [value]="topNews" [paginator]="true" [rows]="5" styleClass="g-table-modern">
                     <ng-template pTemplate="header">
                       <tr>
-                        <th>Título da Notícia</th>
-                        <th class="text-right">Visualizações</th>
-                        <th class="text-right">Acesso</th>
+                        <th class="col-title">Título da Notícia</th>
+                        <th class="col-views text-right">Visualizações</th>
+                        <th class="col-access text-right">Acesso</th>
                       </tr>
                     </ng-template>
                     <ng-template pTemplate="body" let-row let-i="rowIndex">
                       <tr>
-                        <td>
+                        <td class="col-title">
                           <div class="g-news-badge-cell">
                             <span class="rank">{{ i + 1 }}</span>
                             <span class="text-truncate">{{ row.title }}</span>
                           </div>
                         </td>
-                        <td class="text-right">
+                        <td class="col-views text-right">
                           <span class="g-badge accent mini">{{ row.views | number }}</span>
                         </td>
-                        <td class="text-right color-muted text-xs">
+                        <td class="col-access text-right color-muted text-xs">
                           {{ row.lastAccess | date:'dd/MM HH:mm' }}
                         </td>
                       </tr>
@@ -154,7 +154,7 @@
                   </p-table>
                 } @else {
                   <div class="g-empty-state">
-                    <span class="material-icons">inbox</span>
+                    <mat-icon>inbox</mat-icon>
                     <p>Sem dados de navegação no período.</p>
                   </div>
                 }
@@ -168,7 +168,7 @@
           <div class="g-crud-card flex-1">
             <header class="g-crud-header mini soft-warning">
               <div class="header-text">
-                <h3><span class="material-icons">history</span> Atividades do Painel</h3>
+                <h3><mat-icon>history</mat-icon> Atividades do Painel</h3>
               </div>
             </header>
             <div class="card-content timeline-box">

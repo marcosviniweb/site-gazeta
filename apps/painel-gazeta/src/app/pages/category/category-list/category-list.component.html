@@ -4,7 +4,7 @@
     <!-- Filtros Globais -->
     <div class="g-filters-container">
       <div class="g-search-input">
-        <span class="material-icons text-muted sm">search</span>
+        <mat-icon class="text-muted sm">search</mat-icon>
         <input 
           type="text" 
           placeholder="Pesquisar categoria..." 
@@ -57,10 +57,10 @@
                 <!-- Ações Padronizadas -->
                 <div class="g-manage-actions">
                   <button class="g-action-btn edit" (click)="onEdit(category)" title="Editar">
-                    <span class="material-icons sm">edit</span>
+                    <mat-icon class="sm">edit</mat-icon>
                   </button>
                   <button class="g-action-btn delete" (click)="onDelete(category)" title="Excluir">
-                    <span class="material-icons sm">delete</span>
+                    <mat-icon class="sm">delete</mat-icon>
                   </button>
                 </div>
               </div>
@@ -72,7 +72,7 @@
     
     @if (filteredCategories().length === 0) {
       <div class="g-no-results">
-        <span class="material-icons text-muted lg">search_off</span>
+        <mat-icon class="text-muted lg">search_off</mat-icon>
         <p>Nenhuma categoria encontrada com os filtros aplicados.</p>
       </div>
     }
@@ -80,7 +80,7 @@
   } @else {
     <div class="g-empty-state">
       <div class="icon-circle">
-        <span class="material-icons text-primary lg">category</span>
+        <mat-icon class="text-primary lg">category</mat-icon>
       </div>
       <h3>Gerenciamento de Categorias</h3>
       <p>Nenhuma categoria cadastrada no sistema. Comece criando uma nova categoria no formulário ao lado.</p>

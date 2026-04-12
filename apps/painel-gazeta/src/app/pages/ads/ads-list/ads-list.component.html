@@ -9,7 +9,7 @@
       </div>
       <div class="header-actions">
         <a class="btn-primary" [routerLink]="['/ads']">
-          <span class="material-icons">add</span>
+          <mat-icon>add</mat-icon>
           Criar Anúncio
         </a>
       </div>
@@ -56,13 +56,13 @@
         </div>
         <div class="actions-group">
           <button (click)="bulkToggleStatus()" title="Alternar status (Ativo/Inativo)">
-            <span class="material-icons">power_settings_new</span>
+            <mat-icon>power_settings_new</mat-icon>
           </button>
           <button class="danger" (click)="bulkDelete()" title="Excluir selecionados">
-            <span class="material-icons">delete_forever</span>
+            <mat-icon>delete_forever</mat-icon>
           </button>
           <button class="btn-clear" (click)="clearSelection()" title="Limpar seleção">
-            <span class="material-icons">close</span>
+            <mat-icon>close</mat-icon>
           </button>
         </div>
       </div>
@@ -96,9 +96,9 @@
             </div>
 
             <div class="g-data-cell ads-status-cell">
-              <span class="status-indicator material-icons" [class.active]="ad.isActive" [title]="ad.isActive ? 'Ativo' : 'Inativo'">
+              <mat-icon class="status-indicator" [class.active]="ad.isActive" [title]="ad.isActive ? 'Ativo' : 'Inativo'">
                 {{ ad.isActive ? 'check_circle' : 'cancel' }}
-              </span>
+              </mat-icon>
             </div>
 
             <div class="g-data-cell g-cell-image">
@@ -129,13 +129,13 @@
 
             <div class="g-data-cell g-cell-actions">
               <button class="btn-action" (click)="toggleStatus(ad)" [title]="ad.isActive ? 'Desativar' : 'Ativar'">
-                <span class="material-icons">{{ ad.isActive ? 'pause' : 'play_arrow' }}</span>
+                <mat-icon>{{ ad.isActive ? 'pause' : 'play_arrow' }}</mat-icon>
               </button>
               <button class="btn-action" (click)="editAdvertisement(ad)" title="Configurações">
-                <span class="material-icons">settings</span>
+                <mat-icon>settings</mat-icon>
               </button>
               <button class="btn-action btn-delete" (click)="confirmDelete(ad)" title="Excluir">
-                <span class="material-icons">delete</span>
+                <mat-icon>delete</mat-icon>
               </button>
             </div>
           </div>
@@ -149,13 +149,13 @@
       <!-- Paginação -->
       <div class="g-pagination">
         <button class="btn-prev" [disabled]="currentPage() === 1" (click)="prevPage()">
-          <span class="material-icons">chevron_left</span> Anterior
+          <mat-icon>chevron_left</mat-icon> Anterior
         </button>
         <div class="page-info">
           Página <strong>{{ currentPage() }}</strong> de {{ lastPage() }}
         </div>
         <button class="btn-next" [disabled]="currentPage() >= lastPage()" (click)="nextPage()">
-          Próxima <span class="material-icons">chevron_right</span>
+          Próxima <mat-icon>chevron_right</mat-icon>
         </button>
       </div>
     </div>
@@ -167,7 +167,7 @@
   <div class="g-modal-overlay" (click)="cancelDelete()">
     <div class="g-modal-content g-modal-delete" (click)="$event.stopPropagation()">
       <div class="g-modal-header">
-        <span class="material-icons">warning</span>
+        <mat-icon>warning</mat-icon>
         <h3>Confirmar Exclusão</h3>
       </div>
       
@@ -178,10 +178,10 @@
       
       <div class="g-modal-actions">
         <button type="button" class="btn-cancel" (click)="cancelDelete()">
-          <span class="material-icons">close</span> Cancelar
+          <mat-icon>close</mat-icon> Cancelar
         </button>
         <button type="button" class="btn-confirm" (click)="deleteAdvertisement()">
-          <span class="material-icons">delete_forever</span> Excluir
+          <mat-icon>delete_forever</mat-icon> Excluir
         </button>
       </div>
     </div>

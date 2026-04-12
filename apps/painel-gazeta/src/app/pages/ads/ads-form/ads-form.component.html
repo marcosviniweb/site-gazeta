@@ -6,14 +6,14 @@
         <!-- Card: Informações Básicas -->
         <div class="form-card">
       <div class="form-card-header">
-        <i class="material-icons">info</i>
+        <mat-icon>info</mat-icon>
         <h3>Informações Básicas</h3>
       </div>
       <div class="form-card-body">
         <!-- Título -->
         <div class="form-group">
           <label for="title" class="required">
-            <i class="material-icons">title</i>
+            <mat-icon>title</mat-icon>
             Título
           </label>
           <input
@@ -32,7 +32,7 @@
         <!-- Descrição -->
         <div class="form-group">
           <label for="description">
-            <i class="material-icons">description</i>
+            <mat-icon>description</mat-icon>
             Descrição
           </label>
           <textarea
@@ -46,7 +46,7 @@
         <!-- URL de Clique -->
         <div class="form-group">
           <label for="clickUrl">
-            <i class="material-icons">link</i>
+            <mat-icon>link</mat-icon>
             URL de Redirecionamento
           </label>
           <input
@@ -67,7 +67,7 @@
     <!-- Card: Posicionamento -->
     <div class="form-card">
       <div class="form-card-header">
-        <i class="material-icons">place</i>
+        <mat-icon>place</mat-icon>
         <h3>Posicionamento e Tamanho</h3>
       </div>
       <div class="form-card-body">
@@ -75,7 +75,7 @@
           <!-- Página de Exibição -->
           <div class="form-group">
             <label for="placement" class="required">
-              <i class="material-icons">web</i>
+              <mat-icon>web</mat-icon>
               Página de Exibição
             </label>
             <select
@@ -100,7 +100,7 @@
           <!-- Posição -->
           <div class="form-group">
             <label for="position" [class.required]="!isPositionDisabled()">
-              <i class="material-icons">vertical_align_center</i>
+              <mat-icon>vertical_align_center</mat-icon>
               Posição
             </label>
             <select
@@ -123,7 +123,7 @@
             </select>
             @if (isPositionDisabled()) {
               <div class="file-info">
-                <small><i class="material-icons">info</i> Para página "Cabeçalho", a posição é sempre "Topo"</small>
+                <small><mat-icon>info</mat-icon> Para página "Cabeçalho", a posição é sempre "Topo"</small>
               </div>
             }
             @if (!isPositionDisabled() && hasError('position')) {
@@ -137,7 +137,7 @@
         <!-- Tamanho -->
         <div class="form-group">
           <label for="size" class="required">
-            <i class="material-icons">aspect_ratio</i>
+            <mat-icon>aspect_ratio</mat-icon>
             Dimensões
           </label>
           <select
@@ -154,7 +154,7 @@
           </select>
           @if (sizeOptions().length === 0) {
             <div class="file-info">
-              <small><i class="material-icons">info</i> Selecione uma página e posição primeiro</small>
+              <small><mat-icon>info</mat-icon> Selecione uma página e posição primeiro</small>
             </div>
           }
           @if (hasError('size')) {
@@ -169,7 +169,7 @@
     <!-- Card: Configurações -->
     <div class="form-card">
       <div class="form-card-header">
-        <i class="material-icons">settings</i>
+        <mat-icon>settings</mat-icon>
         <h3>Configurações de Exibição</h3>
       </div>
       <div class="form-card-body">
@@ -177,7 +177,7 @@
           <!-- Status Ativo -->
           <div class="toggle-group">
             <div class="toggle-label">
-              <i class="material-icons">visibility</i>
+              <mat-icon>visibility</mat-icon>
               Status
             </div>
             <div class="toggle-container">
@@ -196,7 +196,7 @@
           <!-- Prioridade -->
           <div class="form-group">
             <label for="priority">
-              <i class="material-icons">priority_high</i>
+              <mat-icon>priority_high</mat-icon>
               Prioridade
             </label>
             <input
@@ -215,7 +215,7 @@
     <!-- Card: Período de Exibição -->
     <div class="form-card">
       <div class="form-card-header">
-        <i class="material-icons">date_range</i>
+        <mat-icon>date_range</mat-icon>
         <h3>Período de Exibição</h3>
       </div>
       <div class="form-card-body">
@@ -223,7 +223,7 @@
           <!-- Data de Início -->
           <div class="form-group">
             <label for="startDate">
-              <i class="material-icons">schedule</i>
+              <mat-icon>schedule</mat-icon>
               Data de Início
             </label>
             <input
@@ -235,7 +235,7 @@
           <!-- Data de Fim -->
           <div class="form-group">
             <label for="endDate">
-              <i class="material-icons">event</i>
+              <mat-icon>event</mat-icon>
               Data de Fim
             </label>
             <input
@@ -260,7 +260,7 @@
         <!-- Card: Imagem -->
         <div class="form-card">
           <div class="form-card-header">
-            <i class="material-icons">image</i>
+            <mat-icon>image</mat-icon>
             <h3>Imagem do Anúncio</h3>
             @if (!isEdit()) {
               <span class="required-badge">Obrigatório</span>
@@ -278,7 +278,7 @@
                       class="change-image-btn"
                       (click)="triggerFileInput()"
                       aria-label="Trocar imagem">
-                      <i class="material-icons">edit</i>
+                      <mat-icon>edit</mat-icon>
                       <span>Trocar</span>
                     </button>
                     <button
@@ -286,7 +286,7 @@
                       class="remove-image-btn"
                       (click)="onRemoveImage()"
                       aria-label="Remover imagem">
-                      <i class="material-icons">delete</i>
+                      <mat-icon>delete</mat-icon>
                       <span>Remover</span>
                     </button>
                   </div>
@@ -306,7 +306,7 @@
                 class="file-input">
               <div class="file-input-display">
                 <span class="file-placeholder">
-                  <i class="material-icons">cloud_upload</i>
+                  <mat-icon>cloud_upload</mat-icon>
                   <span>Clique para selecionar uma imagem</span>
                   <small>ou arraste e solte aqui</small>
                 </span>
@@ -314,13 +314,13 @@
             </div>
 
             <div class="file-info">
-              <i class="material-icons">info_outline</i>
+              <mat-icon>info_outline</mat-icon>
               <small>Formatos aceitos: JPG, PNG, GIF, WEBP • Tamanho máximo: 5MB</small>
             </div>
 
             @if (hasError('image')) {
               <div class="error-message">
-                <i class="material-icons">error</i>
+                <mat-icon>error</mat-icon>
                 {{ getErrorMessage('image') }}
               </div>
             }
@@ -336,7 +336,7 @@
         class="btn btn-secondary"
         (click)="onCancel()"
         [disabled]="isSubmitting()">
-        <i class="material-icons">close</i>
+        <mat-icon>close</mat-icon>
         Cancelar
       </button>
       <button
@@ -344,10 +344,10 @@
         class="btn btn-primary"
         [disabled]="isSubmitting()">
         @if (isSubmitting()) {
-          <i class="material-icons spinning">sync</i>
+          <mat-icon class="spinning">sync</mat-icon>
           Salvando...
         } @else {
-          <i class="material-icons">save</i>
+          <mat-icon>save</mat-icon>
           {{ isEdit() ? 'Atualizar' : 'Salvar' }} Anúncio
         }
       </button>

@@ -18,4 +18,9 @@ export interface PaginationParams {
   limit?: number;
   search?: string;
   exclude?: string;
+  categoryId?: number;
+  status?: string;
+  isEmphasis?: boolean;
+  featured?: boolean;
+  includeTrash?: boolean;
 }

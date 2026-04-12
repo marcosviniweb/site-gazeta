@@ -9,7 +9,7 @@
                  alt="Imagem de destaque selecionada" />
           } @else {
             <div class="image-placeholder">
-              <span class="material-icons">image</span>
+              <mat-icon>image</mat-icon>
               <p>A primeira foto adicionada será automaticamente destacada</p>
             </div>
           }
@@ -21,7 +21,7 @@
       <span class="g-label">Gerenciamento de Mídias</span>
       <div class="media-buttons">
         <button type="button" class="btn-add-photo" (click)="addPhoto()">
-          <span class="material-icons">photo_camera</span>
+          <mat-icon>photo_camera</mat-icon>
           Adicionar Foto
         </button>
       </div>
@@ -30,7 +30,7 @@
       @if (selectedMediaIndex() !== null) {
         <div class="media-edit-card">
           <header>
-            <span class="material-icons">edit</span>
+            <mat-icon>edit</mat-icon>
             <h5>Editar Metadados</h5>
           </header>
           
@@ -59,7 +59,7 @@
 
           <div class="edit-actions">
             <button type="button" class="btn-confirm" (click)="saveMediaInfo()">
-              <span class="material-icons">check</span> Salvar
+              <mat-icon>check</mat-icon> Salvar
             </button>
             <button type="button" class="btn-cancel" (click)="cancelMediaEdit()">
                Cancelar
@@ -88,7 +88,7 @@
                    [class.active]="media.emphasis"
                    (click)="toggleFeatured($index, $event)"
                    title="Alternar Destaque">
-                <span class="material-icons">{{ media.emphasis ? 'star' : 'star_border' }}</span>
+                <mat-icon>{{ media.emphasis ? 'star' : 'star_border' }}</mat-icon>
               </button>
 
               <div class="photo-preview">
@@ -96,19 +96,19 @@
                      [alt]="'Foto ' + ($index + 1)" />
 
                 <button type="button" class="remove-media-btn" (click)="removeMedia($index, $event)" title="Remover">
-                  <span class="material-icons">delete</span>
+                  <mat-icon>delete</mat-icon>
                 </button>
 
                 <div class="photo-info">
                   @if (media.author) {
                     <div class="info-item">
-                      <span class="material-icons">person</span>
+                      <mat-icon>person</mat-icon>
                       <span>{{ media.author }}</span>
                     </div>
                   }
                   @if (media.date) {
                     <div class="info-item">
-                      <span class="material-icons">calendar_today</span>
+                      <mat-icon>calendar_today</mat-icon>
                       <span>{{ media.date | date:'dd/MM/yyyy' }}</span>
                     </div>
                   }
@@ -121,11 +121,11 @@
                     <img [src]="media.thumbnail" [alt]="'Vídeo ' + ($index + 1)" />
                   } @else {
                     <div class="video-placeholder">
-                      <span class="material-icons">play_circle_filled</span>
+                      <mat-icon>play_circle_filled</mat-icon>
                     </div>
                   }
                   <div class="play-overlay">
-                    <span class="material-icons">play_arrow</span>
+                    <mat-icon>play_arrow</mat-icon>
                   </div>
                 </div>
                 <div class="video-info">
@@ -133,7 +133,7 @@
                   <small class="video-url">{{ media.url }}</small>
                 </div>
                 <button type="button" class="remove-media-btn" (click)="removeMedia($index, $event)">
-                  <span class="material-icons">delete</span>
+                  <mat-icon>delete</mat-icon>
                 </button>
               </div>
             }

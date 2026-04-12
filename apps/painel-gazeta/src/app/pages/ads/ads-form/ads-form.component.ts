@@ -8,6 +8,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { Ads } from '@site-gazeta/models';
 import { AlertService } from '@site-gazeta/alert';
+import { MatIconModule } from '@angular/material/icon';
 import {
   AdsFormControls,
   SelectOption
@@ -28,7 +29,7 @@ interface FormState {
 @Component({
   selector: 'app-ads-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, MatIconModule],
   templateUrl: './ads-form.component.html',
   styleUrls: ['./ads-form.component.scss'],
 })

@@ -1,6 +1,6 @@
 <div class="form-group">
   <label for="related-news">
-    <span class="material-icons">article</span>
+    <mat-icon>article</mat-icon>
     Notícia Relacionada
   </label>
   
@@ -9,7 +9,7 @@
       <!-- Notícia Selecionada -->
       <div class="selected-news">
         <div class="news-tag">
-          <span class="material-icons">article</span>
+          <mat-icon>article</mat-icon>
           <div class="news-info">
             <span class="news-title">{{ selectedNews()!.title }}</span>
             <small class="news-slug">{{ selectedNews()!.slug }}</small>
@@ -20,7 +20,7 @@
             (click)="removeNews()"
             title="Remover notícia"
           >
-            <span class="material-icons">close</span>
+            <mat-icon>close</mat-icon>
           </button>
         </div>
       </div>
@@ -32,7 +32,7 @@
           class="add-news-btn"
           (click)="showSearchInput()"
           [class.active]="dropdownOpen()">
-          <span class="material-icons">add</span>
+          <mat-icon>add</mat-icon>
           Adicionar Notícia Relacionada
         </button>
       </div>
@@ -58,7 +58,7 @@
         <!-- Resultados da Busca -->
         @if (isSearching()) {
           <div class="search-loading">
-            <span class="material-icons spinning">refresh</span>
+            <mat-icon class="spinning">refresh</mat-icon>
             <span>Buscando...</span>
           </div>
         } @else if (searchTerm().length > 0 && searchTerm().length < 2) {

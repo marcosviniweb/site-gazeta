@@ -5,7 +5,7 @@
       <div class="header-left">
         @if (isEdit()) {
           <a class="back-btn" [routerLink]="['/newsList']">
-            <span class="material-icons">arrow_back</span>
+            <mat-icon>arrow_back</mat-icon>
           </a>
         }
         <div class="header-text">
@@ -19,9 +19,9 @@
           class="sidebar-toggle-btn"
           (click)="toggleSidebar()"
           [title]="sidebarOpen() ? 'Ocultar painel' : 'Mostrar painel'">
-          <span class="material-icons">
+          <mat-icon>
             {{ sidebarOpen() ? 'keyboard_double_arrow_right' : 'keyboard_double_arrow_left' }}
-          </span>
+          </mat-icon>
         </button>
       </div>
     </header>
@@ -42,7 +42,7 @@
               role="tab"
               [class.active]="activeTab === 'info'"
               (click)="setActiveTab('info')">
-              <span class="material-icons">edit_note</span>
+              <mat-icon>edit_note</mat-icon>
               <span class="tab-label">Informações</span>
               <span class="tab-badge"
                 [class.complete]="infoFieldsStatus().filled === infoFieldsStatus().total"
@@ -57,12 +57,12 @@
               role="tab"
               [class.active]="activeTab === 'content'"
               (click)="setActiveTab('content')">
-              <span class="material-icons">article</span>
+              <mat-icon>article</mat-icon>
               <span class="tab-label">Conteúdo</span>
               <span class="tab-badge"
                 [class.complete]="contentFieldStatus().filled === contentFieldStatus().total">
                 @if (contentFieldStatus().filled === 1) {
-                  <span class="material-icons">check</span>
+                  <mat-icon>check</mat-icon>
                 } @else {
                   0/1
                 }
@@ -75,7 +75,7 @@
               role="tab"
               [class.active]="activeTab === 'media'"
               (click)="setActiveTab('media')">
-              <span class="material-icons">photo_library</span>
+              <mat-icon>photo_library</mat-icon>
               <span class="tab-label">Mídias</span>
               <span class="tab-badge"
                 [class.complete]="mediaFieldStatus().count > 0">
@@ -90,7 +90,7 @@
                 <!-- Categorias -->
                 <div class="g-form-group full-width">
                   <span class="g-label">
-                    <span class="material-icons">category</span> Categorias <span class="required">*</span>
+                    <mat-icon>category</mat-icon> Categorias <span class="required">*</span>
                   </span>
                   <lib-multi-select
                     formControlName="categoryId"
@@ -106,7 +106,7 @@
                 <!-- Título -->
                 <div class="g-form-group full-width">
                   <label for="title">
-                    <span class="material-icons">title</span> Título <span class="required">*</span>
+                    <mat-icon>title</mat-icon> Título <span class="required">*</span>
                   </label>
                   <input
                     type="text"
@@ -120,7 +120,7 @@
                 <!-- Subtítulo -->
                 <div class="g-form-group full-width">
                   <label for="subtitle">
-                    <span class="material-icons">short_text</span> Subtítulo <span class="required">*</span>
+                    <mat-icon>short_text</mat-icon> Subtítulo <span class="required">*</span>
                   </label>
                   <input
                     type="text"
@@ -133,7 +133,7 @@
                 <!-- Slug + Preview -->
                 <div class="g-form-group full-width">
                   <label for="slug">
-                    <span class="material-icons">link</span> URL da Notícia <span class="required">*</span>
+                    <mat-icon>link</mat-icon> URL da Notícia <span class="required">*</span>
                   </label>
                   <input
                     type="text"
@@ -142,7 +142,7 @@
                     placeholder="url-da-noticia">
                   @if (urlDisplay()) {
                     <div class="url-preview-pill">
-                      <span class="material-icons language">language</span>
+                      <mat-icon class="language">language</mat-icon>
                       <span>gazetadopara.com/<strong>{{ urlDisplay() }}</strong></span>
                     </div>
                   }
@@ -152,7 +152,7 @@
                 <!-- Autor -->
                 <div class="g-form-group full-width">
                   <label for="author">
-                    <span class="material-icons">person</span> Autor <span class="required">*</span>
+                    <mat-icon>person</mat-icon> Autor <span class="required">*</span>
                   </label>
                   <input
                     type="text"
@@ -166,7 +166,7 @@
             <div class="g-form-group" [class.g-tab-hidden]="activeTab !== 'content'">
               <div class="g-form-group">
                 <span class="g-label">
-                  <span class="material-icons">edit_note</span> Conteúdo da Notícia <span class="required">*</span>
+                  <mat-icon>edit_note</mat-icon> Conteúdo da Notícia <span class="required">*</span>
                 </span>
                 <lib-text-editor
                   (ready)="onReady($event)"
@@ -193,7 +193,7 @@
           <div class="g-crud-footer">
             <div class="actions-left">
               <button type="button" class="btn-secondary" (click)="onReset()" [disabled]="isUploadingMedia()">
-                <span class="material-icons">restart_alt</span> Limpar
+                <mat-icon>restart_alt</mat-icon> Limpar
               </button>
             </div>
 
@@ -214,10 +214,10 @@
                 class="btn-primary"
                 [disabled]="form.invalid || isUploadingMedia() || isSavingNews()">
                 @if (isSavingNews() && !isUploadingMedia()) {
-                  <span class="material-icons spinning">sync</span>
+                  <mat-icon class="spinning">sync</mat-icon>
                   <span>Salvando...</span>
                 } @else if (!isUploadingMedia()) {
-                  <span class="material-icons">{{ isEdit() ? 'save' : 'publish' }}</span>
+                  <mat-icon>{{ isEdit() ? 'save' : 'publish' }}</mat-icon>
                   <span>{{ isEdit() ? 'Atualizar' : 'Publicar' }}</span>
                 }
               </button>
@@ -228,14 +228,14 @@
         <!-- Sidebar -->
         <aside class="g-crud-sidebar" [class.active]="sidebarOpen()">
           <div class="sidebar-header">
-            <span class="material-icons">tune</span> Configurações
+            <mat-icon>tune</mat-icon> Configurações
           </div>
 
           <div class="sidebar-body">
             <!-- Seção: Publicação -->
             <div class="sidebar-section">
               <div class="section-title">
-                <span class="material-icons">schedule</span> Publicação
+                <mat-icon>schedule</mat-icon> Publicação
               </div>
               <div class="g-form-group">
                 <label for="published">Data e Hora <span class="required">*</span></label>
@@ -252,7 +252,7 @@
             <!-- Seção: Destaque -->
             <div class="sidebar-section">
               <div class="section-title">
-                <span class="material-icons">star</span> Destaque
+                <mat-icon>star</mat-icon> Destaque
               </div>
               <label class="g-toggle">
                 <input type="checkbox" formControlName="isEmphasis">
@@ -265,7 +265,7 @@
             <!-- Seção: Status -->
             <div class="sidebar-section">
               <div class="section-title">
-                <span class="material-icons">toggle_on</span> Status
+                <mat-icon>toggle_on</mat-icon> Status
               </div>
               <div class="status-options-grid">
                 @for (option of statusOptions; track option.value) {
@@ -275,9 +275,9 @@
                     [class.active]="form.get('status')?.value === option.value"
                     [attr.data-status]="option.value"
                     (click)="form.patchValue({ status: option.value })">
-                    <span class="material-icons">
+                    <mat-icon>
                       {{ option.value === 'ACTIVE' ? 'check_circle' : 'pause_circle' }}
-                    </span>
+                    </mat-icon>
                     {{ option.label }}
                   </button>
                 }
@@ -287,7 +287,7 @@
             <!-- Seção: Validade -->
             <div class="sidebar-section">
               <div class="section-title">
-                <span class="material-icons">event_available</span> Validade
+                <mat-icon>event_available</mat-icon> Validade
               </div>
               <div class="g-form-group">
                 <input type="date" id="validity" formControlName="validity">

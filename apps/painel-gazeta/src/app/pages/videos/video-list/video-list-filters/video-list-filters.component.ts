@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { CategoryService } from '../../../../core/services/category.service';
 import { Category } from '@site-gazeta/models';
 import { firstValueFrom } from 'rxjs';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-video-list-filters',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './video-list-filters.component.html',
   styleUrl: './video-list-filters.component.scss',
 })

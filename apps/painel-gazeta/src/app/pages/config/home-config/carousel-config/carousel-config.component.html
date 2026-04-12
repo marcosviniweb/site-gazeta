@@ -1,7 +1,7 @@
 <div class="carousel-config-content">
   <div class="form-section">
     <div class="section-title">
-      <span class="material-icons">view_carousel</span>
+      <mat-icon>view_carousel</mat-icon>
       <h4>Configuração do Carrossel</h4>
     </div>
     <p class="section-description">
@@ -38,10 +38,10 @@
         (click)="saveCarouselConfig()"
         [disabled]="isLoading() || isSaving()">
         @if (isSaving()) {
-          <span class="material-icons spinning">sync</span>
+          <mat-icon class="spinning">sync</mat-icon>
           Salvando...
         } @else {
-          <span class="material-icons">save</span>
+          <mat-icon>save</mat-icon>
           Salvar Configuração
         }
       </button>

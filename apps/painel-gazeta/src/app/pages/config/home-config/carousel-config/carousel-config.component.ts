@@ -1,13 +1,15 @@
 import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 import { Subject, takeUntil, first } from 'rxjs';
 import { ConfigService } from '../../../../core/services/config.service';
 import { AlertService } from '@site-gazeta/alert';
 
 @Component({
   selector: 'app-carousel-config',
-  imports: [CommonModule, FormsModule],
+  standalone: true,
+  imports: [CommonModule, FormsModule, MatIconModule],
   templateUrl: './carousel-config.component.html',
   styleUrl: './carousel-config.component.scss',
 })

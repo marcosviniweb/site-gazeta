@@ -1,12 +1,13 @@
 import { Component, signal, input, output, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Video } from '@site-gazeta/models';
 import { AlertService } from '@site-gazeta/alert';
+import { MatIconModule } from '@angular/material/icon';
+import { Video } from '@site-gazeta/models';
 
 @Component({
   selector: 'app-video-files',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './video-files.component.html',
   styleUrl: './video-files.component.scss',
 })
@@ -14,7 +15,7 @@ export class VideoFilesComponent {
   private alertService = inject(AlertService);
 
   // Inputs
-  videoToEdit = input<Video | null>(null);
+  videoToEdit = input<Video| null>(null);
   videoUrl = input<string | null>(null);
   thumbnailUrl = input<string | null>(null);
 
@@ -41,7 +42,6 @@ export class VideoFilesComponent {
   constructor() {
     // Effect para carregar URLs iniciais quando vídeo é passado para edição
     effect(() => {
-      const video = this.videoToEdit();
       const videoUrl = this.videoUrl();
       const thumbnailUrl = this.thumbnailUrl();
 
@@ -117,8 +117,9 @@ export class VideoFilesComponent {
   }
 
   removeVideo(): void {
-    if (this.videoPreviewUrl() && !this.videoUrl()) {
-      URL.revokeObjectURL(this.videoPreviewUrl()!);
+    const previewUrl = this.videoPreviewUrl();
+    if (previewUrl && !this.videoUrl()) {
+      URL.revokeObjectURL(previewUrl);
     }
     this.selectedVideoFile.set(null);
     this.videoPreviewUrl.set(this.videoUrl() || null);

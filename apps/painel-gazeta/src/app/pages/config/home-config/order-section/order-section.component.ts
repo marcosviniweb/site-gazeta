@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ConfigService } from '../../../../core/services/config.service';
 import { AlertService } from '@site-gazeta/alert';
 import { first } from 'rxjs';
+import { MatIconModule } from '@angular/material/icon';
 
 export interface HomeSection {
   id: string;
@@ -15,7 +16,8 @@ export interface HomeSection {
 
 @Component({
   selector: 'app-order-section',
-  imports: [CommonModule],
+  standalone: true,
+  imports: [CommonModule, MatIconModule],
   templateUrl: './order-section.component.html',
   styleUrl: './order-section.component.scss',
 })
