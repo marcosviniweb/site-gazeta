@@ -13,6 +13,7 @@ import { join } from 'path';
 import { devCorsConfig } from './config/cors.config';
 import compression from 'compression';
 import helmet from 'helmet';
+import { BACKEND_VERSION } from './version';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -69,7 +70,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('API Gazeta')
     .setDescription('Documentação da API do sistema Gazeta')
-    .setVersion('1.0')
+    .setVersion(BACKEND_VERSION)
     .addBearerAuth()
     .build();
   

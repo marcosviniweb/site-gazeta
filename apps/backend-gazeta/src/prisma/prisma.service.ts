@@ -13,7 +13,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       const maskedUrl = dbUrl.replace(/:[^:@]+@/, ':****@');
       this.logger.log(`🔍 Tentando conectar ao banco: ${maskedUrl}`);
       this.logger.log(`📁 NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
-      this.logger.log(`📂 Arquivo .env carregado de: ${process.env.NODE_ENV === 'production' ? 'apps/backend-gazeta/.env.production' : 'apps/backend-gazeta/.env.local'}`);
+      this.logger.log(
+        `📂 DATABASE_URL vem de process.env (ConfigModule + PM2/systemd). Em produção, use .env.production na raiz ou apps/backend-gazeta/.env.production, ou defina DATABASE_URL no processo.`,
+      );
       
       await this.$connect();
       this.logger.log('Conexão com o banco de dados estabelecida com sucesso! 🚀');

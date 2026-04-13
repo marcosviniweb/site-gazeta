@@ -1,5 +1,23 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+
+/** Arquivos .env em ordem: os últimos da lista sobrescrevem os anteriores (Nest/dotenv). */
+function configEnvFilePaths(): string[] {
+  const isProd = process.env.NODE_ENV === 'production';
+  if (isProd) {
+    return [
+      'apps/backend-gazeta/.env',
+      'apps/backend-gazeta/.env.production',
+      '.env.production',
+    ];
+  }
+  return [
+    'apps/backend-gazeta/.env.local',
+    'apps/backend-gazeta/.env',
+    '.env.local',
+    '.env',
+  ];
+}
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from '../auth/auth.module';
@@ -19,7 +37,7 @@ import { ContentMediaModule } from '../content-media/content-media.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // Torna o ConfigModule disponível globalmente
-      envFilePath: 'apps/backend-gazeta/.env'
+      envFilePath: configEnvFilePaths(),
     }),
     PrismaModule,
     AuthModule,
