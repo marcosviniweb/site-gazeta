@@ -3,7 +3,7 @@ export interface NewsMedia {
     id?: number;
     idNews?:number;
     emphasis: boolean;
-    imgSize?: size | size[];
+    imgSize?: size;
     author?: string;
     date?: string;
 }
