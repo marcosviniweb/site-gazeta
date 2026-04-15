@@ -110,10 +110,11 @@ export class NewsCategoryComponent implements OnInit {
 
   getNewsForCategory(category: Category) {
     if (category) {
-      this.apiService.getNewsForCategory(category.id as number).subscribe({
-        next: (newNews: News[]) => {
-          this.initializeImageLoading(newNews);
-          this.news.set(newNews);
+      this.apiService.getNewsByCategory(category.id as number, { page: 1 }).subscribe({
+        next: (response) => {
+          this.initializeImageLoading(response.data);
+          this.news.set(response.data);
+          this.paginationMeta.set(response.meta);
           setTimeout(() => this.isLoading.set(false), 300);
         },
         error: () => this.isLoading.set(false),
@@ -122,7 +123,21 @@ export class NewsCategoryComponent implements OnInit {
   }
 
   loadMore() {
-    // Mantido para compatibilidade
+    const category = this.category();
+    const meta = this.paginationMeta();
+    
+    if (category && meta && meta.page < meta.lastPage) {
+      const nextPage = meta.page + 1;
+      this.apiService.getNewsByCategory(category.id as number, { page: nextPage }).subscribe({
+        next: (response) => {
+          this.initializeImageLoading(response.data);
+          // Adiciona as novas notícias às atuais
+          this.news.update(current => [...current, ...response.data]);
+          this.paginationMeta.set(response.meta);
+        },
+        error: (err) => console.error('Error loading more news', err)
+      });
+    }
   }
 
   protected isImageLoading(newsId: number | null | undefined): boolean {

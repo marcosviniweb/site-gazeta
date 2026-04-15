@@ -11,7 +11,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/service/api.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { News } from '@site-gazeta/models';
+import { News, PaginationMeta } from '@site-gazeta/models';
 import { MoreNewsComponent } from '@site-gazeta/more-news';
 import { NewsManagerService } from '../../core/service/news-manager.service';
 
@@ -29,6 +29,7 @@ export class NewsSearchComponent implements OnDestroy {
   query = input<string>('');
   filteredNews = signal<News[]>([]);
   isLoading = signal<boolean>(false);
+  paginationMeta = signal<PaginationMeta | null>(null);
   error = signal<string | null>(null);
   private searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -77,6 +78,7 @@ export class NewsSearchComponent implements OnDestroy {
       .subscribe({
         next: (response) => {
           this.filteredNews.set(response.data);
+          this.paginationMeta.set(response.meta);
           this.isLoading.set(false);
         },
         error: (err) => {
@@ -85,6 +87,25 @@ export class NewsSearchComponent implements OnDestroy {
           console.error('Search error:', err);
         },
       });
+  }
+
+  loadMore(): void {
+    const meta = this.paginationMeta();
+    const query = this.query();
+
+    if (meta && meta.page < meta.lastPage) {
+      const nextPage = meta.page + 1;
+      this.apiService
+        .getBySearch(query, 20, nextPage)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (response) => {
+            this.filteredNews.update((current) => [...current, ...response.data]);
+            this.paginationMeta.set(response.meta);
+          },
+          error: (err) => console.error('Error loading more search results:', err),
+        });
+    }
   }
 
   ngOnDestroy(): void {

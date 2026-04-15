@@ -10,7 +10,7 @@ import {
   PaginatedResponse,
   PaginationParams,
 } from '@site-gazeta/models';
-import { map, Observable, tap } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '@site-gazeta/env';
 import { HttpClient } from '@angular/common/http';
 import { toHttpParams } from '@site-gazeta/api';
@@ -175,10 +175,30 @@ export class ApiService {
     params?: PaginationParams,
   ): Observable<PaginatedResponse<News>> {
     const httpParams = toHttpParams(params);
-    return this.http.get<PaginatedResponse<News>>(
-      `${this.apiUrl}/news/category/${categoryId}`,
-      { params: httpParams },
-    );
+    return this.http
+      .get<News[] | PaginatedResponse<News>>(
+        `${this.apiUrl}/news/category/${categoryId}`,
+        { params: httpParams },
+      )
+      .pipe(
+        map((response): PaginatedResponse<News> => {
+          if (Array.isArray(response)) {
+            return {
+              data: response,
+              meta: {
+                total: response.length,
+                page: 1,
+                limit: response.length,
+                lastPage: 1,
+              },
+            };
+          }
+          return {
+            data: response.data ?? [],
+            meta: response.meta,
+          };
+        }),
+      );
   }
 
   getRelatedNews(categoryId: number[], newsId: number): Observable<News[]> {
@@ -207,11 +227,35 @@ export class ApiService {
       );
   }
 
-  getBySearch(search: string, limit = 12): Observable<PaginatedResponse<News>> {
-    const params = toHttpParams({ search, limit });
-    return this.http.get<PaginatedResponse<News>>(
-      `${this.apiUrl}/news/search`,
-      { params },
-    );
+  getBySearch(
+    search: string, 
+    limit = 12, 
+    page = 1
+  ): Observable<PaginatedResponse<News>> {
+    const params = toHttpParams({ search, limit, page });
+    return this.http
+      .get<News[] | PaginatedResponse<News>>(
+        `${this.apiUrl}/news/search`,
+        { params },
+      )
+      .pipe(
+        map((response): PaginatedResponse<News> => {
+          if (Array.isArray(response)) {
+            return {
+              data: response,
+              meta: {
+                total: response.length,
+                page: 1,
+                limit,
+                lastPage: Math.ceil(response.length / limit) || 1,
+              },
+            };
+          }
+          return {
+            data: response.data ?? [],
+            meta: response.meta,
+          };
+        }),
+      );
   }
 }

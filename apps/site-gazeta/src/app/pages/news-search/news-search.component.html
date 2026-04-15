@@ -10,7 +10,9 @@
 } @else if (filteredNews().length > 0) {
   <lib-more-news
     [moreNews]="filteredNews()"
+    [paginationMeta]="paginationMeta()"
     [title]="'Resultados da pesquisa'"
+    (loadMoreRequested)="loadMore()"
   ></lib-more-news>
 } @else if (queryLength()) {
   <div class="placeholder">

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, of, forkJoin } from 'rxjs';
 import { map, switchMap, tap, shareReplay, catchError } from 'rxjs/operators';
-import { Category, News } from '@site-gazeta/models';
+import { Category, News, PaginatedResponse, PaginationParams } from '@site-gazeta/models';
 import {
   ApiConfigService,
   HomeCategoryGridItem,
@@ -194,12 +194,11 @@ export class HomeNewsOrchestratorService {
    * Traz as últimas notícias mais gerais, filtrando tudo o que os cabeçalhos
    * acima já carregaram e registraram no exclude global.
    */
-  getFilteredMoreNews(): Observable<News[]> {
+  getFilteredMoreNews(params?: PaginationParams): Observable<PaginatedResponse<News>> {
     const excludes = Array.from(this.globalExcludedIds).join(',');
 
-    return this.apiConfigService.getNews({ exclude: excludes }).pipe(
-      map((response) => response.data),
-      catchError(() => of([])),
+    return this.apiConfigService.getNews({ ...params, exclude: excludes }).pipe(
+      catchError(() => of({ data: [], meta: { total: 0, page: 1, limit: 10, lastPage: 0 } })),
     );
   }
 
