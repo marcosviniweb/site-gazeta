@@ -15,21 +15,66 @@
       <div class="category-layout">
         <!-- Formulário Lateral -->
         <div class="category-form-section">
-          <app-category-form 
-            [editingCategory]="editingCategory()" 
+          <app-category-form
+            [editingCategory]="editingCategory()"
             [usedColors]="usedColors()"
             (categorySubmit)="onCategorySubmit($event)"
-            (cancelEdit)="onCancelEdit()" />
+            (cancelEdit)="onCancelEdit()"
+          />
         </div>
 
         <!-- Lista de Categorias (Rolável) -->
         <div class="category-list-section g-scroll-container">
           <div class="list-inner-wrapper">
-            <app-category-list [categories]="categories()" (editCategory)="onEditCategory($event)"
-              (deleteCategory)="onDeleteCategory($event)" (toggleStatus)="onToggleStatus($event)" />
+            <app-category-list
+              [categories]="categories()"
+              (editCategory)="onEditCategory($event)"
+              (deleteCategory)="onDeleteCategory($event)"
+              (toggleStatus)="onToggleStatus($event)"
+            />
           </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Modal de Confirmação de Exclusão -->
+@if (showDeleteConfirm()) {
+  <div class="g-modal-overlay" (click)="cancelDelete()">
+    <div class="g-modal-confirm-container" (click)="$event.stopPropagation()">
+      <div class="g-modal-confirm-header danger">
+        <div class="header-icon">
+          <mat-icon>warning</mat-icon>
+        </div>
+        <div class="header-text">
+          <h3>Confirmar Exclusão</h3>
+        </div>
+      </div>
+
+      <div class="g-modal-confirm-body">
+        <p>
+          Tem certeza que deseja excluir a categoria
+          <strong>"{{ categoryToDelete()?.name }}"</strong>?
+        </p>
+        <div class="warning-highlight danger">
+          <mat-icon>warning</mat-icon>
+          <p>Esta ação não pode ser desfeita.</p>
+        </div>
+      </div>
+
+      <div class="g-modal-confirm-footer">
+        <button type="button" class="btn-cancel" (click)="cancelDelete()">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn-confirm danger"
+          (click)="confirmDeleteCategory()"
+        >
+          Sim, Excluir
+        </button>
+      </div>
+    </div>
+  </div>
+}

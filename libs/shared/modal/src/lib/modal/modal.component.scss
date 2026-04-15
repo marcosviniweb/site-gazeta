@@ -154,11 +154,17 @@
     padding-top: env(safe-area-inset-top, 0.5rem);
     padding-bottom: env(safe-area-inset-bottom, 0.5rem);
     max-width: 100%;
-    max-height: calc(100vh - 1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-height: calc(
+      100vh -
+        1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+    );
   }
 
   .modal-body {
-    max-height: calc(100vh - 1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-height: calc(
+      100vh -
+        1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+    );
   }
 
   .modal-close {
@@ -180,11 +186,17 @@
     padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));
     padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
     max-width: 100%;
-    max-height: calc(100vh - 1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-height: calc(
+      100vh -
+        1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+    );
   }
 
   .modal-body {
-    max-height: calc(100vh - 1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-height: calc(
+      100vh -
+        1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+    );
   }
 
   .modal-close {
@@ -247,11 +259,23 @@
     padding-top: env(safe-area-inset-top, 0.25rem);
     padding-bottom: env(safe-area-inset-bottom, 0.25rem);
     max-width: 100%;
-    max-height: calc(100vh - 0.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-height: calc(
+      100vh -
+        0.5rem - env(safe-area-inset-top, 0px) - env(
+          safe-area-inset-bottom,
+          0px
+        )
+    );
   }
 
   .modal-body {
-    max-height: calc(100vh - 0.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-height: calc(
+      100vh -
+        0.5rem - env(safe-area-inset-top, 0px) - env(
+          safe-area-inset-bottom,
+          0px
+        )
+    );
   }
 
   .modal-close {
@@ -265,4 +289,3 @@
     }
   }
 }
-

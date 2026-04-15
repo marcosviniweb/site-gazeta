@@ -77,6 +77,10 @@ export class NewsListComponent implements OnInit, OnDestroy {
 
   newsEmitter = output<News>();
 
+  // Modal de exclusão
+  itemToDelete = signal<News | null>(null);
+  showDeleteConfirm = signal(false);
+
   ngOnInit(): void {
     this.getCategories();
     this.loadNews();
@@ -416,12 +420,41 @@ export class NewsListComponent implements OnInit, OnDestroy {
     if (!news.mediaNews || news.mediaNews.length === 0) return null;
     const emphasisMedia = news.mediaNews.find((m) => m.emphasis);
     const media = emphasisMedia || news.mediaNews[0];
-    const imgSize = Array.isArray(media.imgSize) ? media.imgSize[0] : media.imgSize;
-    return (
-      imgSize?.small ||
-      imgSize?.medium ||
-      imgSize?.original ||
-      null
-    );
+    const imgSize = Array.isArray(media.imgSize)
+      ? media.imgSize[0]
+      : media.imgSize;
+    return imgSize?.small || imgSize?.medium || imgSize?.original || null;
+  }
+
+  // --- Modal de Exclusão ---
+  confirmDelete(news: News): void {
+    this.itemToDelete.set(news);
+    this.showDeleteConfirm.set(true);
+  }
+
+  cancelDelete(): void {
+    this.itemToDelete.set(null);
+    this.showDeleteConfirm.set(false);
+  }
+
+  deleteItem(): void {
+    const news = this.itemToDelete();
+    if (!news?.id) return;
+
+    this.newsService.delete(news.id).subscribe({
+      next: () => {
+        this.loadNews();
+        this.cancelDelete();
+        this.alertService.success(
+          'Sucesso',
+          'Notícia excluída permanentemente.',
+        );
+      },
+      error: (err) => {
+        console.error('Erro ao excluir notícia:', err);
+        this.cancelDelete();
+        this.alertService.error('Erro', 'Falha ao excluir notícia.');
+      },
+    });
   }
 }

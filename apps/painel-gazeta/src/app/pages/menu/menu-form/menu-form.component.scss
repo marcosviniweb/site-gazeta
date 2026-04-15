@@ -13,8 +13,9 @@
 }
 
 .column-gap {
+  display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 1.5rem;
 }
 
 .margin-top-lg {
@@ -35,4 +36,6 @@
 
 // ─── Animações ─────────────────────────────────────
 
-.spinning { animation: spin 1s linear infinite; }
+.spinning {
+  animation: spin 1s linear infinite;
+}

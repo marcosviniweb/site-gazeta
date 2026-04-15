@@ -20,9 +20,18 @@
       @if (isProcessing()) {
         <div class="g-processing-overlay">
           <div class="g-progress-container">
-            <p>Processando {{ processingProgress().current }} de {{ processingProgress().total }} vídeos...</p>
+            <p>
+              Processando {{ processingProgress().current }} de
+              {{ processingProgress().total }} vídeos...
+            </p>
             <div class="g-progress-bar">
-              <div class="fill" [style.width.%]="(processingProgress().current / processingProgress().total) * 100"></div>
+              <div
+                class="fill"
+                [style.width.%]="
+                  (processingProgress().current / processingProgress().total) *
+                  100
+                "
+              ></div>
             </div>
           </div>
         </div>
@@ -46,7 +55,8 @@
         (filterViewsChange)="setFilterViews($event)"
         (filterCategoryChange)="setFilterCategory($event)"
         (filterSearchChange)="setFilterSearch($event)"
-        (filterFeaturedChange)="setFilterFeatured($event)">
+        (filterFeaturedChange)="setFilterFeatured($event)"
+      >
       </app-video-list-filters>
 
       <!-- Ações em Massa -->
@@ -55,16 +65,32 @@
           <span class="count">{{ selectedIds().size }}</span> selecionados
         </div>
         <div class="actions-group">
-          <button (click)="bulkToggleFeatured(true)" title="Destacar selecionados">
+          <button
+            (click)="bulkToggleFeatured(true)"
+            title="Destacar selecionados"
+            aria-label="Destacar vídeos selecionados"
+          >
             <mat-icon>star</mat-icon>
           </button>
-          <button (click)="bulkToggleFeatured(false)" title="Remover destaque">
+          <button 
+            (click)="bulkToggleFeatured(false)" 
+            title="Remover destaque"
+            aria-label="Remover destaque dos vídeos selecionados"
+          >
             <mat-icon>star_outline</mat-icon>
           </button>
-          <button class="danger" (click)="bulkDelete()" title="Excluir selecionados">
+          <button
+            class="danger"
+            (click)="bulkDelete()"
+            title="Excluir selecionados"
+          >
             <mat-icon>delete_forever</mat-icon>
           </button>
-          <button class="btn-clear" (click)="clearSelection()" title="Limpar seleção">
+          <button
+            class="btn-clear"
+            (click)="clearSelection()"
+            title="Limpar seleção"
+          >
             <mat-icon>close</mat-icon>
           </button>
         </div>
@@ -87,7 +113,11 @@
       <div class="g-data-list">
         <div class="video-list-header">
           <div class="header-cell header-select">
-            <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll($event)" />
+            <input
+              type="checkbox"
+              [checked]="isAllSelected()"
+              (change)="toggleSelectAll($event)"
+            />
           </div>
           <div class="header-cell header-featured"></div>
           <div class="header-cell header-image">Vídeo</div>
@@ -96,26 +126,37 @@
           <div class="header-cell header-actions">Ações</div>
         </div>
 
-        @for(video of videos(); track video.id){
-          <div class="video-row" [class.playing]="isPlaying(video.id)" [class.selected]="isSelected(video.id)">
+        @for (video of videos(); track video.id) {
+          <div
+            class="video-row"
+            [class.playing]="isPlaying(video.id)"
+            [class.selected]="isSelected(video.id)"
+          >
             <div class="g-data-cell g-cell-select">
-              <input type="checkbox" [checked]="isSelected(video.id)" (change)="toggleSelection(video.id)" />
+              <input
+                type="checkbox"
+                [checked]="isSelected(video.id)"
+                (change)="toggleSelection(video.id)"
+              />
             </div>
 
             <div class="g-data-cell video-featured-cell">
-              @if(video.featured) {
-                <mat-icon class="emphasis-star" title="Vídeo em destaque">star</mat-icon>
+              @if (video.featured) {
+                <mat-icon class="emphasis-star" title="Vídeo em destaque"
+                  >star</mat-icon
+                >
               }
             </div>
 
             <div class="g-data-cell g-cell-image">
-              <div 
-                class="video-thumbnail-container" 
+              <div
+                class="video-thumbnail-container"
                 (click)="togglePlayVideo(video.id)"
                 (keydown.enter)="togglePlayVideo(video.id)"
                 (keydown.space)="togglePlayVideo(video.id)"
                 tabindex="0"
-                role="button">
+                role="button"
+              >
                 @if (!isPlaying(video.id)) {
                   @if (video.thumbnail) {
                     <img [src]="video.thumbnail" [alt]="video.title" />
@@ -128,7 +169,9 @@
                     <mat-icon>play_circle_filled</mat-icon>
                   </div>
                   @if (video.duration) {
-                    <div class="duration-badge">{{ formatDuration(video.duration) }}</div>
+                    <div class="duration-badge">
+                      {{ formatDuration(video.duration) }}
+                    </div>
                   }
                 } @else {
                   <video [src]="video.url" controls autoplay></video>
@@ -137,53 +180,79 @@
             </div>
 
             <div class="g-data-cell g-cell-content">
-              <h4 class="title">{{video.title}}</h4>
+              <h4 class="title">{{ video.title }}</h4>
               @if (video.description) {
-                <p class="subtitle">{{video.description}}</p>
+                <p class="subtitle">{{ video.description }}</p>
               }
             </div>
 
             <div class="g-data-cell video-meta-cell">
               <div class="video-meta">
                 @if (video.createdAt) {
-                  <span class="date">{{video.createdAt | date:'dd/MM/yyyy - HH:mm'}}</span>
+                  <span class="date">{{
+                    video.createdAt | date: 'dd/MM/yyyy - HH:mm'
+                  }}</span>
                 }
                 @if (video.categories && video.categories.length > 0) {
                   <div class="categories-inline">
                     @for (category of video.categories; track category.id) {
-                      <span class="chip">{{category.name}}</span>
+                      <span class="chip">{{ category.name }}</span>
                     }
                   </div>
                 }
-                <span class="views"><b>Acessos:</b> {{video.views || 0}}</span>
+                <span class="views"
+                  ><b>Acessos:</b> {{ video.views || 0 }}</span
+                >
               </div>
             </div>
 
             <div class="g-data-cell g-cell-actions">
-              <button class="btn-action" (click)="editVideo(video)" title="Configurações">
+              <button
+                class="btn-action"
+                (click)="editVideo(video)"
+                title="Configurações"
+              >
                 <mat-icon>settings</mat-icon>
               </button>
-              <button class="btn-action btn-delete" (click)="confirmDelete(video)" title="Excluir">
+              <button
+                class="btn-action btn-delete"
+                (click)="confirmDelete(video)"
+                title="Excluir"
+              >
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
           </div>
         } @empty {
           <div class="video-empty">
-            <p>{{ isLoading() ? 'Carregando vídeos...' : 'Nenhum vídeo encontrado.' }}</p>
+            <p>
+              {{
+                isLoading()
+                  ? 'Carregando vídeos...'
+                  : 'Nenhum vídeo encontrado.'
+              }}
+            </p>
           </div>
         }
       </div>
 
       <!-- Paginação -->
       <div class="g-pagination">
-        <button class="btn-prev" [disabled]="currentPage() === 1" (click)="prevPage()">
+        <button
+          class="btn-prev"
+          [disabled]="currentPage() === 1"
+          (click)="prevPage()"
+        >
           <mat-icon>chevron_left</mat-icon> Anterior
         </button>
         <div class="page-info">
           Página <strong>{{ currentPage() }}</strong> de {{ lastPage() }}
         </div>
-        <button class="btn-next" [disabled]="currentPage() >= lastPage()" (click)="nextPage()">
+        <button
+          class="btn-next"
+          [disabled]="currentPage() >= lastPage()"
+          (click)="nextPage()"
+        >
           Próxima <mat-icon>chevron_right</mat-icon>
         </button>
       </div>
@@ -193,28 +262,52 @@
 
 <!-- Modal de Confirmação de Exclusão -->
 @if (showDeleteConfirm()) {
-  <div class="g-modal-overlay" (click)="cancelDelete()">
-    <div class="g-modal-content g-modal-delete" (click)="$event.stopPropagation()">
-      <div class="g-modal-header">
-        <mat-icon>warning</mat-icon>
-        <h3>Confirmar Exclusão</h3>
+  <div
+    class="g-modal-overlay"
+    (click)="cancelDelete()"
+    (keydown.escape)="cancelDelete()"
+    tabindex="-1"
+    role="presentation"
+  >
+    <div
+      class="g-modal-confirm-container"
+      (click)="$event.stopPropagation()"
+      (keydown)="$event.stopPropagation()"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="g-modal-confirm-header danger">
+        <div class="header-icon">
+          <mat-icon>warning</mat-icon>
+        </div>
+        <div class="header-text">
+          <h3>Confirmar Exclusão</h3>
+        </div>
       </div>
-      
-      <div class="g-modal-body">
-        <p>Tem certeza que deseja excluir o vídeo <strong>"{{ videoToDelete()?.title }}"</strong>?</p>
-        <p class="warning-text">Esta ação não pode ser desfeita.</p>
+
+      <div class="g-modal-confirm-body">
+        <p>
+          Tem certeza que deseja excluir o vídeo
+          <strong>"{{ videoToDelete()?.title }}"</strong>?
+        </p>
+        <div class="warning-highlight danger">
+          <mat-icon>warning</mat-icon>
+          <p>Esta ação não pode ser desfeita.</p>
+        </div>
       </div>
-      
-      <div class="g-modal-actions">
+
+      <div class="g-modal-confirm-footer">
         <button type="button" class="btn-cancel" (click)="cancelDelete()">
           <mat-icon>close</mat-icon> Cancelar
         </button>
-        <button type="button" class="btn-confirm" (click)="deleteVideo()">
+        <button
+          type="button"
+          class="btn-confirm danger"
+          (click)="deleteVideo()"
+        >
           <mat-icon>delete_forever</mat-icon> Excluir
         </button>
       </div>
     </div>
   </div>
 }
-
-

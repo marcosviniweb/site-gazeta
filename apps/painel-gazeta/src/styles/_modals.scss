@@ -19,7 +19,9 @@
 @mixin modal-content($max-width: 450px) {
   background: white;
   border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
   max-width: $max-width;
   width: 95%;
   display: flex;
@@ -43,10 +45,13 @@
     align-items: center;
     justify-content: center;
     border-radius: 14px;
-    background: rgba(var(#{$color-var}-rgb), 0.08); // Usa o RGB para fundo suave
+    background: rgba(
+      var(#{$color-var}-rgb),
+      0.08
+    ); // Usa o RGB para fundo suave
     color: var(#{$color-var});
     flex-shrink: 0;
-    
+
     .material-icons {
       font-size: 26px;
     }
@@ -56,7 +61,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    
+
     h3 {
       margin: 0;
       color: var(--secondary);
@@ -69,7 +74,7 @@
       margin: 0.15rem 0 0 0;
       font-size: 0.8rem;
       color: var(--text-muted);
-      
+
       strong {
         color: var(#{$color-var});
         padding: 0.1rem 0.4rem;
@@ -83,14 +88,16 @@
 
 @mixin modal-body {
   padding: 2rem;
-  
+
   p {
     margin: 0 0 1.25rem 0;
     color: var(--text);
     line-height: 1.6;
     font-size: 0.95rem;
-    
-    &:last-child { margin-bottom: 0; }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
   }
 
   .warning-highlight {
@@ -118,8 +125,12 @@
     &.danger {
       background: rgba(235, 50, 55, 0.04);
       border-left-color: var(--accent-red);
-      p { color: #991b1b; }
-      .material-icons { color: var(--accent-red); }
+      p {
+        color: #991b1b;
+      }
+      .material-icons {
+        color: var(--accent-red);
+      }
     }
   }
 }
@@ -159,23 +170,63 @@
 
 .g-modal-form-container {
   @include modal-content(550px);
-  .g-modal-header { @include modal-header-modern(--accent-blue); }
-  .g-modal-body { @include modal-body; }
-  .g-modal-actions { @include modal-actions; }
+  width: 100%;
+  .g-modal-header {
+    @include modal-header-modern(--accent-blue);
+  }
+  .g-modal-body {
+    @include modal-body;
+  }
+  .g-modal-actions {
+    @include modal-actions;
+  }
 }
 
 .g-modal-confirm-container {
-  @include modal-content(100%);
+  @include modal-content(90%);
+  max-width: 700px;
   width: 100%;
-  
+
   .g-modal-confirm-header {
     @include modal-header-modern(--accent-blue);
-    
+
     &.danger {
       @include modal-header-modern(--accent-red);
     }
   }
 
-  .g-modal-confirm-body { @include modal-body; }
-  .g-modal-confirm-footer { @include modal-actions; }
+  .g-modal-confirm-body {
+    @include modal-body;
+  }
+  .g-modal-confirm-footer {
+    @include modal-actions;
+  }
+}
+
+.g-modal-overlay {
+  @include modal-overlay;
+}
+
+.g-modal-confirm-footer {
+  .btn-cancel {
+    background: var(--light);
+    color: var(--text);
+
+    &:hover:not(:disabled) {
+      background: #ececec;
+    }
+  }
+
+  .btn-confirm {
+    background: var(--accent-blue);
+    color: white;
+
+    &.danger {
+      background: var(--accent-red);
+    }
+
+    &:hover:not(:disabled) {
+      background: var(--accent-blue);
+    }
+  }
 }

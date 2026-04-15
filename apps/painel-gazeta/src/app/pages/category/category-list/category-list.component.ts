@@ -12,30 +12,29 @@ import { Category } from '@site-gazeta/models';
 })
 export class CategoryListComponent {
   categories = input.required<Category[]>();
-  
+
   editCategory = output<Category>();
   deleteCategory = output<Category>();
   toggleStatus = output<Category>();
 
-
   searchTerm = signal('');
   orderBy = signal<'newest' | 'oldest'>('newest');
   statusFilter = signal<'all' | 'active' | 'inactive'>('all');
-
 
   filteredCategories = computed(() => {
     let filtered = this.categories();
 
     if (this.searchTerm().trim()) {
       const term = this.searchTerm().toLowerCase().trim();
-      filtered = filtered.filter(category => 
-        this.normalizeText(category.name).includes(term) ||
-        this.normalizeText(category.description).includes(term)
+      filtered = filtered.filter(
+        (category) =>
+          this.normalizeText(category.name).includes(term) ||
+          this.normalizeText(category.description).includes(term),
       );
     }
 
     if (this.statusFilter() !== 'all') {
-      filtered = filtered.filter(category => {
+      filtered = filtered.filter((category) => {
         if (this.statusFilter() === 'active') {
           return category.isActive;
         } else {
@@ -47,7 +46,7 @@ export class CategoryListComponent {
     filtered.sort((a, b) => {
       const dateA = new Date(a.createdAt as string).getTime();
       const dateB = new Date(b.createdAt as string).getTime();
-      
+
       if (this.orderBy() === 'newest') {
         return dateB - dateA;
       } else {
@@ -78,9 +77,7 @@ export class CategoryListComponent {
   }
 
   onDelete(category: Category) {
-    if (confirm(`Tem certeza que deseja excluir a categoria "${category.name}"?`)) {
-      this.deleteCategory.emit(category);
-    }
+    this.deleteCategory.emit(category);
   }
 
   onToggleStatus(category: Category, event: Event) {
@@ -95,5 +92,4 @@ export class CategoryListComponent {
       .replace(/[^\w]|_/g, '')
       .toLowerCase();
   }
-
 }

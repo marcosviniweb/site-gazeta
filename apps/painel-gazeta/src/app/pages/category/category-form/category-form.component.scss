@@ -15,8 +15,9 @@ textarea {
 // ─── Footer customizado para barra lateral ──────────
 .g-crud-footer {
   .actions-right {
+    display: flex;
     flex-direction: column;
-    gap: 0.8rem;
+    gap: 1.5rem;
   }
 }
 

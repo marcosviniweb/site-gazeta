@@ -20,9 +20,18 @@
       @if (isProcessing()) {
         <div class="g-processing-overlay">
           <div class="g-progress-container">
-            <p>Processando {{ processingProgress().current }} de {{ processingProgress().total }} anúncios...</p>
+            <p>
+              Processando {{ processingProgress().current }} de
+              {{ processingProgress().total }} anúncios...
+            </p>
             <div class="g-progress-bar">
-              <div class="fill" [style.width.%]="(processingProgress().current / processingProgress().total) * 100"></div>
+              <div
+                class="fill"
+                [style.width.%]="
+                  (processingProgress().current / processingProgress().total) *
+                  100
+                "
+              ></div>
             </div>
           </div>
         </div>
@@ -46,7 +55,8 @@
         (filterPositionChange)="setFilterPosition($event)"
         (filterPlacementChange)="setFilterPlacement($event)"
         (filterStatusChange)="setFilterStatus($event)"
-        (filterSearchChange)="setFilterSearch($event)">
+        (filterSearchChange)="setFilterSearch($event)"
+      >
       </app-ads-list-filters>
 
       <!-- Ações em Massa -->
@@ -55,13 +65,24 @@
           <span class="count">{{ selectedIds().size }}</span> selecionados
         </div>
         <div class="actions-group">
-          <button (click)="bulkToggleStatus()" title="Alternar status (Ativo/Inativo)">
+          <button
+            (click)="bulkToggleStatus()"
+            title="Alternar status (Ativo/Inativo)"
+          >
             <mat-icon>power_settings_new</mat-icon>
           </button>
-          <button class="danger" (click)="bulkDelete()" title="Excluir selecionados">
+          <button
+            class="danger"
+            (click)="bulkDelete()"
+            title="Excluir selecionados"
+          >
             <mat-icon>delete_forever</mat-icon>
           </button>
-          <button class="btn-clear" (click)="clearSelection()" title="Limpar seleção">
+          <button
+            class="btn-clear"
+            (click)="clearSelection()"
+            title="Limpar seleção"
+          >
             <mat-icon>close</mat-icon>
           </button>
         </div>
@@ -80,7 +101,11 @@
       <div class="g-data-list">
         <div class="ads-list-header">
           <div class="header-cell header-select">
-            <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll($event)" />
+            <input
+              type="checkbox"
+              [checked]="isAllSelected()"
+              (change)="toggleSelectAll($event)"
+            />
           </div>
           <div class="header-cell header-featured">Status</div>
           <div class="header-cell header-image">Banner</div>
@@ -89,14 +114,22 @@
           <div class="header-cell header-actions">Ações</div>
         </div>
 
-        @for(ad of advertisements(); track ad.id){
+        @for (ad of advertisements(); track ad.id) {
           <div class="ads-row" [class.selected]="isSelected(ad.id)">
             <div class="g-data-cell g-cell-select">
-              <input type="checkbox" [checked]="isSelected(ad.id)" (change)="toggleSelection(ad.id)" />
+              <input
+                type="checkbox"
+                [checked]="isSelected(ad.id)"
+                (change)="toggleSelection(ad.id)"
+              />
             </div>
 
             <div class="g-data-cell ads-status-cell">
-              <mat-icon class="status-indicator" [class.active]="ad.isActive" [title]="ad.isActive ? 'Ativo' : 'Inativo'">
+              <mat-icon
+                class="status-indicator"
+                [class.active]="ad.isActive"
+                [title]="ad.isActive ? 'Ativo' : 'Inativo'"
+              >
                 {{ ad.isActive ? 'check_circle' : 'cancel' }}
               </mat-icon>
             </div>
@@ -118,8 +151,12 @@
 
             <div class="g-data-cell ads-meta-cell">
               <div class="ads-meta">
-                <span class="item"><b>Posição:</b> {{ getPositionName(ad.position) }}</span>
-                <span class="item"><b>Página:</b> {{ getPlacementName(ad.placement) }}</span>
+                <span class="item"
+                  ><b>Posição:</b> {{ getPositionName(ad.position) }}</span
+                >
+                <span class="item"
+                  ><b>Página:</b> {{ getPlacementName(ad.placement) }}</span
+                >
                 <span class="item"><b>Prioridade:</b> {{ ad.priority }}</span>
                 <span class="status-badge" [class.active]="ad.isActive">
                   {{ ad.isActive ? 'ATIVO' : 'INATIVO' }}
@@ -128,33 +165,59 @@
             </div>
 
             <div class="g-data-cell g-cell-actions">
-              <button class="btn-action" (click)="toggleStatus(ad)" [title]="ad.isActive ? 'Desativar' : 'Ativar'">
+              <button
+                class="btn-action"
+                (click)="toggleStatus(ad)"
+                [title]="ad.isActive ? 'Desativar' : 'Ativar'"
+              >
                 <mat-icon>{{ ad.isActive ? 'pause' : 'play_arrow' }}</mat-icon>
               </button>
-              <button class="btn-action" (click)="editAdvertisement(ad)" title="Configurações">
+              <button
+                class="btn-action"
+                (click)="editAdvertisement(ad)"
+                title="Configurações"
+              >
                 <mat-icon>settings</mat-icon>
               </button>
-              <button class="btn-action btn-delete" (click)="confirmDelete(ad)" title="Excluir">
+              <button
+                class="btn-action btn-delete"
+                (click)="confirmDelete(ad)"
+                title="Excluir"
+              >
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
           </div>
         } @empty {
           <div class="ads-empty">
-            <p>{{ isLoading() ? 'Carregando anúncios...' : 'Nenhum anúncio encontrado.' }}</p>
+            <p>
+              {{
+                isLoading()
+                  ? 'Carregando anúncios...'
+                  : 'Nenhum anúncio encontrado.'
+              }}
+            </p>
           </div>
         }
       </div>
 
       <!-- Paginação -->
       <div class="g-pagination">
-        <button class="btn-prev" [disabled]="currentPage() === 1" (click)="prevPage()">
+        <button
+          class="btn-prev"
+          [disabled]="currentPage() === 1"
+          (click)="prevPage()"
+        >
           <mat-icon>chevron_left</mat-icon> Anterior
         </button>
         <div class="page-info">
           Página <strong>{{ currentPage() }}</strong> de {{ lastPage() }}
         </div>
-        <button class="btn-next" [disabled]="currentPage() >= lastPage()" (click)="nextPage()">
+        <button
+          class="btn-next"
+          [disabled]="currentPage() >= lastPage()"
+          (click)="nextPage()"
+        >
           Próxima <mat-icon>chevron_right</mat-icon>
         </button>
       </div>
@@ -165,27 +228,39 @@
 <!-- Modal de Confirmação de Exclusão -->
 @if (showDeleteConfirm()) {
   <div class="g-modal-overlay" (click)="cancelDelete()">
-    <div class="g-modal-content g-modal-delete" (click)="$event.stopPropagation()">
-      <div class="g-modal-header">
-        <mat-icon>warning</mat-icon>
-        <h3>Confirmar Exclusão</h3>
+    <div class="g-modal-confirm-container" (click)="$event.stopPropagation()">
+      <div class="g-modal-confirm-header danger">
+        <div class="header-icon">
+          <mat-icon>warning</mat-icon>
+        </div>
+        <div class="header-text">
+          <h3>Confirmar Exclusão</h3>
+        </div>
       </div>
-      
-      <div class="g-modal-body">
-        <p>Tem certeza que deseja excluir o anúncio <strong>"{{ adToDelete()?.title }}"</strong>?</p>
-        <p class="warning-text">Esta ação não pode ser desfeita.</p>
+
+      <div class="g-modal-confirm-body">
+        <p>
+          Tem certeza que deseja excluir o anúncio
+          <strong>"{{ adToDelete()?.title }}"</strong>?
+        </p>
+        <div class="warning-highlight danger">
+          <mat-icon>warning</mat-icon>
+          <p>Esta ação não pode ser desfeita.</p>
+        </div>
       </div>
-      
-      <div class="g-modal-actions">
+
+      <div class="g-modal-confirm-footer">
         <button type="button" class="btn-cancel" (click)="cancelDelete()">
-          <mat-icon>close</mat-icon> Cancelar
+          Cancelar
         </button>
-        <button type="button" class="btn-confirm" (click)="deleteAdvertisement()">
-          <mat-icon>delete_forever</mat-icon> Excluir
+        <button
+          type="button"
+          class="btn-confirm danger"
+          (click)="deleteAdvertisement()"
+        >
+          Sim, Excluir
         </button>
       </div>
     </div>
   </div>
 }
-
-

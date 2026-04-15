@@ -1,11 +1,9 @@
 <div class="menu-list-wrapper">
-
-  <lib-drag-and-drop 
-    [items]="menus()" 
+  <lib-drag-and-drop
+    [items]="menus()"
     [config]="config"
     listId="main-menu-list"
   >
-    
     <!-- Custom Header -->
     <ng-template #headerTemplate>
       <div class="list-section-header">
@@ -26,7 +24,12 @@
     </ng-template>
 
     <!-- Item Template -->
-    <ng-template #itemTemplate let-item let-isExpanded="isExpanded" let-toggle="toggle">
+    <ng-template
+      #itemTemplate
+      let-item
+      let-isExpanded="isExpanded"
+      let-toggle="toggle"
+    >
       <div class="menu-item-row" [class.is-submenu]="item.type === 'submenu'">
         <!-- Drag Handle -->
         <div class="drag-handle-container" cdkDragHandle>
@@ -38,21 +41,25 @@
           <div class="main-info">
             <div class="title-area">
               @if (item.type === 'submenu') {
-                <button 
-                  type="button" 
-                  class="toggle-btn" 
+                <button
+                  type="button"
+                  class="toggle-btn"
                   (click)="toggle()"
                   [class.expanded]="isExpanded"
                 >
                   <mat-icon class="sm">chevron_right</mat-icon>
                 </button>
               }
-              <mat-icon class="type-icon text-primary sm">{{ getMenuTypeIcon(item.type) }}</mat-icon>
+              <mat-icon class="type-icon text-primary sm">{{
+                getMenuTypeIcon(item.type)
+              }}</mat-icon>
               <span class="name">{{ item.name }}</span>
             </div>
-            <span class="g-badge light mini">{{ getMenuTypeLabel(item.type) }}</span>
+            <span class="g-badge light mini">{{
+              getMenuTypeLabel(item.type)
+            }}</span>
           </div>
-          
+
           <div class="meta-info">
             <div class="meta-item">
               <mat-icon class="text-muted xs">link</mat-icon>
@@ -64,14 +71,26 @@
         <!-- Ações -->
         <div class="g-manage-actions">
           @if (item.type === 'submenu') {
-            <button class="g-action-btn config" (click)="openSubmenuModal(item)" title="Configurar Submenu">
+            <button
+              class="g-action-btn config"
+              (click)="openSubmenuModal(item)"
+              title="Configurar Submenu"
+            >
               <mat-icon class="sm">settings</mat-icon>
             </button>
           }
-          <button class="g-action-btn edit" (click)="editMenu(item)" title="Editar">
+          <button
+            class="g-action-btn edit"
+            (click)="editMenu(item)"
+            title="Editar"
+          >
             <mat-icon class="sm">edit</mat-icon>
           </button>
-          <button class="g-action-btn delete" (click)="confirmDelete(item)" title="Excluir">
+          <button
+            class="g-action-btn delete"
+            (click)="confirmDelete(item)"
+            title="Excluir"
+          >
             <mat-icon class="sm">delete</mat-icon>
           </button>
         </div>
@@ -86,7 +105,11 @@
           <span class="sub-name">{{ child.name }}</span>
           <span class="sub-dest">{{ getMenuDestination(child) }}</span>
         </div>
-        <button class="sub-delete-btn" (click)="confirmDelete(child)" title="Remover subitem">
+        <button
+          class="sub-delete-btn"
+          (click)="confirmDelete(child)"
+          title="Remover subitem"
+        >
           <mat-icon>close</mat-icon>
         </button>
       </div>
@@ -117,9 +140,7 @@
         </div>
       }
     </ng-template>
-
   </lib-drag-and-drop>
-
 </div>
 
 <!-- Modal de Confirmação - Padronizado -->
@@ -130,29 +151,41 @@
         <mat-icon>delete_forever</mat-icon>
       </div>
       <div class="header-text">
-        <h3>Confirmação de Exclusão</h3>
+        <h3>Confirmar Exclusão</h3>
         <p>Esta ação é <strong>irreversível</strong></p>
       </div>
     </div>
-    
+
     <div class="g-modal-confirm-body">
       @if (menuToDelete()?.parentId) {
-        <p>Deseja remover o item <strong>"{{ menuToDelete()?.name }}"</strong> deste submenu?</p>
+        <p>
+          Deseja remover o item
+          <strong>"{{ menuToDelete()?.name }}"</strong> deste submenu?
+        </p>
         <div class="warning-highlight">
           <mat-icon>info</mat-icon>
           <p>O item deixará de ser exibido na navegação do site.</p>
         </div>
       } @else {
-        <p>Tem certeza que deseja excluir o menu <strong>"{{ menuToDelete()?.name }}"</strong>?</p>
-        @if (menuToDelete()?.type === 'submenu' && menuToDelete()?.children?.length) {
+        <p>
+          Tem certeza que deseja excluir o menu
+          <strong>"{{ menuToDelete()?.name }}"</strong>?
+        </p>
+        @if (
+          menuToDelete()?.type === 'submenu' && menuToDelete()?.children?.length
+        ) {
           <div class="warning-highlight danger">
             <mat-icon>report_problem</mat-icon>
-            <p>Atenção: Este item possui <strong>{{ menuToDelete()?.children?.length }} subitens</strong> que também serão removidos!</p>
+            <p>
+              Atenção: Este item possui
+              <strong>{{ menuToDelete()?.children?.length }} subitens</strong>
+              que também serão removidos!
+            </p>
           </div>
         }
       }
     </div>
-    
+
     <div class="g-modal-confirm-footer">
       <button type="button" class="btn-cancel" (click)="cancelDelete()">
         Cancelar
@@ -163,4 +196,3 @@
     </div>
   </div>
 </modal>
-
