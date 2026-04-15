@@ -114,6 +114,18 @@ export class NewsCoreService {
 
     // Extrair dados relacionados
     const { categoryId, mediaNews, videoNews, ...newsData } = createNewsDto;
+    let reconciledMediaNews = mediaNews;
+
+    // Garantir que apenas uma mídia tenha emphasis: true (exclusividade)
+    if (reconciledMediaNews && reconciledMediaNews.length > 0) {
+      const featuredIndex = reconciledMediaNews.findIndex(m => m.emphasis === true);
+      if (featuredIndex !== -1) {
+        reconciledMediaNews = reconciledMediaNews.map((m, index) => ({
+          ...m,
+          emphasis: index === featuredIndex
+        }));
+      }
+    }
 
     // Criar a notícia com relacionamentos
     const news = await this.prisma.news.create({
@@ -124,8 +136,8 @@ export class NewsCoreService {
         newsCategories: {
           create: categoryId.map(catId => ({ categoryId: catId }))
         },
-        mediaNews: mediaNews ? {
-          create: mediaNews.map(media => ({
+        mediaNews: reconciledMediaNews ? {
+          create: reconciledMediaNews.map(media => ({
             emphasis: media.emphasis ?? false,
             imgSize: media.imgSize ? (typeof media.imgSize === 'string' ? media.imgSize : JSON.stringify(Array.isArray(media.imgSize) ? media.imgSize[0] : media.imgSize)) : null,
             author: media.author,
@@ -214,6 +226,18 @@ export class NewsCoreService {
     }
 
     const { categoryId, mediaNews, videoNews, ...newsData } = updateNewsDto;
+    let reconciledMediaNews = mediaNews;
+
+    // Garantir que apenas uma mídia tenha emphasis: true (exclusividade)
+    if (reconciledMediaNews && reconciledMediaNews.length > 0) {
+      const featuredIndex = reconciledMediaNews.findIndex(m => m.emphasis === true);
+      if (featuredIndex !== -1) {
+        reconciledMediaNews = reconciledMediaNews.map((m, index) => ({
+          ...m,
+          emphasis: index === featuredIndex
+        }));
+      }
+    }
 
     // Atualizar a notícia em transação
     await this.prisma.$transaction(async (tx) => {
@@ -235,13 +259,13 @@ export class NewsCoreService {
       }
 
       // Atualizar mídias se fornecidas
-      if (mediaNews) {
+    if (reconciledMediaNews) {
         await tx.newsMedia.deleteMany({
           where: { newsId: id }
         });
 
         await tx.newsMedia.createMany({
-          data: mediaNews.map(media => ({
+          data: reconciledMediaNews.map(media => ({
             newsId: id,
             emphasis: media.emphasis ?? false,
             imgSize: media.imgSize ? (typeof media.imgSize === 'string' ? media.imgSize : JSON.stringify(Array.isArray(media.imgSize) ? media.imgSize[0] : media.imgSize)) : null,

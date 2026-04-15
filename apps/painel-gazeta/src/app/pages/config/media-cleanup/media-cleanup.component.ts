@@ -253,7 +253,8 @@ export class MediaCleanupComponent implements OnInit, OnDestroy {
     const emphasisMedia = news.mediaNews.find(m => m.emphasis);
     const media = emphasisMedia || news.mediaNews[0];
     
-    return media.imgSize?.small || media.imgSize?.medium || media.imgSize?.original || null;
+    const imgSize = Array.isArray(media.imgSize) ? media.imgSize[0] : media.imgSize;
+    return imgSize?.small || imgSize?.medium || imgSize?.original || null;
   }
 
   onImageError(id: number): void {

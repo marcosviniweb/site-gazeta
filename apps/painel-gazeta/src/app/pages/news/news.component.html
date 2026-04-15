@@ -169,7 +169,6 @@
                   <mat-icon>edit_note</mat-icon> Conteúdo da Notícia <span class="required">*</span>
                 </span>
                 <lib-text-editor
-                  (ready)="onReady($event)"
                   formControlName="content"
                   [apiUrl]="apiUrl"
                   [newsId]="newsId">

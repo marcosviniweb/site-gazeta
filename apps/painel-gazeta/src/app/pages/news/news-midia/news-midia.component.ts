@@ -162,10 +162,14 @@ export class NewsMidiaComponent implements OnInit {
 
     if (this.newsMedia()) {
       for (const media of this.newsMedia() ?? []) {
+        const imgSize = Array.isArray(media.imgSize)
+          ? media.imgSize[0]
+          : media.imgSize;
         mediaItems.push({
           ...media,
           type: 'photo',
-          preview: media.imgSize?.medium,
+          imgSize: imgSize,
+          preview: imgSize?.medium,
           isNew: false,
         });
       }
@@ -258,13 +262,11 @@ export class NewsMidiaComponent implements OnInit {
     };
     if (media.type === 'photo') {
       firstValueFrom(this.newsService.updateMedia(id, payload))
-        .then(() => {})
         .catch((error) => {
           console.error(`Erro ao editar mídia`, error);
         });
     } else {
       firstValueFrom(this.newsService.updateVideo(id, payload))
-        .then(() => {})
         .catch((error) => {
           console.error(`Erro ao editar vídeo`, error);
         });
@@ -301,14 +303,17 @@ export class NewsMidiaComponent implements OnInit {
     this.previewMidias().forEach((midia) => {
       if (midia.type === 'photo') {
         newsMidias.push({
+          id: midia.id,
           file: midia.file,
           author: midia.author,
           date: midia.date,
           emphasis: midia.emphasis as boolean,
+          imgSize: midia.imgSize ? [midia.imgSize] : undefined,
         });
       }
       if (midia.type === 'video') {
         videoMidias.push({
+          id: midia.id,
           url: midia.url as string,
           thumbnail: midia.thumbnail as string,
           title: midia.title as string,
@@ -326,7 +331,6 @@ export class NewsMidiaComponent implements OnInit {
   // Função para DELETE (API)
   deleteMediaFromApi(id: number) {
     firstValueFrom(this.newsService.deleteMedia(id))
-      .then(() => {})
       .catch((error) => {
         console.error(`Erro ao deletar mídia`, error);
       });

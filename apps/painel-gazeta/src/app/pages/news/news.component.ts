@@ -246,9 +246,11 @@ export class NewsComponent implements OnInit, OnDestroy {
       content: formValue.content as string,
       categoryId: formValue.categoryId as number[],
       published: formValue.published as string,
-      isEmphasis: false, // Inicialmente salva como false
+      isEmphasis: formValue.isEmphasis as boolean,
       validity: formValue.validity as string | null,
       status: formValue.status as string,
+      mediaNews: formValue['newsMidia'] as NewsMedia[],
+      videoNews: formValue['newsVideo'] as NewsVideo[],
     };
 
     if (this.isEdit()) {
@@ -356,7 +358,7 @@ export class NewsComponent implements OnInit, OnDestroy {
           toArray(), // junta os resultados em um array
         )
         .subscribe({
-          next: (res) => {
+          next: () => {
             this.isUploadingMedia.set(false);
             this.isSavingNews.set(false);
             this.alertService.success('Sucesso', 'Notícia salva com sucesso!');
@@ -426,8 +428,6 @@ export class NewsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onReady(editor: any): void {}
 
   onReset() {
     this.form.reset({

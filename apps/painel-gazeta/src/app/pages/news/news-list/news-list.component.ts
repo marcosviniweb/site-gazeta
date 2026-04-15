@@ -416,10 +416,11 @@ export class NewsListComponent implements OnInit, OnDestroy {
     if (!news.mediaNews || news.mediaNews.length === 0) return null;
     const emphasisMedia = news.mediaNews.find((m) => m.emphasis);
     const media = emphasisMedia || news.mediaNews[0];
+    const imgSize = Array.isArray(media.imgSize) ? media.imgSize[0] : media.imgSize;
     return (
-      media.imgSize?.small ||
-      media.imgSize?.medium ||
-      media.imgSize?.original ||
+      imgSize?.small ||
+      imgSize?.medium ||
+      imgSize?.original ||
       null
     );
   }
