@@ -1,100 +1,256 @@
 @if (isLoading()) {
   <div class="loading-container">
     <div class="loading-spinner"></div>
-    <p>Carregando notícias...</p>
+    <p>Carregando conteúdo...</p>
   </div>
 } @else {
-  <section class="news-category-container">
-      <div class="category-header">
-        <div class="category-name" [style.border-color]="category()!.color">
-          <h2 [style.color]="category()!.color">{{ category()!.name }}</h2>
-          <div class="category-decoration" [style.background]="category()!.color"></div>
-        </div>
-        <div class="category-description">
-          <p [style.color]="category()!.color">{{ category()!.description }}</p>
-        </div>
-      </div>
-    @if (news().length > 0) {
-    <div class="news-grid" >
-      <!-- Notícia principal (imagem grande) -->
-      @if (featuredNews()) {
-        <article class="featured-news" [routerLink]="['/news', featuredNews()!.slug]" >
-          <div class="news-image" [class.loading]="isImageLoading(featuredNews()!.id)">
-            @if (featuredNews()!.mediaNews && featuredNews()!.mediaNews.length > 0) {
-              <img
-                [ngSrc]="featuredNews()!.mediaNews[0].imgSize!.medium || featuredNews()!.mediaNews[0].imgSize!.original"
-                [alt]="featuredNews()!.title"
-                fill
-                priority
-                [class.image-hidden]="isImageLoading(featuredNews()!.id)"
-                (load)="handleImageLoaded(featuredNews()!.id)"
-                (error)="handleImageError(featuredNews()!.id)"
-              />
-              @if (isImageLoading(featuredNews()!.id)) {
-                <div class="image-skeleton">
-                  <div class="shimmer"></div>
-                </div>
-              }
-            } @else {
-              <div class="placeholder-image">
-                <span>Sem imagem</span>
-              </div>
-            }
-            <div class="news-title-overlay">
-              <h2 class="news-title" [style.color]="category()!.color" >{{ featuredNews()!.title }}</h2>
-            </div>
-          </div>
-        </article>
-      }
-
-      <!-- Notícias secundárias (2 imagens menores) -->
-      <div class="secondary-news">
-        @for (newsItem of secondaryNews(); track newsItem.id) {
-          <article class="secondary-news-item" [routerLink]="['/news', newsItem.slug]">
-            <div class="news-image" [class.loading]="isImageLoading(newsItem.id)">
-              @if (newsItem.mediaNews && newsItem.mediaNews.length > 0) {
-                <img
-                  [ngSrc]="newsItem.mediaNews[0].imgSize!.small || newsItem.mediaNews[0].imgSize!.original"
-                  [alt]="newsItem.title"
-                  fill
-                  priority
-                  [class.image-hidden]="isImageLoading(newsItem.id)"
-                  (load)="handleImageLoaded(newsItem.id)"
-                  (error)="handleImageError(newsItem.id)"
-                />
-                @if (isImageLoading(newsItem.id)) {
-                  <div class="image-skeleton">
-                    <div class="shimmer"></div>
-                  </div>
-                }
-              } @else {
-                <div class="placeholder-image">
-                  <span>Sem imagem</span>
-                </div>
-              }
-              <div class="news-title-overlay">
-                <h3 class="news-title" [style.color]="category()!.color" >{{ newsItem.title }}</h3>
-              </div>
-            </div>
-          </article>
+  <section class="news-category-container" [style]="getCategoryStyle()">
+    <!-- Header da Categoria -->
+    <header class="category-header">
+      <div class="category-meta">
+        <span class="category-badge" [style.background]="getCategoryColor()">{{
+          category()?.name
+        }}</span>
+        @if (news().length > 0) {
+          <span class="news-count"
+            >{{ news().length }}
+            {{ news().length === 1 ? 'matéria' : 'matérias' }}</span
+          >
         }
       </div>
-    </div>
-    <div class="more-news">
-      <div class="more-news-container">
-      <lib-more-news 
-        [moreNews]="moreNews()" 
-        [paginationMeta]="paginationMeta()"
-        [title]="''" 
-        [category]="category()!" 
-        [slice]="3"
-        (loadMoreRequested)="loadMore()">
-      </lib-more-news>
+      <div class="category-name">
+        <h2 [style.color]="getCategoryColor()">{{ category()?.name }}</h2>
       </div>
-    </div>
-    } @else {
+      @if (category()?.description) {
+        <div class="category-description">
+          <p>{{ category()?.description }}</p>
+        </div>
+      }
+    </header>
+
+    <!-- Layout: 1 Notícia -->
+    @if (newsLayout() === 'single' && mainNews()) {
+      <div class="news-layout news-layout-single">
+        <article
+          class="featured-hero"
+          [routerLink]="['/news', mainNews()!.slug]"
+        >
+          <div
+            class="news-image"
+            [class.loading]="isImageLoading(mainNews()!.id)"
+          >
+            @if (getImageUrl(mainNews()!)) {
+              <img
+                [ngSrc]="getImageUrl(mainNews()!, 'medium')"
+                [alt]="mainNews()!.title"
+                fill
+                priority
+                [class.image-hidden]="isImageLoading(mainNews()!.id)"
+                (load)="handleImageLoaded(mainNews()!.id)"
+                (error)="handleImageError(mainNews()!.id)"
+              />
+            } @else {
+              <div class="placeholder-image">Sem imagem disponível</div>
+            }
+          </div>
+          <div class="hero-content">
+            <span class="hero-date">{{
+              formatDate(mainNews()!.createdAt)
+            }}</span>
+            <h1 class="hero-title">{{ mainNews()!.title }}</h1>
+          </div>
+        </article>
+      </div>
+    }
+
+    <!-- Layout: 2 Notícias -->
+    @if (
+      newsLayout() === 'double' &&
+      newsForDouble().main &&
+      newsForDouble().secondary
+    ) {
+      <div class="news-layout news-layout-double">
+        <!-- Card Principal -->
+        <article
+          class="news-card main-card"
+          [routerLink]="['/news', newsForDouble().main!.slug]"
+        >
+          <div
+            class="news-image"
+            [class.loading]="isImageLoading(newsForDouble().main!.id)"
+          >
+            @if (getImageUrl(newsForDouble().main!)) {
+              <img
+                [ngSrc]="getImageUrl(newsForDouble().main!, 'medium')"
+                [alt]="newsForDouble().main!.title"
+                fill
+                priority
+                [class.image-hidden]="isImageLoading(newsForDouble().main!.id)"
+                (load)="handleImageLoaded(newsForDouble().main!.id)"
+                (error)="handleImageError(newsForDouble().main!.id)"
+              />
+            } @else {
+              <div class="placeholder-image">Sem imagem</div>
+            }
+          </div>
+          <div class="card-content">
+            <span class="card-date">{{
+              formatDate(newsForDouble().main!.createdAt)
+            }}</span>
+            <h3 class="card-title">{{ newsForDouble().main!.title }}</h3>
+          </div>
+        </article>
+
+        <!-- Card Secundário -->
+        <article
+          class="news-card"
+          [routerLink]="['/news', newsForDouble().secondary!.slug]"
+        >
+          <div
+            class="news-image"
+            [class.loading]="isImageLoading(newsForDouble().secondary!.id)"
+          >
+            @if (getImageUrl(newsForDouble().secondary!)) {
+              <img
+                [ngSrc]="getImageUrl(newsForDouble().secondary!, 'small')"
+                [alt]="newsForDouble().secondary!.title"
+                fill
+                priority
+                [class.image-hidden]="
+                  isImageLoading(newsForDouble().secondary!.id)
+                "
+                (load)="handleImageLoaded(newsForDouble().secondary!.id)"
+                (error)="handleImageError(newsForDouble().secondary!.id)"
+              />
+            } @else {
+              <div class="placeholder-image">Sem imagem</div>
+            }
+          </div>
+          <div class="card-content">
+            <span class="card-date">{{
+              formatDate(newsForDouble().secondary!.createdAt)
+            }}</span>
+            <h3 class="card-title">{{ newsForDouble().secondary!.title }}</h3>
+          </div>
+        </article>
+      </div>
+    }
+
+    <!-- Layout: 3+ Notícias -->
+    @if (
+      newsLayout() === 'multiple' && mainNews() && secondaryNews().length > 0
+    ) {
+      <div class="news-layout news-layout-multiple">
+        <!-- Featured Row -->
+        <div class="featured-row">
+          <!-- Main Featured -->
+          <article
+            class="main-featured"
+            [routerLink]="['/news', mainNews()!.slug]"
+          >
+            <div
+              class="news-image"
+              [class.loading]="isImageLoading(mainNews()!.id)"
+            >
+              @if (getImageUrl(mainNews()!)) {
+                <img
+                  [ngSrc]="getImageUrl(mainNews()!, 'medium')"
+                  [alt]="mainNews()!.title"
+                  fill
+                  priority
+                  [class.image-hidden]="isImageLoading(mainNews()!.id)"
+                  (load)="handleImageLoaded(mainNews()!.id)"
+                  (error)="handleImageError(mainNews()!.id)"
+                />
+              } @else {
+                <div class="placeholder-image">Sem imagem</div>
+              }
+            </div>
+            <div class="featured-content">
+              <span
+                class="featured-label"
+                [style.background]="getCategoryColor()"
+                >Destaque</span
+              >
+              <h1 class="featured-title">{{ mainNews()!.title }}</h1>
+            </div>
+          </article>
+
+          <!-- Side Featured -->
+          <div class="side-featured">
+            @for (newsItem of secondaryNews(); track newsItem.id) {
+              <article
+                class="side-item"
+                [routerLink]="['/news', newsItem.slug]"
+              >
+                <div
+                  class="news-image"
+                  [class.loading]="isImageLoading(newsItem.id)"
+                >
+                  @if (getImageUrl(newsItem)) {
+                    <img
+                      [ngSrc]="getImageUrl(newsItem, 'small')"
+                      [alt]="newsItem.title"
+                      fill
+                      priority
+                      [class.image-hidden]="isImageLoading(newsItem.id)"
+                      (load)="handleImageLoaded(newsItem.id)"
+                      (error)="handleImageError(newsItem.id)"
+                    />
+                  } @else {
+                    <div class="placeholder-image">Sem imagem</div>
+                  }
+                </div>
+                <div class="side-content">
+                  <h3 class="side-title">{{ newsItem.title }}</h3>
+                </div>
+              </article>
+            }
+          </div>
+        </div>
+
+        <!-- More News Section -->
+        @if (remainingNews().length > 0) {
+          <div class="more-news-section">
+            <div class="section-divider"></div>
+            <div class="section-header">
+              <h2 class="section-title" [style.color]="getCategoryColor()">
+                Mais notícias
+              </h2>
+              <div class="section-line"></div>
+            </div>
+            <lib-more-news
+              [moreNews]="remainingNews()"
+              [paginationMeta]="paginationMeta()"
+              [title]="''"
+              [category]="category()!"
+              [slice]="6"
+              (loadMoreRequested)="loadMore()"
+            >
+            </lib-more-news>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Empty State -->
+    @if (news().length === 0 && !isLoading()) {
       <div class="no-news">
-        <p>Nenhuma notícia encontrada para esta categoria.</p>
+        <div class="no-news-icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path
+              d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V9a2 2 0 012-2h2a2 2 0 012 2v9a2 2 0 01-2 2h-2z"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <p>Nenhuma notícia encontrada para esta categoria ainda.</p>
       </div>
     }
   </section>
