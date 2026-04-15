@@ -49,7 +49,7 @@ interface MediaItem {
 export class NewsMidiaComponent implements OnInit {
   private alertService = inject(AlertService);
   private sanitizer = inject(DomSanitizer);
-  
+
   @ViewChild('photoInput') photoInput!: ElementRef<HTMLInputElement>;
   //medias da noticia para edição
   newsMedia = input<NewsMedia[]>();
@@ -62,8 +62,8 @@ export class NewsMidiaComponent implements OnInit {
   formValue = output<{ newsVideo: NewsVideo[]; newsMedia: NewsMedia[] }>();
   featuredImage = computed(() =>
     this.previewMidias().find(
-      (media) => media.type === 'photo' && media.emphasis
-    )
+      (media) => media.type === 'photo' && media.emphasis,
+    ),
   );
 
   selectedMedia = computed(() => {
@@ -72,19 +72,23 @@ export class NewsMidiaComponent implements OnInit {
   });
 
   hasMidias = computed(() => this.previewMidias().length > 0);
+  private inputsPopulated = false;
   constructor() {
-    // Effect só para exportação e checagem
+    // Effect só para exportação - sempre roda quando há mudança
     effect(() => {
       this.exportMidias();
       this.checkEditNewsMedia();
     });
 
-    // Effect separado, só para inputs
+    // Effect separado - só para inputs iniciais
     effect(() => {
       // Só depende dos inputs!
-      this.newsMedia();
-      this.newsVideo();
-      this.populateMediaFromInputs();
+      const media = this.newsMedia();
+      const videos = this.newsVideo();
+      if (!this.inputsPopulated && (media?.length || videos?.length)) {
+        this.inputsPopulated = true;
+        this.populateMediaFromInputs();
+      }
     });
   }
   privewChange = computed(() => this.exportMidias());
@@ -94,7 +98,6 @@ export class NewsMidiaComponent implements OnInit {
 
   checkEditNewsMedia() {
     if (this.newsMedia() || this.newsVideo()) {
-      console.log(this.newsMedia(), this.newsVideo());
       return this.isEdit.set(true);
     }
     return;
@@ -113,7 +116,10 @@ export class NewsMidiaComponent implements OnInit {
 
       this.previewMidias.update((midias) => [...midias, newVideo]);
     } else if (videoUrl) {
-      this.alertService.warning('Atenção', 'Por favor, insira uma URL válida do YouTube.');
+      this.alertService.warning(
+        'Atenção',
+        'Por favor, insira uma URL válida do YouTube.',
+      );
     }
   }
 
@@ -151,14 +157,15 @@ export class NewsMidiaComponent implements OnInit {
 
   // Popula o array interno ao receber dados da API
   populateMediaFromInputs() {
-    const mediaItems: MediaItem[] = [];
+    const existingNew = this.previewMidias().filter((m) => m.file || m.isNew);
+    const mediaItems: MediaItem[] = [...existingNew];
+
     if (this.newsMedia()) {
-      console.log(this.newsMedia());
       for (const media of this.newsMedia() ?? []) {
         mediaItems.push({
           ...media,
           type: 'photo',
-          preview: media.imgSize?.medium, // para exibição
+          preview: media.imgSize?.medium,
           isNew: false,
         });
       }
@@ -216,28 +223,27 @@ export class NewsMidiaComponent implements OnInit {
             i === index
               ? !item.emphasis
               : item.type === 'photo'
-              ? false
-              : item.emphasis,
-        }))
+                ? false
+                : item.emphasis,
+        })),
       );
     }
   }
 
   // Salvar edição (diferencia nova de existente)
   saveMediaInfo() {
-    console.log(this.editingMedia())
     const index = this.selectedMediaIndex();
     if (index !== null) {
       const media = this.editingMedia();
       if (media.id) {
-        this.patchMediaInfo(media.id,media);
+        this.patchMediaInfo(media.id, media);
       }
       this.previewMidias.update((midias) =>
         midias.map((item, i) =>
           i === index
             ? ({ ...item, ...this.editingMedia() } as MediaItem)
-            : item
-        )
+            : item,
+        ),
       );
       this.cancelMediaEdit();
     }
@@ -245,26 +251,24 @@ export class NewsMidiaComponent implements OnInit {
 
   // Função para PATCH (API)
   patchMediaInfo(id: number, media: Partial<MediaItem>) {
-    console.log(`Editando mídia com ID: ${id}`, media);
-    if(media.imgSize){
-      firstValueFrom(this.newsService.updateMedia(id,media))
-      .then(() => {
-        console.log(`Mídia editada com sucesso.`);
-      })
-      .catch((error) => {
-        console.error(`Erro ao editar mídia`, error);
-      });
-
-    }else{
-      firstValueFrom(this.newsService.updateVideo(id,media))
-      .then(() => {
-        console.log(`Vídeo editado com sucesso.`);
-      })
-      .catch((error) => {
-        console.error(`Erro ao editar vídeo`, error);
-      });
+    const payload: Partial<MediaItem> = {
+      emphasis: media.emphasis,
+      author: media.author,
+      date: media.date,
+    };
+    if (media.type === 'photo') {
+      firstValueFrom(this.newsService.updateMedia(id, payload))
+        .then(() => {})
+        .catch((error) => {
+          console.error(`Erro ao editar mídia`, error);
+        });
+    } else {
+      firstValueFrom(this.newsService.updateVideo(id, payload))
+        .then(() => {})
+        .catch((error) => {
+          console.error(`Erro ao editar vídeo`, error);
+        });
     }
-
   }
 
   cancelMediaEdit() {
@@ -286,7 +290,7 @@ export class NewsMidiaComponent implements OnInit {
 
   private extractYouTubeId(url: string): string {
     const match = url.match(
-      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
+      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/,
     );
     return match && match[2].length === 11 ? match[2] : '';
   }
@@ -322,12 +326,10 @@ export class NewsMidiaComponent implements OnInit {
   // Função para DELETE (API)
   deleteMediaFromApi(id: number) {
     firstValueFrom(this.newsService.deleteMedia(id))
-    .then(() => {
-      console.log(`Mídia deletada com sucesso.`);
-    })
-    .catch((error) => {
-      console.error(`Erro ao deletar mídia`, error);
-    });
+      .then(() => {})
+      .catch((error) => {
+        console.error(`Erro ao deletar mídia`, error);
+      });
   }
 
   private shouldSetAsFirstFeatured(): boolean {
@@ -337,7 +339,7 @@ export class NewsMidiaComponent implements OnInit {
     }
 
     const hasFeaturedImage = currentMidias.some(
-      (media) => media.type === 'photo' && media.emphasis
+      (media) => media.type === 'photo' && media.emphasis,
     );
 
     return !hasFeaturedImage;
@@ -357,6 +359,8 @@ export class NewsMidiaComponent implements OnInit {
     }
     // Reseta o estado de edição
     this.isEdit.set(false);
+    // Reseta o flag de population
+    this.inputsPopulated = false;
     // Emite evento vazio para atualizar o formulário principal
     this.formValue.emit({
       newsVideo: [],

@@ -4,16 +4,19 @@ import { appRoutes } from './app.routes';
 import {
   provideClientHydration,
   withEventReplay,
+  withHttpTransferCacheOptions,
 } from '@angular/platform-browser';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { environment } from './core/env/env';
+import { environment } from '@site-gazeta/env';
 import { newsIdsInterceptor } from './core/interceptor/news-ids.interceptor';
 import { excludeNewsInterceptor } from './core/interceptor/exclude-news.interceptor';
-import { provideLibraryConfig, debugApiInterceptor } from '@site-gazeta/api';
+import { provideLibraryConfig} from '@site-gazeta/api';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideClientHydration(withEventReplay()),
+    provideClientHydration(
+      withEventReplay(),
+    ),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(
       appRoutes,
@@ -26,7 +29,6 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([
         excludeNewsInterceptor,
         newsIdsInterceptor,
-        debugApiInterceptor
       ]),
       withFetch()
     ),

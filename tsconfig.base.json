@@ -54,7 +54,8 @@
         "libs/components/video-components/src/index.ts"
       ],
       "@site-gazeta/video-player": ["libs/components/video-player/src/index.ts"],
-      "@site-gazeta/api": ["libs/api/src/index.ts"]
+      "@site-gazeta/api": ["libs/api/src/index.ts"],
+      "@site-gazeta/env": ["environments/env.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

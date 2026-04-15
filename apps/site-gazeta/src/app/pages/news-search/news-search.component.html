@@ -1,24 +1,26 @@
-@if(filteredNews().length > 0 || queryLength()) {
-  @if(isLoading()){
-    <div class="loading-container">
-      <div class="loading-spinner"></div>
-      <p>Buscando Resultados...</p>
-    </div>
-  } @else {
-    <lib-more-news [moreNews]="filteredNews()" [title]="'Resultados da pesquisa'"></lib-more-news>
-  }
+@if (error()) {
+  <div class="error-container">
+    <p>{{ error() }}</p>
+  </div>
+} @else if (isLoading()) {
+  <div class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Buscando Resultados...</p>
+  </div>
+} @else if (filteredNews().length > 0) {
+  <lib-more-news
+    [moreNews]="filteredNews()"
+    [title]="'Resultados da pesquisa'"
+  ></lib-more-news>
+} @else if (queryLength()) {
+  <div class="placeholder">
+    <h2>Nenhum resultado encontrado</h2>
+    <p>Tente usar outros termos ou palavras-chave diferentes.</p>
+  </div>
 } @else {
   <div class="placeholder">
-    <h2 >Pesquise suas notícias favoritas!</h2>
-    <p>Utilize o campo de busca acima para encontrar o que você procura. (Deve conter pelo menos 2 caracteres)</p>
-    <p>Se não encontrou o que procurava, tente outros termos ou palavras-chave.</p>
+    <h2>Pesquise suas notícias favoritas!</h2>
+    <p>Utilize o campo de busca acima para encontrar o que você procura.</p>
+    <p class="hint">Deve conter pelo menos 2 caracteres</p>
   </div>
-
 }
-<!-- @defer (when filteredNews().length > 0){
-<lib-more-news [moreNews]="filteredNews()" [title]="''"></lib-more-news>
-}@loading {
-
-</div>
-} -->
-

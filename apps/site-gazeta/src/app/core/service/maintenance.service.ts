@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { environment } from '../env/env';
+import { environment } from '@site-gazeta/env';
 
 export interface MaintenanceConfig {
   id: number;

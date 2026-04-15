@@ -4,7 +4,10 @@ import { CreateMediaDto } from './dto/create-media.dto';
 import { UpdateMediaDto } from './dto/update-media.dto';
 import { MediaResponseDto } from './dto/media-response.dto';
 import { UploadMediaDto } from './dto/upload-media.dto';
-import { ImageProcessingService, ImageSizes } from './services/image-processing.service';
+import {
+  ImageProcessingService,
+  ImageSizes,
+} from './services/image-processing.service';
 import { sanitizeFileName } from '../utils/file-name-sanitizer';
 
 @Injectable()
@@ -13,7 +16,7 @@ export class MediaService {
 
   constructor(
     private prisma: PrismaService,
-    private imageProcessingService: ImageProcessingService
+    private imageProcessingService: ImageProcessingService,
   ) {}
 
   async create(createMediaDto: CreateMediaDto): Promise<MediaResponseDto> {
@@ -21,7 +24,9 @@ export class MediaService {
       data: {
         newsId: createMediaDto.postId,
         emphasis: createMediaDto.emphasis,
-        imgSize: createMediaDto.imgSize ? JSON.stringify(createMediaDto.imgSize) : null,
+        imgSize: createMediaDto.imgSize
+          ? JSON.stringify(createMediaDto.imgSize)
+          : null,
         author: createMediaDto.author,
         date: createMediaDto.date,
       },
@@ -30,7 +35,11 @@ export class MediaService {
     return this.formatResponse(media);
   }
 
-  async createWithUpload(file: any, data: UploadMediaDto, baseUrlFromRequest?: string): Promise<MediaResponseDto> {
+  async createWithUpload(
+    file: any,
+    data: UploadMediaDto,
+    baseUrlFromRequest?: string,
+  ): Promise<MediaResponseDto> {
     // Sanitizar nome do arquivo antes de adicionar timestamp
     const sanitizedOriginalName = sanitizeFileName(file.originalname);
     // Gerar nome único para o arquivo (formato: {timestamp}_{nome_sanitizado})
@@ -38,13 +47,30 @@ export class MediaService {
     const filename = `${timestamp}_${sanitizedOriginalName}`;
 
     // Processar imagem em diferentes tamanhos
-    const imageSizes = await this.imageProcessingService.processImage(file, filename);
+    const imageSizes = await this.imageProcessingService.processImage(
+      file,
+      filename,
+    );
 
     // Gerar URLs públicas
     const resolvedBaseUrl = baseUrlFromRequest || process.env.BASE_URL || '';
-    const publicUrls = this.imageProcessingService.generatePublicUrls(imageSizes, resolvedBaseUrl);
+    const publicUrls = this.imageProcessingService.generatePublicUrls(
+      imageSizes,
+      resolvedBaseUrl,
+    );
 
     // Salvar no banco de dados usando NewsMedia
+    if (data.emphasis) {
+      await this.prisma.newsMedia.updateMany({
+        where: {
+          newsId: data.postId,
+        },
+        data: {
+          emphasis: false,
+        },
+      });
+    }
+
     const media = await this.prisma.newsMedia.create({
       data: {
         newsId: data.postId,
@@ -58,7 +84,11 @@ export class MediaService {
     return this.formatResponse(media);
   }
 
-  async createWithMultipleUpload(files: any[], data: UploadMediaDto, baseUrlFromRequest?: string): Promise<MediaResponseDto[]> {
+  async createWithMultipleUpload(
+    files: any[],
+    data: UploadMediaDto,
+    baseUrlFromRequest?: string,
+  ): Promise<MediaResponseDto[]> {
     const results: MediaResponseDto[] = [];
     const resolvedBaseUrl = baseUrlFromRequest || process.env.BASE_URL || '';
 
@@ -74,17 +104,35 @@ export class MediaService {
         const filename = `${timestamp}_${randomId}_${sanitizedOriginalName}`;
 
         // Processar imagem em diferentes tamanhos
-        const imageSizes = await this.imageProcessingService.processImage(file, filename);
+        const imageSizes = await this.imageProcessingService.processImage(
+          file,
+          filename,
+        );
 
         // Gerar URLs públicas
-        const publicUrls = this.imageProcessingService.generatePublicUrls(imageSizes, resolvedBaseUrl);
+        const publicUrls = this.imageProcessingService.generatePublicUrls(
+          imageSizes,
+          resolvedBaseUrl,
+        );
 
         // Salvar no banco de dados
         // Para múltiplas imagens, apenas a primeira pode ter emphasis = true
+        const isEmphasis = data.emphasis && i === 0;
+        if (isEmphasis) {
+          await this.prisma.newsMedia.updateMany({
+            where: {
+              newsId: data.postId,
+            },
+            data: {
+              emphasis: false,
+            },
+          });
+        }
+
         const media = await this.prisma.newsMedia.create({
           data: {
             newsId: data.postId,
-            emphasis: data.emphasis && i === 0, // Apenas a primeira imagem tem emphasis
+            emphasis: isEmphasis,
             imgSize: JSON.stringify(publicUrls), // Converter para JSON string
             author: data.author,
             date: data.date,
@@ -93,7 +141,10 @@ export class MediaService {
 
         results.push(this.formatResponse(media));
       } catch (error) {
-        this.logger.error(`Erro ao processar arquivo ${file.originalname}:`, error);
+        this.logger.error(
+          `Erro ao processar arquivo ${file.originalname}:`,
+          error,
+        );
         // Continua processando os outros arquivos mesmo se um falhar
       }
     }
@@ -112,7 +163,7 @@ export class MediaService {
       },
     });
 
-    return medias.map(media => this.formatResponse(media));
+    return medias.map((media) => this.formatResponse(media));
   }
 
   async findOne(id: number): Promise<MediaResponseDto> {
@@ -135,18 +186,36 @@ export class MediaService {
       },
     });
 
-    return medias.map(media => this.formatResponse(media));
+    return medias.map((media) => this.formatResponse(media));
   }
 
-  async update(id: number, updateMediaDto: UpdateMediaDto): Promise<MediaResponseDto> {
+  async update(
+    id: number,
+    updateMediaDto: UpdateMediaDto,
+  ): Promise<MediaResponseDto> {
     const existingMedia = await this.findMediaById(id);
+    const newEmphasis = updateMediaDto.emphasis ?? existingMedia.emphasis;
+
+    if (newEmphasis === true) {
+      await this.prisma.newsMedia.updateMany({
+        where: {
+          newsId: existingMedia.newsId,
+          id: { not: id },
+        },
+        data: {
+          emphasis: false,
+        },
+      });
+    }
 
     const updatedMedia = await this.prisma.newsMedia.update({
       where: { id },
       data: {
         newsId: updateMediaDto.postId || existingMedia.newsId,
-        emphasis: updateMediaDto.emphasis ?? existingMedia.emphasis,
-        imgSize: updateMediaDto.imgSize ? JSON.stringify(updateMediaDto.imgSize) : existingMedia.imgSize,
+        emphasis: newEmphasis,
+        imgSize: updateMediaDto.imgSize
+          ? JSON.stringify(updateMediaDto.imgSize)
+          : existingMedia.imgSize,
         author: updateMediaDto.author ?? existingMedia.author,
         date: updateMediaDto.date ?? existingMedia.date,
       },
@@ -170,7 +239,10 @@ export class MediaService {
         }
         await this.imageProcessingService.deleteImageFiles(imgSize);
       } catch (error) {
-        this.logger.error(`Erro ao deletar arquivos de imagem para mídia ${id}:`, error);
+        this.logger.error(
+          `Erro ao deletar arquivos de imagem para mídia ${id}:`,
+          error,
+        );
         // Não interrompe a exclusão do registro no banco
       }
     }
@@ -197,7 +269,7 @@ export class MediaService {
         postId,
         deletedCount: 0,
         keptMediaIds: medias.map((media) => media.id),
-        removedMediaIds: []
+        removedMediaIds: [],
       };
     }
 
@@ -219,7 +291,9 @@ export class MediaService {
         continue;
       }
 
-      const preferredMedia = group.find((media) => media.emphasis) ?? [...group].sort((a, b) => b.id - a.id)[0];
+      const preferredMedia =
+        group.find((media) => media.emphasis) ??
+        [...group].sort((a, b) => b.id - a.id)[0];
       keptMediaIds.push(preferredMedia.id);
 
       const duplicates = group
@@ -237,7 +311,7 @@ export class MediaService {
       postId,
       deletedCount: removedMediaIds.length,
       keptMediaIds,
-      removedMediaIds
+      removedMediaIds,
     };
   }
 
@@ -255,9 +329,12 @@ export class MediaService {
 
   private normalizeUrl(url: string): string {
     if (!url) return url;
-    const match = url.match(/^[^/]+,\s*(https?:\/\/.*)$/i);
-    if (match) return match[1].trim();
-    return url.replace(/\\/g, '/');
+    let normalized = url.replace(/\\/g, '/');
+    const match = normalized.match(/^(https?,?\s*)+,\s*(https?:\/\/.*)$/i);
+    if (match) return match[2].trim();
+    normalized = normalized.replace(/^https,?\s+/i, 'https://');
+    normalized = normalized.replace(/^http,?\s+/i, 'http://');
+    return normalized;
   }
 
   private formatResponse(media: any): MediaResponseDto {
@@ -267,18 +344,21 @@ export class MediaService {
       try {
         imgSize = JSON.parse(imgSize);
         if (imgSize && typeof imgSize === 'object') {
-          Object.keys(imgSize).forEach(key => {
+          Object.keys(imgSize).forEach((key) => {
             if (typeof imgSize[key] === 'string') {
               imgSize[key] = this.normalizeUrl(imgSize[key]);
             }
           });
         }
       } catch (error) {
-        this.logger.warn(`Erro ao fazer parse de imgSize para mídia ${media.id}:`, error);
+        this.logger.warn(
+          `Erro ao fazer parse de imgSize para mídia ${media.id}:`,
+          error,
+        );
         imgSize = null;
       }
     } else if (imgSize && typeof imgSize === 'object') {
-      Object.keys(imgSize).forEach(key => {
+      Object.keys(imgSize).forEach((key) => {
         if (typeof imgSize[key] === 'string') {
           imgSize[key] = this.normalizeUrl(imgSize[key]);
         }
@@ -298,7 +378,11 @@ export class MediaService {
   }
 
   private buildMediaFingerprint(media: MediaResponseDto): string {
-    const source = media.imgSize?.original || media.imgSize?.medium || media.imgSize?.small || '';
+    const source =
+      media.imgSize?.original ||
+      media.imgSize?.medium ||
+      media.imgSize?.small ||
+      '';
     const filename = source.split('?')[0].split('/').pop() || '';
 
     return filename

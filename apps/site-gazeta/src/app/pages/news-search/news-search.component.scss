@@ -1,29 +1,35 @@
-:host{
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    min-height: 90vh;
-    padding-top: 10px;
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 90vh;
+  padding-top: 10px;
 }
 
-.result, .placeholder {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    h2 {
-        font-size: 20px;
-        font-weight: 700;
-        margin: 0;
-        font-family: 'Open Sans', sans-serif;
-        color: #0a80c4;
-    }
-    p{
-        font-size: 16px;
-        font-weight: 500;
-        margin: 0;
-        font-family: 'Open Sans', sans-serif;
-        color: #666;
-    }
+.result,
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+    font-family: 'Open Sans', sans-serif;
+    color: #0a80c4;
+  }
+  p {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
+    font-family: 'Open Sans', sans-serif;
+    color: #666;
+  }
+  .hint {
+    font-size: 14px;
+    color: #999;
+    font-weight: 400;
+  }
 }
 
 .loading-container,
@@ -41,6 +47,14 @@
   }
 }
 
+.error-container {
+  p {
+    color: #d32f2f;
+    font-weight: 500;
+  }
+}
+
+
 .loading-spinner {
   width: 50px;
   height: 50px;
@@ -51,6 +65,10 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

@@ -18,23 +18,21 @@ export interface TopCategoriesConfig {
   createdBy: number;
 }
 
-// Mantido para compatibilidade (deprecated)
-export interface PrimaryConfig {
+// Mantido para compatibilidade (aliases de TopCategoriesConfig)
+export type PrimaryConfig = TopCategoriesConfig;
+export type SecondaryConfig = TopCategoriesConfig;
+
+export interface MaintenanceConfig {
   id: number;
-  randomMode: boolean;
-  categories: Category[];
-  categoryIds: number[];
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
   createdBy: number;
 }
 
-// Mantido para compatibilidade (deprecated)
-export interface SecondaryConfig {
+export interface CarouselConfig {
   id: number;
-  randomMode: boolean;
-  categories: Category[];
-  categoryIds: number[];
+  featuredNewsLimit: number;
   createdAt: string;
   updatedAt: string;
   createdBy: number;

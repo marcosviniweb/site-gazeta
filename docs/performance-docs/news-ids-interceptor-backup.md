@@ -1,17 +1,16 @@
+# Backup: news-ids.interceptor.ts
+
+## Estado Original - Antes das Otimizações
+
+**Arquivo:** `apps/site-gazeta/src/app/core/interceptor/news-ids.interceptor.ts`
+
+```typescript
 import { HttpInterceptorFn, HttpResponse } from '@angular/common/http';
 import { inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { tap } from 'rxjs/operators';
 import { NewsManagerService } from '../service/news-manager.service';
 import { News } from '@site-gazeta/models';
-
-// ✅ Padrões regex pré-compilados para performance (avaliação única)
-const NEWS_ID_PATTERNS = [
-  /\/news\/featured$/,
-  /\/news\/category\/\d+/,
-  /\/news$/,
-  /\/news\?/,
-];
 
 /**
  * Interceptor que captura IDs de notícias das respostas HTTP
@@ -31,35 +30,22 @@ export const newsIdsInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
-  // ✅ Early exit - ignora endpoints que não são de notícias
-  const url = req.url;
-  if (!url.includes('/news')) {
-    return next(req);
-  }
-
   const newsManagerService = inject(NewsManagerService);
 
   return next(req).pipe(
     tap((response) => {
       const responseData = response as HttpResponse<any>;
+      const url = req.url;
 
-      // ✅ Detecção otimizada com regex pré-compilado
-      const isNewsEndpoint = NEWS_ID_PATTERNS.some((pattern) =>
-        pattern.test(url),
-      );
+      // Detecta endpoints de notícias
+      const isNewsEndpoint = (url.includes('/news') && !url.includes('/news/')) || url.match(/\/news\/(featured|category|latest-news|search)/);
 
-      if (
-        isNewsEndpoint &&
-        Array.isArray(responseData.body) &&
-        responseData.body.length > 0
-      ) {
+      if (isNewsEndpoint && Array.isArray(responseData.body) && responseData.body.length > 0) {
         const firstItem = responseData.body[0];
 
         // Verifica se é um array de notícias (tem ID)
         if (firstItem && typeof firstItem === 'object' && 'id' in firstItem) {
-          const ids = (responseData.body as News[]).map(
-            (news: News) => news.id,
-          );
+          const ids = (responseData.body as News[]).map((news: News) => news.id);
 
           if (ids.length > 0) {
             newsManagerService.excludeIds(ids);
@@ -69,3 +55,14 @@ export const newsIdsInterceptor: HttpInterceptorFn = (req, next) => {
     }),
   );
 };
+```
+
+## Problemas Identificados
+
+1. **Bug lógico (linha 34-36):** Precedence de operadores incorreto
+   - `url.includes('/news') && !url.includes('/news/') || url.match(...)`
+   - Deveria ser: `url.includes('/news') && (!url.includes('/news/') || url.match(...))`
+
+2. **Performance:** regex compilado em cada request
+
+3. **Edge case:** urls como `/news/123` falham na detecção

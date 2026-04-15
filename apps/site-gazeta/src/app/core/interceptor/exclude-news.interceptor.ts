@@ -3,6 +3,20 @@ import { inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { NewsManagerService } from '../service/news-manager.service';
 
+// ✅ Padrões regex pré-compilados para performance
+const NEWS_ENDPOINTS_WITH_EXCLUDE = [
+  /\/news\/featured$/,
+  /\/news\/category\/\d+/,
+  /\/news(\?|$)/,
+];
+
+// ✅ Endpoints que NÃO devem receber exclude (verifica primeiro)
+const EXCLUDED_ENDPOINTS = [
+  '/news/most-viewed',
+  '/news/latest-news',
+  '/news/search',
+];
+
 /**
  * Interceptor que adiciona automaticamente IDs excluídos nos endpoints de notícias
  *
@@ -21,49 +35,47 @@ export const excludeNewsInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
-  const newsManagerService = inject(NewsManagerService);
   const url = req.url;
 
-  // Lista de endpoints que suportam o parâmetro 'exclude'
-  // NOTA: latest-news e most-viewed NÃO estão incluídos pois devem mostrar sempre
-  // as mais recentes/mais vistas, mesmo que já tenham sido exibidas em outras seções
-  const newsEndpointsWithExclude = [
-    '/news/featured',
-    '/news/category/',
-    '/news'
-  ];
+  // ✅ Early exit - ignora se não é endpoint de notícias
+  if (!url.includes('/news')) {
+    return next(req);
+  }
 
-  // Endpoints que NÃO devem receber exclude
-  const excludedEndpoints = [
-    '/news/most-viewed',
-    '/news/latest-news',
-    '/news/search'
-  ];
+  // ✅ Verifica endpoints excluídos PRIMEIRO (mais rápido)
+  const isExcludedEndpoint = EXCLUDED_ENDPOINTS.some((endpoint) =>
+    url.includes(endpoint),
+  );
+  if (isExcludedEndpoint) {
+    return next(req);
+  }
 
-  // Verifica se é um endpoint de notícias que suporta exclusão
-  const isExcludedEndpoint = excludedEndpoints.some(endpoint => url.includes(endpoint));
-  const isNewsEndpoint = !isExcludedEndpoint && newsEndpointsWithExclude.some(endpoint => url.includes(endpoint));
+  // ✅ Detecta endpoints que suportam exclude com regex pré-compilado
+  const isNewsEndpoint = NEWS_ENDPOINTS_WITH_EXCLUDE.some((pattern) =>
+    pattern.test(url),
+  );
 
-  if (isNewsEndpoint && newsManagerService.excludedIds.length > 0) {
-    // Pega os IDs excluídos
-    const excludeIds = newsManagerService.excludedIds.join(',');
+  if (isNewsEndpoint) {
+    const newsManagerService = inject(NewsManagerService);
 
-    // Adiciona o parâmetro 'exclude' na requisição
-    let params = req.params || new HttpParams();
+    if (newsManagerService.excludedIds.length > 0) {
+      // Pega os IDs excluídos
+      const excludeIds = newsManagerService.excludedIds.join(',');
 
-    // Não sobrescreve se já existe um parâmetro exclude (permite override manual)
-    if (!params.has('exclude')) {
-      params = params.set('exclude', excludeIds);
+      // Adiciona o parâmetro 'exclude' na requisição
+      let params = req.params || new HttpParams();
+
+      // Não sobrescreve se já existe um parâmetro exclude (permite override manual)
+      if (!params.has('exclude')) {
+        params = params.set('exclude', excludeIds);
+      }
+
+      // Clona a requisição com os novos parâmetros
+      const modifiedReq = req.clone({ params });
+      return next(modifiedReq);
     }
-
-    // Clona a requisição com os novos parâmetros
-    const modifiedReq = req.clone({ params });
-
-
-    return next(modifiedReq);
   }
 
   // Se não é um endpoint de notícias, passa sem modificar
   return next(req);
 };
-

@@ -1,10 +1,21 @@
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ContentMediaResponseDto } from './dto/content-media-response.dto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
-import { writeFile, readdir, rm, stat, unlink as unlinkFile } from 'fs/promises';
+import {
+  writeFile,
+  readdir,
+  rm,
+  stat,
+  unlink as unlinkFile,
+} from 'fs/promises';
 import sharp from 'sharp';
 import { sanitizeFileName } from '../utils/file-name-sanitizer';
 
@@ -21,18 +32,33 @@ export class ContentMediaService {
   /**
    * Faz upload de uma imagem de conteúdo (apenas tamanho original)
    */
+  private cleanBaseUrl(baseUrl: string): string {
+    let clean = baseUrl.replace(/\\/g, '/');
+    clean = clean.replace(/^https,?\s+/i, 'https://');
+    clean = clean.replace(/^http,?\s+/i, 'http://');
+    clean = clean.replace(/,+$/, '');
+    return clean;
+  }
+
   async uploadContentMedia(
     file: any,
-    baseUrl: string
+    baseUrl: string,
   ): Promise<ContentMediaResponseDto> {
     if (!file) {
       throw new BadRequestException('Arquivo não fornecido');
     }
 
     // Validar tipo de arquivo
-    const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/webp',
+    ];
     if (!allowedMimeTypes.includes(file.mimetype)) {
-      throw new BadRequestException('Tipo de arquivo não permitido. Use JPG, PNG ou WEBP');
+      throw new BadRequestException(
+        'Tipo de arquivo não permitido. Use JPG, PNG ou WEBP',
+      );
     }
 
     // Gerar nome único para o arquivo (formato: {timestamp}_{nome_sanitizado})
@@ -52,11 +78,11 @@ export class ContentMediaService {
     await this.convertToWebP(file.buffer, filePath);
 
     // Gerar URL pública (com extensão .webp)
-    const publicUrl = `${baseUrl}/uploads/${timestamp}/${webpFilename}`;
+    const publicUrl = `${this.cleanBaseUrl(baseUrl)}/uploads/${timestamp}/${webpFilename}`;
 
     // Verificar se URL já existe (evitar duplicação)
     const existing = await this.prisma.contentMedia.findUnique({
-      where: { url: publicUrl }
+      where: { url: publicUrl },
     });
 
     if (existing) {
@@ -64,7 +90,10 @@ export class ContentMediaService {
       try {
         await unlink(filePath);
       } catch (error) {
-        this.logger.warn(`Erro ao deletar arquivo duplicado: ${filePath}`, error);
+        this.logger.warn(
+          `Erro ao deletar arquivo duplicado: ${filePath}`,
+          error,
+        );
       }
       return { url: existing.url, mediaId: existing.id };
     }
@@ -73,8 +102,8 @@ export class ContentMediaService {
     const contentMedia = await this.prisma.contentMedia.create({
       data: {
         url: publicUrl,
-        filePath: filePath
-      }
+        filePath: filePath,
+      },
     });
 
     this.logger.log(`Content media criado: ${contentMedia.id} - ${publicUrl}`);
@@ -82,20 +111,25 @@ export class ContentMediaService {
     return {
       url: contentMedia.url,
       mediaId: contentMedia.id,
-      sizeBytes: file.buffer?.length ?? file.size
+      sizeBytes: file.buffer?.length ?? file.size,
     };
   }
 
   /**
    * Upload de vídeo embutido no HTML da notícia (MP4/MOV/M4V), sem conversão.
    */
-  async uploadContentVideo(file: any, baseUrl: string): Promise<ContentMediaResponseDto> {
+  async uploadContentVideo(
+    file: any,
+    baseUrl: string,
+  ): Promise<ContentMediaResponseDto> {
     if (!file) {
       throw new BadRequestException('Arquivo não fornecido');
     }
 
     if (!this.isValidContentVideoFormat(file)) {
-      throw new BadRequestException('Formato de vídeo não suportado. Use MP4, M4V ou MOV.');
+      throw new BadRequestException(
+        'Formato de vídeo não suportado. Use MP4, M4V ou MOV.',
+      );
     }
 
     const timestamp = Date.now();
@@ -109,17 +143,20 @@ export class ContentMediaService {
     const filePath = path.join(timestampDir, videoFilename);
     await writeFile(filePath, file.buffer);
 
-    const publicUrl = `${baseUrl}/uploads/${timestamp}/${videoFilename}`;
+    const publicUrl = `${this.cleanBaseUrl(baseUrl)}/uploads/${timestamp}/${videoFilename}`;
 
     const existing = await this.prisma.contentMedia.findUnique({
-      where: { url: publicUrl }
+      where: { url: publicUrl },
     });
 
     if (existing) {
       try {
         await unlink(filePath);
       } catch (error) {
-        this.logger.warn(`Erro ao deletar arquivo duplicado: ${filePath}`, error);
+        this.logger.warn(
+          `Erro ao deletar arquivo duplicado: ${filePath}`,
+          error,
+        );
       }
       return { url: existing.url, mediaId: existing.id };
     }
@@ -127,25 +164,32 @@ export class ContentMediaService {
     const contentMedia = await this.prisma.contentMedia.create({
       data: {
         url: publicUrl,
-        filePath: filePath
-      }
+        filePath: filePath,
+      },
     });
 
-    this.logger.log(`Content media (vídeo) criado: ${contentMedia.id} - ${publicUrl}`);
+    this.logger.log(
+      `Content media (vídeo) criado: ${contentMedia.id} - ${publicUrl}`,
+    );
 
     const sizeBytes = file.buffer?.length ?? file.size;
     return {
       url: contentMedia.url,
       mediaId: contentMedia.id,
-      sizeBytes: typeof sizeBytes === 'number' ? sizeBytes : undefined
+      sizeBytes: typeof sizeBytes === 'number' ? sizeBytes : undefined,
     };
   }
 
-  private isValidContentVideoFormat(file: { mimetype: string; originalname: string }): boolean {
+  private isValidContentVideoFormat(file: {
+    mimetype: string;
+    originalname: string;
+  }): boolean {
     const validMimeTypes = ['video/mp4', 'video/x-m4v', 'video/quicktime'];
     const validExtensions = ['.mp4', '.m4v', '.mov'];
     const mimeOk = validMimeTypes.includes(file.mimetype?.toLowerCase() || '');
-    const extOk = validExtensions.some(ext => file.originalname?.toLowerCase().endsWith(ext));
+    const extOk = validExtensions.some((ext) =>
+      file.originalname?.toLowerCase().endsWith(ext),
+    );
     return mimeOk || extOk;
   }
 
@@ -171,7 +215,7 @@ export class ContentMediaService {
     for (const candidate of this.contentMediaUrlCandidates(url)) {
       const row = await this.prisma.contentMedia.findUnique({
         where: { url: candidate },
-        include: { newsContentMedia: true }
+        include: { newsContentMedia: true },
       });
       if (row) {
         return row;
@@ -200,7 +244,7 @@ export class ContentMediaService {
     const patterns = [
       /<img\b[\s\S]*?\bsrc\s*=\s*["']([^"']+)["']/gi,
       /<video\b[\s\S]*?\bsrc\s*=\s*["']([^"']+)["']/gi,
-      /<source\b[\s\S]*?\bsrc\s*=\s*["']([^"']+)["']/gi
+      /<source\b[\s\S]*?\bsrc\s*=\s*["']([^"']+)["']/gi,
     ];
 
     for (const re of patterns) {
@@ -216,18 +260,23 @@ export class ContentMediaService {
   /**
    * Cria ou atualiza referências de ContentMedia para uma notícia
    */
-  async syncNewsContentMedia(newsId: number, htmlContent: string): Promise<void> {
+  async syncNewsContentMedia(
+    newsId: number,
+    htmlContent: string,
+  ): Promise<void> {
     const assetUrls = this.extractContentAssetUrls(htmlContent);
 
     // Buscar todas as referências atuais desta notícia
     const currentReferences = await this.prisma.newsContentMedia.findMany({
       where: { newsId },
-      include: { contentMedia: true }
+      include: { contentMedia: true },
     });
 
-    const currentUrls = currentReferences.map(ref => this.normalizeContentAssetUrl(ref.contentMedia.url));
-    const urlsToAdd = assetUrls.filter(url => !currentUrls.includes(url));
-    const urlsToRemove = currentUrls.filter(url => !assetUrls.includes(url));
+    const currentUrls = currentReferences.map((ref) =>
+      this.normalizeContentAssetUrl(ref.contentMedia.url),
+    );
+    const urlsToAdd = assetUrls.filter((url) => !currentUrls.includes(url));
+    const urlsToRemove = currentUrls.filter((url) => !assetUrls.includes(url));
 
     // Adicionar novas referências
     for (const url of urlsToAdd) {
@@ -235,20 +284,26 @@ export class ContentMediaService {
 
       // Se não existe, criar (pode acontecer se a URL foi inserida manualmente)
       if (!contentMedia) {
-        this.logger.warn(`ContentMedia não encontrado para URL: ${url}. Criando registro...`);
+        this.logger.warn(
+          `ContentMedia não encontrado para URL: ${url}. Criando registro...`,
+        );
         // Extrair filePath da URL
         const urlPath = url.replace(/^https?:\/\/[^\/]+/, '');
-        const filePath = urlPath.startsWith('/') ? urlPath.substring(1) : urlPath;
+        const filePath = urlPath.startsWith('/')
+          ? urlPath.substring(1)
+          : urlPath;
 
         await this.prisma.contentMedia.create({
           data: {
             url,
-            filePath
-          }
+            filePath,
+          },
         });
         contentMedia = await this.findContentMediaByUrl(url);
         if (!contentMedia) {
-          throw new Error(`Falha ao localizar ContentMedia recém-criado: ${url}`);
+          throw new Error(
+            `Falha ao localizar ContentMedia recém-criado: ${url}`,
+          );
         }
       }
 
@@ -256,8 +311,8 @@ export class ContentMediaService {
       await this.prisma.newsContentMedia.create({
         data: {
           newsId,
-          contentMediaId: contentMedia.id
-        }
+          contentMediaId: contentMedia.id,
+        },
       });
     }
 
@@ -270,13 +325,13 @@ export class ContentMediaService {
         await this.prisma.newsContentMedia.deleteMany({
           where: {
             newsId,
-            contentMediaId: contentMedia.id
-          }
+            contentMediaId: contentMedia.id,
+          },
         });
 
         // Verificar se ContentMedia ainda está em uso
         const remainingReferences = await this.prisma.newsContentMedia.count({
-          where: { contentMediaId: contentMedia.id }
+          where: { contentMediaId: contentMedia.id },
         });
 
         // Se não há mais referências, deletar arquivo e registro
@@ -302,19 +357,24 @@ export class ContentMediaService {
           this.logger.log(`Arquivo deletado: ${filePath}`);
         } else if (st.isDirectory()) {
           await rm(filePath, { recursive: true, force: true });
-          this.logger.warn(`filePath apontava para diretório; removido: ${filePath}`);
+          this.logger.warn(
+            `filePath apontava para diretório; removido: ${filePath}`,
+          );
         }
       }
 
       await this.deleteEmptyDirectory(fileDir);
 
       await this.prisma.contentMedia.delete({
-        where: { id: contentMedia.id }
+        where: { id: contentMedia.id },
       });
 
       this.logger.log(`ContentMedia deletado: ${contentMedia.id}`);
     } catch (error) {
-      this.logger.error(`Erro ao deletar ContentMedia ${contentMedia.id}:`, error);
+      this.logger.error(
+        `Erro ao deletar ContentMedia ${contentMedia.id}:`,
+        error,
+      );
       // Não lançar exceção para não quebrar o fluxo
     }
   }
@@ -324,7 +384,10 @@ export class ContentMediaService {
    */
   private async deleteEmptyDirectory(dirPath: string): Promise<void> {
     try {
-      if (dirPath === this.baseUploadDir || !dirPath.startsWith(this.baseUploadDir)) {
+      if (
+        dirPath === this.baseUploadDir ||
+        !dirPath.startsWith(this.baseUploadDir)
+      ) {
         return;
       }
 
@@ -345,12 +408,17 @@ export class ContentMediaService {
           this.logger.log(`Pasta vazia deletada: ${dirPath}`);
 
           const parentDir = path.dirname(dirPath);
-          if (parentDir !== dirPath && parentDir.startsWith(this.baseUploadDir)) {
+          if (
+            parentDir !== dirPath &&
+            parentDir.startsWith(this.baseUploadDir)
+          ) {
             await this.deleteEmptyDirectory(parentDir);
           }
         } catch (rmError: any) {
           if (rmError.code !== 'ENOTEMPTY' && rmError.code !== 'ENOENT') {
-            this.logger.warn(`Erro ao deletar pasta ${dirPath}: ${rmError.message}`);
+            this.logger.warn(
+              `Erro ao deletar pasta ${dirPath}: ${rmError.message}`,
+            );
           }
         }
       }
@@ -374,12 +442,12 @@ export class ContentMediaService {
       // Se está em uso, apenas remover referências (não deletar arquivo ainda)
       // Isso pode acontecer se a imagem foi removida do editor mas a notícia ainda não foi salva
       this.logger.warn(
-        `Mídia ${contentMedia.url} está em uso por ${contentMedia.newsContentMedia.length} notícia(s). Removendo referências...`
+        `Mídia ${contentMedia.url} está em uso por ${contentMedia.newsContentMedia.length} notícia(s). Removendo referências...`,
       );
-      
+
       // Remover todas as referências
       await this.prisma.newsContentMedia.deleteMany({
-        where: { contentMediaId: contentMedia.id }
+        where: { contentMediaId: contentMedia.id },
       });
     }
 
@@ -394,9 +462,9 @@ export class ContentMediaService {
     const orphanedMedia = await this.prisma.contentMedia.findMany({
       where: {
         newsContentMedia: {
-          none: {}
-        }
-      }
+          none: {},
+        },
+      },
     });
 
     let deletedCount = 0;
@@ -405,18 +473,23 @@ export class ContentMediaService {
       deletedCount++;
     }
 
-    this.logger.log(`Limpeza concluída: ${deletedCount} arquivos órfãos deletados`);
+    this.logger.log(
+      `Limpeza concluída: ${deletedCount} arquivos órfãos deletados`,
+    );
     return deletedCount;
   }
 
   /**
    * Converte imagem para WebP
    */
-  private async convertToWebP(buffer: Buffer, outputPath: string): Promise<void> {
+  private async convertToWebP(
+    buffer: Buffer,
+    outputPath: string,
+  ): Promise<void> {
     await sharp(buffer)
       .webp({
         quality: 85,
-        effort: 4 // Balance entre qualidade e velocidade (0-6)
+        effort: 4, // Balance entre qualidade e velocidade (0-6)
       })
       .toFile(outputPath);
   }
@@ -432,4 +505,3 @@ export class ContentMediaService {
     }
   }
 }
-

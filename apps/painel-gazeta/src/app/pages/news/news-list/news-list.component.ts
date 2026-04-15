@@ -1,9 +1,26 @@
-import { Component, OnInit, OnDestroy, signal, inject, output } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  signal,
+  inject,
+  output,
+} from '@angular/core';
 import { NewsService } from '../../../core/services/news.service';
 import { CategoryService } from '../../../core/services/category.service';
 import { Category, News } from '@site-gazeta/models';
 import { CommonModule } from '@angular/common';
-import { concatMap, debounceTime, distinctUntilChanged, finalize, from, Subject, takeUntil, toArray } from 'rxjs';
+import {
+  concatMap,
+  debounceTime,
+  distinctUntilChanged,
+  finalize,
+  from,
+  Subject,
+  takeUntil,
+  tap,
+  toArray,
+} from 'rxjs';
 import { RouterModule } from '@angular/router';
 import { AlertService } from '@site-gazeta/alert';
 import { FormsModule } from '@angular/forms';
@@ -12,7 +29,13 @@ import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-news-list',
-  imports: [CommonModule, RouterModule, FormsModule, NewsListFiltersComponent, MatIconModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    NewsListFiltersComponent,
+    MatIconModule,
+  ],
   templateUrl: './news-list.component.html',
   styleUrl: './news-list.component.scss',
 })
@@ -35,7 +58,10 @@ export class NewsListComponent implements OnInit, OnDestroy {
   // Seleção
   selectedIds = signal<Set<number>>(new Set());
   isProcessing = signal<boolean>(false);
-  processingProgress = signal<{ current: number; total: number }>({ current: 0, total: 0 });
+  processingProgress = signal<{ current: number; total: number }>({
+    current: 0,
+    total: 0,
+  });
 
   // Filtros
   filterSearch = signal<string>('');
@@ -57,15 +83,13 @@ export class NewsListComponent implements OnInit, OnDestroy {
     this.loadTotalFeatured();
 
     // Configura o debounce da busca
-    this.searchSubject.pipe(
-      debounceTime(400),
-      distinctUntilChanged(),
-      takeUntil(this.destroy$)
-    ).subscribe(searchTerm => {
-      this.filterSearch.set(searchTerm);
-      this.currentPage.set(1); // Volta para a primeira página ao buscar
-      this.loadNews();
-    });
+    this.searchSubject
+      .pipe(debounceTime(400), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((searchTerm) => {
+        this.filterSearch.set(searchTerm);
+        this.currentPage.set(1); // Volta para a primeira página ao buscar
+        this.loadNews();
+      });
   }
 
   ngOnDestroy(): void {
@@ -75,7 +99,7 @@ export class NewsListComponent implements OnInit, OnDestroy {
 
   loadNews(): void {
     this.isLoading.set(true);
-    
+
     const params = {
       page: this.currentPage(),
       limit: this.pageSize(),
@@ -86,43 +110,52 @@ export class NewsListComponent implements OnInit, OnDestroy {
       order: this.filterOrder() || undefined,
       views: this.filterViews() || undefined,
       isEmphasis: this.filterEmphasis() ?? undefined,
-      includeTrash: this.filterStatus() === 'TRASH' || this.filterStatus() === 'all'
+      includeTrash:
+        this.filterStatus() === 'TRASH' || this.filterStatus() === 'all',
     };
 
-    this.newsService.getAll(params)
+    this.newsService
+      .getAll(params)
       .pipe(
         takeUntil(this.destroy$),
-        finalize(() => this.isLoading.set(false))
+        finalize(() => this.isLoading.set(false)),
       )
       .subscribe({
         next: (response) => {
-          this.news.set(response.data);
-          this.totalItems.set(response.meta.total);
-          this.lastPage.set(response.meta.lastPage);
-          
+          this.news.set(response?.data || []);
+          this.totalItems.set(response?.meta?.total ?? 0);
+          this.lastPage.set(response?.meta?.lastPage ?? 1);
+
           // Scroll suave para o topo ao mudar de página ou filtro
           window.scrollTo({ top: 0, behavior: 'smooth' });
         },
         error: (error) => {
           this.alertService.error('Erro', 'Falha ao carregar notícias.');
           console.error(error);
-        }
+        },
       });
   }
 
   getCategories(): void {
-    this.categoryService.getAll().pipe(takeUntil(this.destroy$)).subscribe({
-      next: (categories) => this.categories.set(categories),
-      error: (error) => console.error('Erro ao carregar categorias', error)
-    });
+    this.categoryService
+      .getAll()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (categories) => this.categories.set(categories),
+        error: (error) => console.error('Erro ao carregar categorias', error),
+      });
   }
 
   loadTotalFeatured(): void {
-    this.newsService.getAll({ isEmphasis: true, limit: 1 })
+    this.newsService
+      .getAll({ isEmphasis: true, limit: 1 })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response) => this.totalFeatured.set(response.meta.total),
-        error: (error) => console.error('Erro ao carregar total de destaques', error)
+        next: (response) => {
+          this.totalFeatured.set(response?.meta?.total ?? 0);
+        },
+        error: (error) =>
+          console.error('Erro ao carregar total de destaques', error),
       });
   }
 
@@ -130,14 +163,14 @@ export class NewsListComponent implements OnInit, OnDestroy {
 
   nextPage(): void {
     if (this.currentPage() < this.lastPage()) {
-      this.currentPage.update(p => p + 1);
+      this.currentPage.update((p) => p + 1);
       this.loadNews();
     }
   }
 
   prevPage(): void {
     if (this.currentPage() > 1) {
-      this.currentPage.update(p => p - 1);
+      this.currentPage.update((p) => p - 1);
       this.loadNews();
     }
   }
@@ -147,7 +180,7 @@ export class NewsListComponent implements OnInit, OnDestroy {
   toggleSelectAll(event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;
     if (checked) {
-      const ids = this.news().map(n => n.id);
+      const ids = this.news().map((n) => n.id);
       this.selectedIds.set(new Set(ids));
     } else {
       this.clearSelection();
@@ -169,7 +202,9 @@ export class NewsListComponent implements OnInit, OnDestroy {
   }
 
   isAllSelected(): boolean {
-    return this.news().length > 0 && this.selectedIds().size === this.news().length;
+    const news = this.news();
+    if (!news || !Array.isArray(news)) return false;
+    return news.length > 0 && this.selectedIds().size === news.length;
   }
 
   clearSelection(): void {
@@ -178,78 +213,107 @@ export class NewsListComponent implements OnInit, OnDestroy {
 
   // --- Ações em Massa ---
 
-  async bulkUpdateStatus(status: 'ACTIVE' | 'INACTIVE' | 'TRASH'): Promise<void> {
+  async bulkUpdateStatus(
+    status: 'ACTIVE' | 'INACTIVE' | 'TRASH',
+  ): Promise<void> {
     const ids = Array.from(this.selectedIds());
     if (ids.length === 0) return;
 
-    const actionLabel = status === 'TRASH' ? 'mover para lixeira' : `alterar para ${status.toLowerCase()}`;
-    if (!confirm(`Deseja realmente ${actionLabel} ${ids.length} notícias?`)) return;
+    const actionLabel =
+      status === 'TRASH'
+        ? 'mover para lixeira'
+        : `alterar para ${status.toLowerCase()}`;
+    if (!confirm(`Deseja realmente ${actionLabel} ${ids.length} notícias?`))
+      return;
 
     this.startProcessing(ids.length);
 
-    from(ids).pipe(
-      concatMap(id => {
-        this.incrementProgress();
-        return this.newsService.update(id, { status });
-      }),
-      toArray(),
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: () => {
-        this.finishProcessing(`Status de ${ids.length} notícias atualizado.`);
-        this.loadNews();
-      },
-      error: () => this.handleError('Falha ao atualizar algumas notícias.')
-    });
+    from(ids)
+      .pipe(
+        concatMap((id) => {
+          this.incrementProgress();
+          return this.newsService.update(id, { status });
+        }),
+        toArray(),
+        takeUntil(this.destroy$),
+      )
+      .subscribe({
+        next: () => {
+          this.finishProcessing(`Status de ${ids.length} notícias atualizado.`);
+          this.loadNews();
+        },
+        error: () => this.handleError('Falha ao atualizar algumas notícias.'),
+      });
   }
 
   async bulkToggleEmphasis(isEmphasis: boolean): Promise<void> {
     const ids = Array.from(this.selectedIds());
     if (ids.length === 0) return;
 
-    if (!confirm(`Deseja ${isEmphasis ? 'ativar' : 'remover'} o destaque de ${ids.length} notícias?`)) return;
+    if (
+      !confirm(
+        `Deseja ${isEmphasis ? 'ativar' : 'remover'} o destaque de ${ids.length} notícias?`,
+      )
+    )
+      return;
 
     this.startProcessing(ids.length);
 
-    from(ids).pipe(
-      concatMap(id => {
-        this.incrementProgress();
-        return this.newsService.updateEmphasis(id, isEmphasis);
-      }),
-      toArray(),
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: () => {
-        this.finishProcessing(`Destaque de ${ids.length} notícias atualizado.`);
-        this.loadNews();
-        this.loadTotalFeatured();
-      },
-      error: () => this.handleError('Falha ao atualizar destaques. Lembre-se do limite de 6.')
-    });
+    from(ids)
+      .pipe(
+        concatMap((id) => {
+          this.incrementProgress();
+          return this.newsService.updateEmphasis(id, isEmphasis);
+        }),
+        toArray(),
+        takeUntil(this.destroy$),
+      )
+      .subscribe({
+        next: () => {
+          this.finishProcessing(
+            `Destaque de ${ids.length} notícias atualizado.`,
+          );
+          this.loadNews();
+          this.loadTotalFeatured();
+        },
+        error: () =>
+          this.handleError(
+            'Falha ao atualizar destaques. Lembre-se do limite de 6.',
+          ),
+      });
   }
 
   async bulkDelete(): Promise<void> {
     const ids = Array.from(this.selectedIds());
     if (ids.length === 0) return;
 
-    if (!confirm(`PERIGO: Deseja realmente EXCLUIR PERMANENTEMENTE ${ids.length} notícias? Esta ação não pode ser desfeita.`)) return;
+    if (
+      !confirm(
+        `PERIGO: Deseja realmente EXCLUIR PERMANENTEMENTE ${ids.length} notícias? Esta ação não pode ser desfeita.`,
+      )
+    )
+      return;
 
     this.startProcessing(ids.length);
 
-    from(ids).pipe(
-      concatMap(id => {
-        this.incrementProgress();
-        return this.newsService.delete(id);
-      }),
-      toArray(),
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: () => {
-        this.finishProcessing(`${ids.length} notícias excluídas permanentemente.`);
-        this.loadNews();
-      },
-      error: () => this.handleError('Falha ao excluir algumas notícias.')
-    });
+    from(ids)
+      .pipe(
+        concatMap((id) => {
+          this.incrementProgress();
+          return this.newsService.delete(id);
+        }),
+        toArray(),
+        takeUntil(this.destroy$),
+      )
+      .subscribe({
+        next: () => {
+          this.finishProcessing(
+            `${ids.length} notícias excluídas permanentemente.`,
+          );
+          this.loadNews();
+        },
+        error: () => this.handleError('Falha ao excluir algumas notícias.'),
+      });
   }
 
   // --- Helpers de Processamento ---
@@ -323,7 +387,9 @@ export class NewsListComponent implements OnInit, OnDestroy {
   // --- Outros Métodos ---
 
   openNewsInSite(slug: string): void {
-    const siteUrl = window.location.origin.replace(':4201', ':4200') || 'http://localhost:4200';
+    const siteUrl =
+      window.location.origin.replace(':4201', ':4200') ||
+      'http://localhost:4200';
     const newsUrl = `${siteUrl}/news/${slug}`;
     window.open(newsUrl, '_blank');
   }
@@ -333,21 +399,28 @@ export class NewsListComponent implements OnInit, OnDestroy {
   }
 
   getCategoryNames(categoryId: number[]): string {
-    return this.categories()
-      .filter(c => c.id !== undefined && categoryId.includes(c.id))
-      .map(c => c.name)
-      .join(', ') || 'Sem Categoria';
+    return (
+      this.categories()
+        .filter((c) => c.id !== undefined && categoryId.includes(c.id))
+        .map((c) => c.name)
+        .join(', ') || 'Sem Categoria'
+    );
   }
 
   hasNoEmphasisImage(news: News): boolean {
     if (!news.mediaNews || news.mediaNews.length === 0) return true;
-    return !news.mediaNews.some(m => m.emphasis);
+    return !news.mediaNews.some((m) => m.emphasis);
   }
 
   getFeaturedImage(news: News): string | null {
     if (!news.mediaNews || news.mediaNews.length === 0) return null;
-    const emphasisMedia = news.mediaNews.find(m => m.emphasis);
+    const emphasisMedia = news.mediaNews.find((m) => m.emphasis);
     const media = emphasisMedia || news.mediaNews[0];
-    return media.imgSize?.small || media.imgSize?.medium || media.imgSize?.original || null;
+    return (
+      media.imgSize?.small ||
+      media.imgSize?.medium ||
+      media.imgSize?.original ||
+      null
+    );
   }
 }

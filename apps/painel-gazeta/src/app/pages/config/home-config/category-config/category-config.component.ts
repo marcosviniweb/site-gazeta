@@ -1,4 +1,13 @@
-import { Component, inject, OnDestroy, OnInit, signal, HostListener, output, input } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+  HostListener,
+  output,
+  input,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   NonNullableFormBuilder,
@@ -29,36 +38,35 @@ export interface CategoryConfig {
   templateUrl: './category-config.component.html',
   styleUrl: './category-config.component.scss',
 })
-
 export class CategoryConfigComponent implements OnInit, OnDestroy {
   fb = inject(NonNullableFormBuilder);
   formValidator = inject(FormValidatorService);
   categoryService = inject(CategoryService);
   destroy$ = new Subject<void>();
-  
+
   // Services
   private configService = inject(ConfigService);
   private alertService = inject(AlertService);
-  
+
   // Loading states
   destaquesLoading = signal<boolean>(false);
   topGazetaLoading = signal<boolean>(false);
-  
+
   // Output para comunicar mudanças com o pai
   configChange = output<CategoryConfig>();
-  
+
   // Input para receber dados iniciais (para edição)
   initialConfig = input<CategoryConfig | null>(null);
-  
+
   displayError = signal<{ [key: string]: string } | null>({});
   availableCategories = signal<Category[]>([]);
-  
+
   // Categorias em Destaque
   selectedCategories = signal<Category[]>([]);
   categoryDropdownOpen = signal<boolean>(false);
   searchTerm = signal<string>('');
   destaquesRandomMode = signal<boolean>(false);
-  
+
   // Top Gazeta
   topGazetaCategories = signal<Category[]>([]);
   topGazetaDropdownOpen = signal<boolean>(false);
@@ -97,27 +105,27 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
 
     this.loadCategories();
     this.loadSavedConfigs();
-    
+
     // Atualizar validação dos Destaques quando modo aleatório mudar
-    this.form.get('destaquesRandomMode')?.valueChanges
-      .pipe(takeUntil(this.destroy$))
+    this.form
+      .get('destaquesRandomMode')
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((isRandom) => {
         this.updateDestaquesValidation(isRandom);
       });
-    
+
     // Atualizar validação do Top Gazeta quando modo aleatório mudar
-    this.form.get('topGazetaRandomMode')?.valueChanges
-      .pipe(takeUntil(this.destroy$))
+    this.form
+      .get('topGazetaRandomMode')
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((isRandom) => {
         this.updateTopGazetaValidation(isRandom);
       });
 
     // Emitir mudanças no formulário
-    this.form.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.emitConfigChange();
-      });
+    this.form.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.emitConfigChange();
+    });
   }
 
   // Fecha dropdowns ao clicar fora
@@ -125,15 +133,16 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
     const clickedSelector = target.closest('.category-selector');
-    
+
     if (this.categoryDropdownOpen()) {
-      const isDestaqueArea = clickedSelector && clickedSelector.hasAttribute('data-destaques');
+      const isDestaqueArea =
+        clickedSelector && clickedSelector.hasAttribute('data-destaques');
       if (!isDestaqueArea) {
         this.categoryDropdownOpen.set(false);
         this.searchTerm.set('');
       }
     }
-    
+
     if (this.topGazetaDropdownOpen()) {
       const isTopGazetaArea = clickedSelector?.hasAttribute('data-top-gazeta');
       if (!isTopGazetaArea) {
@@ -160,24 +169,32 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
       if (config.destaquesRandomMode) {
         this.destaquesRandomMode.set(true);
         this.form.patchValue({ destaquesRandomMode: true });
-      } else if (config.destaquesCategoryIds && config.destaquesCategoryIds.length > 0) {
-        const destaques = this.availableCategories().filter(cat => 
-          config.destaquesCategoryIds.includes(cat.id as number)
+      } else if (
+        config.destaquesCategoryIds &&
+        config.destaquesCategoryIds.length > 0
+      ) {
+        const destaques = this.availableCategories().filter((cat) =>
+          config.destaquesCategoryIds.includes(cat.id as number),
         );
         this.selectedCategories.set(destaques);
         this.form.patchValue({ categoryIds: config.destaquesCategoryIds });
       }
-      
+
       // Carregar Top Gazeta
       if (config.topGazetaRandomMode) {
         this.topGazetaRandomMode.set(true);
         this.form.patchValue({ topGazetaRandomMode: true });
-      } else if (config.topGazetaCategoryIds && config.topGazetaCategoryIds.length > 0) {
-        const topGazeta = this.availableCategories().filter(cat => 
-          config.topGazetaCategoryIds.includes(cat.id as number)
+      } else if (
+        config.topGazetaCategoryIds &&
+        config.topGazetaCategoryIds.length > 0
+      ) {
+        const topGazeta = this.availableCategories().filter((cat) =>
+          config.topGazetaCategoryIds.includes(cat.id as number),
         );
         this.topGazetaCategories.set(topGazeta);
-        this.form.patchValue({ topGazetaCategoryIds: config.topGazetaCategoryIds });
+        this.form.patchValue({
+          topGazetaCategoryIds: config.topGazetaCategoryIds,
+        });
       }
     }
   }
@@ -197,7 +214,7 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
     const newValue = !this.destaquesRandomMode();
     this.destaquesRandomMode.set(newValue);
     this.form.patchValue({ destaquesRandomMode: newValue });
-    
+
     if (newValue) {
       this.selectedCategories.set([]);
       this.form.patchValue({ categoryIds: [] });
@@ -209,7 +226,11 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
     if (isRandom) {
       control?.clearValidators();
     } else {
-      control?.setValidators([Validators.required, Validators.minLength(3), Validators.maxLength(3)]);
+      control?.setValidators([
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(3),
+      ]);
     }
     control?.updateValueAndValidity();
   }
@@ -228,15 +249,20 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
     if (this.destaquesRandomMode()) {
       return;
     }
-    
+
     const currentSelected = this.selectedCategories();
-    
+
     if (currentSelected.length >= this.MAX_CATEGORIES) {
-      this.alertService.warning('Atenção', `Você pode selecionar no máximo ${this.MAX_CATEGORIES} categorias`);
+      this.alertService.warning(
+        'Atenção',
+        `Você pode selecionar no máximo ${this.MAX_CATEGORIES} categorias`,
+      );
       return;
     }
 
-    const isAlreadySelected = currentSelected.some((cat) => cat.id === category.id);
+    const isAlreadySelected = currentSelected.some(
+      (cat) => cat.id === category.id,
+    );
 
     if (!isAlreadySelected) {
       const newSelected = [...currentSelected, category];
@@ -250,7 +276,7 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
 
   removeCategory(categoryId: number) {
     const newSelected = this.selectedCategories().filter(
-      (cat) => cat.id !== categoryId
+      (cat) => cat.id !== categoryId,
     );
     this.selectedCategories.set(newSelected);
     this.updateFormCategories(newSelected);
@@ -264,7 +290,7 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
   getFilteredCategories(): Category[] {
     const selectedIds = this.selectedCategories().map((cat) => cat.id);
     const available = this.availableCategories().filter(
-      (cat) => !selectedIds.includes(cat.id as number)
+      (cat) => !selectedIds.includes(cat.id as number),
     );
 
     const search = this.searchTerm().toLowerCase().trim();
@@ -272,9 +298,10 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
       return available;
     }
 
-    return available.filter((cat) =>
-      cat.name.toLowerCase().includes(search) ||
-      (cat.description && cat.description.toLowerCase().includes(search))
+    return available.filter(
+      (cat) =>
+        cat.name.toLowerCase().includes(search) ||
+        (cat.description && cat.description.toLowerCase().includes(search)),
     );
   }
 
@@ -288,7 +315,7 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
     const newValue = !this.topGazetaRandomMode();
     this.topGazetaRandomMode.set(newValue);
     this.form.patchValue({ topGazetaRandomMode: newValue });
-    
+
     if (newValue) {
       this.topGazetaCategories.set([]);
       this.form.patchValue({ topGazetaCategoryIds: [] });
@@ -300,7 +327,11 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
     if (isRandom) {
       control?.clearValidators();
     } else {
-      control?.setValidators([Validators.required, Validators.minLength(3), Validators.maxLength(3)]);
+      control?.setValidators([
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(3),
+      ]);
     }
     control?.updateValueAndValidity();
   }
@@ -321,13 +352,18 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
     }
 
     const currentSelected = this.topGazetaCategories();
-    
+
     if (currentSelected.length >= this.MAX_CATEGORIES) {
-      this.alertService.warning('Atenção', `Você pode selecionar no máximo ${this.MAX_CATEGORIES} categorias`);
+      this.alertService.warning(
+        'Atenção',
+        `Você pode selecionar no máximo ${this.MAX_CATEGORIES} categorias`,
+      );
       return;
     }
 
-    const isAlreadySelected = currentSelected.some((cat) => cat.id === category.id);
+    const isAlreadySelected = currentSelected.some(
+      (cat) => cat.id === category.id,
+    );
 
     if (!isAlreadySelected) {
       const newSelected = [...currentSelected, category];
@@ -341,7 +377,7 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
 
   removeTopGazetaCategory(categoryId: number) {
     const newSelected = this.topGazetaCategories().filter(
-      (cat) => cat.id !== categoryId
+      (cat) => cat.id !== categoryId,
     );
     this.topGazetaCategories.set(newSelected);
     this.updateFormTopGazetaCategories(newSelected);
@@ -353,9 +389,11 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
   }
 
   getFilteredTopGazetaCategories(): Category[] {
-    const selectedTopGazetaIds = this.topGazetaCategories().map((cat) => cat.id);
+    const selectedTopGazetaIds = this.topGazetaCategories().map(
+      (cat) => cat.id,
+    );
     const available = this.availableCategories().filter(
-      (cat) => !selectedTopGazetaIds.includes(cat.id as number)
+      (cat) => !selectedTopGazetaIds.includes(cat.id as number),
     );
 
     const search = this.topGazetaSearchTerm().toLowerCase().trim();
@@ -363,9 +401,10 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
       return available;
     }
 
-    return available.filter((cat) =>
-      cat.name.toLowerCase().includes(search) ||
-      (cat.description && cat.description.toLowerCase().includes(search))
+    return available.filter(
+      (cat) =>
+        cat.name.toLowerCase().includes(search) ||
+        (cat.description && cat.description.toLowerCase().includes(search)),
     );
   }
 
@@ -377,14 +416,23 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
   // Método público para validação
   isValid(): boolean {
     // Validar Destaques
-    if (!this.destaquesRandomMode() && this.selectedCategories().length < this.MAX_CATEGORIES) {
+    if (
+      !this.destaquesRandomMode() &&
+      this.selectedCategories().length < this.MAX_CATEGORIES
+    ) {
       return false;
     }
     // Validar Top Gazeta
-    if (!this.topGazetaRandomMode() && this.topGazetaCategories().length < this.MAX_CATEGORIES) {
+    if (
+      !this.topGazetaRandomMode() &&
+      this.topGazetaCategories().length < this.MAX_CATEGORIES
+    ) {
       return false;
     }
-    return this.form.valid || (this.destaquesRandomMode() && this.topGazetaRandomMode());
+    return (
+      this.form.valid ||
+      (this.destaquesRandomMode() && this.topGazetaRandomMode())
+    );
   }
 
   // ========== MÉTODOS DE SALVAMENTO ==========
@@ -394,49 +442,73 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
    */
   saveDestaques() {
     // Validar
-    if (!this.destaquesRandomMode() && this.selectedCategories().length !== this.MAX_CATEGORIES) {
-      this.alertService.warning('Atenção', 'Selecione exatamente 3 categorias ou ative o modo aleatório');
+    if (
+      !this.destaquesRandomMode() &&
+      this.selectedCategories().length !== this.MAX_CATEGORIES
+    ) {
+      this.alertService.warning(
+        'Atenção',
+        'Selecione exatamente 3 categorias ou ative o modo aleatório',
+      );
       return;
     }
 
     this.destaquesLoading.set(true);
-    const categoryIds = this.destaquesRandomMode() ? [] : this.selectedCategories().map(cat => cat.id as number);
+    const categoryIds = this.destaquesRandomMode()
+      ? []
+      : this.selectedCategories().map((cat) => cat.id as number);
 
     // Tentar atualizar primeiro, se falhar, criar
-    this.configService.updateDestaque({
-      randomMode: this.destaquesRandomMode(),
-      categoryIds: categoryIds.length > 0 ? categoryIds : undefined
-    }).pipe(first()).subscribe({
-      next: (config) => {
-        this.destaquesLoading.set(false);
-        this.alertService.success('Sucesso', 'Configuração de Destaques salva com sucesso!');
-        console.log('Destaques salvos:', config);
-      },
-      error: (error) => {
-        // Se não existe, criar
-        if (error.status === 404) {
-          this.configService.createDestaque({
-            randomMode: this.destaquesRandomMode(),
-            categoryIds: categoryIds.length > 0 ? categoryIds : undefined
-          }).pipe(first()).subscribe({
-            next: (config) => {
-              this.destaquesLoading.set(false);
-              this.alertService.success('Sucesso', 'Configuração de Destaques criada com sucesso!');
-              console.log('Destaques criados:', config);
-            },
-            error: (createError) => {
-              this.destaquesLoading.set(false);
-              this.alertService.error('Erro', 'Erro ao criar configuração de Destaques');
-              console.error('Erro ao criar destaques:', createError);
-            }
-          });
-        } else {
+    this.configService
+      .updateDestaque({
+        randomMode: this.destaquesRandomMode(),
+        categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
+      })
+      .pipe(first())
+      .subscribe({
+        next: (config) => {
           this.destaquesLoading.set(false);
-          this.alertService.error('Erro', 'Erro ao salvar configuração de Destaques');
-          console.error('Erro ao salvar destaques:', error);
-        }
-      }
-    });
+          this.alertService.success(
+            'Sucesso',
+            'Configuração de Destaques criada com sucesso!',
+          );
+        },
+        error: (error) => {
+          // Se não existe, criar
+          if (error.status === 404) {
+            this.configService
+              .createDestaque({
+                randomMode: this.destaquesRandomMode(),
+                categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
+              })
+              .pipe(first())
+              .subscribe({
+                next: (config) => {
+                  this.destaquesLoading.set(false);
+                  this.alertService.success(
+                    'Sucesso',
+                    'Configuração de Destaques criada com sucesso!',
+                  );
+                },
+                error: (createError) => {
+                  this.destaquesLoading.set(false);
+                  this.alertService.error(
+                    'Erro',
+                    'Erro ao criar configuração de Destaques',
+                  );
+                  console.error('Erro ao criar destaques:', createError);
+                },
+              });
+          } else {
+            this.destaquesLoading.set(false);
+            this.alertService.error(
+              'Erro',
+              'Erro ao salvar configuração de Destaques',
+            );
+            console.error('Erro ao salvar destaques:', error);
+          }
+        },
+      });
   }
 
   /**
@@ -444,49 +516,73 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
    */
   saveTopGazeta() {
     // Validar
-    if (!this.topGazetaRandomMode() && this.topGazetaCategories().length !== this.MAX_CATEGORIES) {
-      this.alertService.warning('Atenção', 'Selecione exatamente 3 categorias ou ative o modo aleatório');
+    if (
+      !this.topGazetaRandomMode() &&
+      this.topGazetaCategories().length !== this.MAX_CATEGORIES
+    ) {
+      this.alertService.warning(
+        'Atenção',
+        'Selecione exatamente 3 categorias ou ative o modo aleatório',
+      );
       return;
     }
 
     this.topGazetaLoading.set(true);
-    const categoryIds = this.topGazetaRandomMode() ? [] : this.topGazetaCategories().map(cat => cat.id as number);
+    const categoryIds = this.topGazetaRandomMode()
+      ? []
+      : this.topGazetaCategories().map((cat) => cat.id as number);
 
     // Tentar atualizar primeiro, se falhar, criar
-    this.configService.updateTopGazeta({
-      randomMode: this.topGazetaRandomMode(),
-      categoryIds: categoryIds.length > 0 ? categoryIds : undefined
-    }).pipe(first()).subscribe({
-      next: (config) => {
-        this.topGazetaLoading.set(false);
-        this.alertService.success('Sucesso', 'Configuração do Top Gazeta salva com sucesso!');
-        console.log('Top Gazeta salvo:', config);
-      },
-      error: (error) => {
-        // Se não existe, criar
-        if (error.status === 404) {
-          this.configService.createTopGazeta({
-            randomMode: this.topGazetaRandomMode(),
-            categoryIds: categoryIds.length > 0 ? categoryIds : undefined
-          }).pipe(first()).subscribe({
-            next: (config) => {
-              this.topGazetaLoading.set(false);
-              this.alertService.success('Sucesso', 'Configuração do Top Gazeta criada com sucesso!');
-              console.log('Top Gazeta criado:', config);
-            },
-            error: (createError) => {
-              this.topGazetaLoading.set(false);
-              this.alertService.error('Erro', 'Erro ao criar configuração do Top Gazeta');
-              console.error('Erro ao criar Top Gazeta:', createError);
-            }
-          });
-        } else {
+    this.configService
+      .updateTopGazeta({
+        randomMode: this.topGazetaRandomMode(),
+        categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
+      })
+      .pipe(first())
+      .subscribe({
+        next: (config) => {
           this.topGazetaLoading.set(false);
-          this.alertService.error('Erro', 'Erro ao salvar configuração do Top Gazeta');
-          console.error('Erro ao salvar Top Gazeta:', error);
-        }
-      }
-    });
+          this.alertService.success(
+            'Sucesso',
+            'Configuração do Top Gazeta criada com sucesso!',
+          );
+        },
+        error: (error) => {
+          // Se não existe, criar
+          if (error.status === 404) {
+            this.configService
+              .createTopGazeta({
+                randomMode: this.topGazetaRandomMode(),
+                categoryIds: categoryIds.length > 0 ? categoryIds : undefined,
+              })
+              .pipe(first())
+              .subscribe({
+                next: (config) => {
+                  this.topGazetaLoading.set(false);
+                  this.alertService.success(
+                    'Sucesso',
+                    'Configuração do Top Gazeta criada com sucesso!',
+                  );
+                },
+                error: (createError) => {
+                  this.topGazetaLoading.set(false);
+                  this.alertService.error(
+                    'Erro',
+                    'Erro ao criar configuração do Top Gazeta',
+                  );
+                  console.error('Erro ao criar Top Gazeta:', createError);
+                },
+              });
+          } else {
+            this.topGazetaLoading.set(false);
+            this.alertService.error(
+              'Erro',
+              'Erro ao salvar configuração do Top Gazeta',
+            );
+            console.error('Erro ao salvar Top Gazeta:', error);
+          }
+        },
+      });
   }
 
   /**
@@ -494,36 +590,52 @@ export class CategoryConfigComponent implements OnInit, OnDestroy {
    */
   loadSavedConfigs() {
     // Carregar Destaques
-    this.configService.getDestaque().pipe(first()).subscribe({
-      next: (config) => {
-        if (config) {
-          this.destaquesRandomMode.set(config.randomMode);
-          this.form.patchValue({ destaquesRandomMode: config.randomMode });
-          
-          if (!config.randomMode && config.categories && config.categories.length > 0) {
-            this.selectedCategories.set(config.categories as Category[]);
-            this.form.patchValue({ categoryIds: config.categoryIds });
+    this.configService
+      .getDestaque()
+      .pipe(first())
+      .subscribe({
+        next: (config) => {
+          if (config) {
+            this.destaquesRandomMode.set(config.randomMode);
+            this.form.patchValue({ destaquesRandomMode: config.randomMode });
+
+            if (
+              !config.randomMode &&
+              config.categories &&
+              config.categories.length > 0
+            ) {
+              this.selectedCategories.set(config.categories as Category[]);
+              this.form.patchValue({ categoryIds: config.categoryIds });
+            }
           }
-        }
-      },
-      error: (error) => console.error('Erro ao carregar Destaques:', error)
-    });
+        },
+        error: (error) => console.error('Erro ao carregar Destaques:', error),
+      });
 
     // Carregar Top Gazeta
-    this.configService.getTopGazeta().pipe(first()).subscribe({
-      next: (config) => {
-        if (config) {
-          this.topGazetaRandomMode.set(config.randomMode);
-          this.form.patchValue({ topGazetaRandomMode: config.randomMode });
-          
-          if (!config.randomMode && config.categories && config.categories.length > 0) {
-            this.topGazetaCategories.set(config.categories as Category[]);
-            this.form.patchValue({ topGazetaCategoryIds: config.categoryIds });
+    this.configService
+      .getTopGazeta()
+      .pipe(first())
+      .subscribe({
+        next: (config) => {
+          if (config) {
+            this.topGazetaRandomMode.set(config.randomMode);
+            this.form.patchValue({ topGazetaRandomMode: config.randomMode });
+
+            if (
+              !config.randomMode &&
+              config.categories &&
+              config.categories.length > 0
+            ) {
+              this.topGazetaCategories.set(config.categories as Category[]);
+              this.form.patchValue({
+                topGazetaCategoryIds: config.categoryIds,
+              });
+            }
           }
-        }
-      },
-      error: (error) => console.error('Erro ao carregar Top Gazeta:', error)
-    });
+        },
+        error: (error) => console.error('Erro ao carregar Top Gazeta:', error),
+      });
   }
 
   // Método público para reset

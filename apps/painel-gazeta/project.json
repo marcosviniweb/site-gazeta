@@ -42,8 +42,8 @@
           "outputHashing": "all",
           "fileReplacements": [
             {
-              "replace": "apps/painel-gazeta/src/app/core/env/env.ts",
-              "with": "apps/painel-gazeta/src/app/core/env/environment.production.ts"
+              "replace": "environments/env.ts",
+              "with": "environments/environment.production.ts"
             }
           ]
         },
@@ -53,8 +53,8 @@
           "sourceMap": true,
           "fileReplacements": [
             {
-              "replace": "apps/painel-gazeta/src/app/core/env/env.ts",
-              "with": "apps/painel-gazeta/src/app/core/env/environment.development.ts"
+              "replace": "environments/env.ts",
+              "with": "environments/environment.development.ts"
             }
           ]
         }

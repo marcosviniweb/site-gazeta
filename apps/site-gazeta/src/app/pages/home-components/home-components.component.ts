@@ -1,12 +1,11 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { map } from 'rxjs/operators';
 import { NewsCategoryGridComponent } from '@site-gazeta/home-components';
 import { NewsHighligthsComponent } from '@site-gazeta/home-components';
 import { VideoManagerComponent } from '@site-gazeta/video-player';
 import { MoreNewsComponent } from '@site-gazeta/more-news';
 import { ApiService } from '../../core/service/api.service';
-import { Ads, Category,  Menu, News, Video } from '@site-gazeta/models';
+import { Ads } from '@site-gazeta/models';
 import { AdsComponent } from '@site-gazeta/ads';
 import { CarouselManagerComponent } from '@site-gazeta/carousel';
 import { LatestNewsComponent, MostViewedComponent } from '@site-gazeta/home-components';

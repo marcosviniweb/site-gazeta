@@ -15,7 +15,13 @@ interface MenuComponentState {
 @Component({
   selector: 'app-menu',
   standalone: true,
-  imports: [CommonModule, MenuFormComponent, SubmenuFormComponent, MenuListComponent, ModalComponent],
+  imports: [
+    CommonModule,
+    MenuFormComponent,
+    SubmenuFormComponent,
+    MenuListComponent,
+    ModalComponent,
+  ],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss',
 })
@@ -31,7 +37,7 @@ export class MenuComponent implements OnInit {
   menus = signal<Menu[]>([]);
   isLoading = signal(false);
   isSubmenuModalOpen = signal(false);
-  
+
   // Computed signals
   isEdit = computed(() => !!this.state().menuToEdit);
   selectedSubmenu = computed(() => this.state().selectedSubmenu);
@@ -41,45 +47,44 @@ export class MenuComponent implements OnInit {
   }
 
   openSubmenuModal(submenu: Menu): void {
-    this.state.update(state => ({
+    this.state.update((state) => ({
       ...state,
-      selectedSubmenu: submenu
+      selectedSubmenu: submenu,
     }));
     this.isSubmenuModalOpen.set(true);
   }
 
   closeSubmenuModal(): void {
     this.isSubmenuModalOpen.set(false);
-    this.state.update(state => ({
+    this.state.update((state) => ({
       ...state,
-      selectedSubmenu: null
+      selectedSubmenu: null,
     }));
   }
   loadMenus(): void {
     this.isLoading.set(true);
     this.menuService.getAll().subscribe({
       next: (menus) => {
-        console.log('🔄 Menus carregados:', menus);
         this.menus.set(menus);
         this.isLoading.set(false);
       },
       error: (err) => {
         console.error('Erro ao carregar menus:', err);
         this.isLoading.set(false);
-      }
+      },
     });
   }
 
   handleSave(): void {
     this.loadMenus();
-    this.state.update(state => ({
+    this.state.update((state) => ({
       ...state,
       menuToEdit: null,
     }));
   }
 
   handleEdit(menu: Menu): void {
-    this.state.update(state => ({
+    this.state.update((state) => ({
       ...state,
       menuToEdit: menu,
     }));
@@ -103,7 +108,7 @@ export class MenuComponent implements OnInit {
   }
 
   handleCancel(): void {
-    this.state.update(state => ({
+    this.state.update((state) => ({
       ...state,
       menuToEdit: null,
     }));

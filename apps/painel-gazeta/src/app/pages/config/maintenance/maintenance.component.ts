@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil, first } from 'rxjs';
-import { ConfigService, MaintenanceConfig } from '../../../core/services/config.service';
+import { ConfigService } from '../../../core/services/config.service';
 import { AlertService } from '@site-gazeta/alert';
 
 @Component({

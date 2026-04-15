@@ -1,6 +1,18 @@
-import { Component, inject, signal, effect, input, output } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  effect,
+  input,
+  output,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { MenuService } from '../../../core/services/menu.service';
 import { CategoryService } from '../../../core/services/category.service';
 import { Category, Menu } from '@site-gazeta/models';
@@ -17,7 +29,12 @@ interface InternalRoute {
 @Component({
   selector: 'app-menu-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule , MultiSelectComponent, MatIconModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MultiSelectComponent,
+    MatIconModule,
+  ],
   templateUrl: './menu-form.component.html',
   styleUrl: './menu-form.component.scss',
 })
@@ -40,20 +57,20 @@ export class MenuFormComponent {
   isLoading = signal(false);
   showCategoryDropdown = signal(false);
   selectedCategories = signal<Category[]>([]); // Para multi-select
-  
+
   // Rotas internas disponíveis
   internalRoutes: InternalRoute[] = [
     { path: '/', label: 'Home' },
     { path: '/noticias', label: 'Notícias' },
     { path: '/videos', label: 'Vídeos' },
     { path: '/sobre', label: 'Sobre' },
-    { path: '/contato', label: 'Contato' }
+    { path: '/contato', label: 'Contato' },
   ];
 
   constructor() {
     this.initForm();
     this.loadCategories();
-    
+
     // Effect para atualizar form quando receber menu para editar
     effect(() => {
       const menu = this.menuToEdit();
@@ -77,14 +94,14 @@ export class MenuFormComponent {
       categoryIds: [[]], // Para multi-select
       categoryName: [''],
       slug: [''],
-      order: [1]
+      order: [1],
     });
 
     // Listener para mudanças no tipo
     this.menuForm.get('type')?.valueChanges.subscribe((type: MenuType) => {
       this.selectedType.set(type);
       this.updateValidators(type);
-      
+
       // Limpar categorias selecionadas quando mudar de tipo
       if (type !== 'category') {
         this.selectedCategories.set([]);
@@ -107,11 +124,20 @@ export class MenuFormComponent {
     switch (type) {
       case 'internal':
         routerLinkControl?.setValidators([Validators.required]);
-        nameControl?.setValidators([Validators.required, Validators.minLength(2)]);
+        nameControl?.setValidators([
+          Validators.required,
+          Validators.minLength(2),
+        ]);
         break;
       case 'external':
-        externalLinkControl?.setValidators([Validators.required, Validators.pattern(/^https?:\/\/.+/)]);
-        nameControl?.setValidators([Validators.required, Validators.minLength(2)]);
+        externalLinkControl?.setValidators([
+          Validators.required,
+          Validators.pattern(/^https?:\/\/.+/),
+        ]);
+        nameControl?.setValidators([
+          Validators.required,
+          Validators.minLength(2),
+        ]);
         this.menuForm.patchValue({ name: '' }); // Limpar nome para forçar preenchimento
         break;
       case 'category':
@@ -121,7 +147,10 @@ export class MenuFormComponent {
         break;
       case 'submenu':
         // Para submenu (agrupador), apenas o nome é obrigatório
-        nameControl?.setValidators([Validators.required, Validators.minLength(2)]);
+        nameControl?.setValidators([
+          Validators.required,
+          Validators.minLength(2),
+        ]);
         break;
     }
 
@@ -134,7 +163,7 @@ export class MenuFormComponent {
   private loadCategories(): void {
     this.categoryService.getActive().subscribe({
       next: (categories) => this.categories.set(categories),
-      error: (err) => console.error('Erro ao carregar categorias:', err)
+      error: (err) => console.error('Erro ao carregar categorias:', err),
     });
   }
 
@@ -143,9 +172,9 @@ export class MenuFormComponent {
     if (!menus || menus.length === 0) {
       return 1;
     }
-    
+
     // Encontrar a maior ordem existente
-    const maxOrder = Math.max(...menus.map(m => m.order || 1));
+    const maxOrder = Math.max(...menus.map((m) => m.order || 1));
     return maxOrder + 1;
   }
 
@@ -157,7 +186,7 @@ export class MenuFormComponent {
       routerLink: menu.routerLink || '',
       externalLink: menu.externalLink || '',
       slug: menu.slug || '',
-      order: menu.order || 1
+      order: menu.order || 1,
     });
   }
 
@@ -167,83 +196,78 @@ export class MenuFormComponent {
       categoryId: category.id,
       categoryName: category.name,
       name: category.name,
-      slug: category.slug
+      slug: category.slug,
     });
     this.showCategoryDropdown.set(false);
   }
 
   toggleCategoryDropdown(): void {
-    this.showCategoryDropdown.update(v => !v);
+    this.showCategoryDropdown.update((v) => !v);
   }
 
   getSelectedCategory(): Category | null {
     const categoryId = this.menuForm.get('categoryId')?.value;
-    return this.categories().find(c => c.id === categoryId) || null;
+    return this.categories().find((c) => c.id === categoryId) || null;
   }
 
   onCategoriesChange(categories: unknown[]): void {
-    console.log('📦 Categorias recebidas do multi-select:', categories);
     // Validar que todas as categorias têm name e slug
     const validCategories = categories.filter((c: unknown): c is Category => {
       const isValid = !!(c && (c as Category).name && (c as Category).slug);
-      if (!isValid) {
-        console.warn('⚠️ Categoria inválida ignorada:', c);
-      }
       return isValid;
     });
     this.selectedCategories.set(validCategories);
   }
 
   submitForm(): void {
-    console.log('🔄 Submetendo formulário:', this.menuForm.value);
-    console.log('🔄 Categorias selecionadas:', this.selectedCategories());
-    console.log('🔄 Form válido:', this.menuForm.valid);
-    
     const formValue = this.menuForm.value;
     const isCategory = formValue.type === 'category';
-    
+
     // Se for tipo category e tiver categorias selecionadas, usar criação em lote
     if (isCategory && this.selectedCategories().length > 0) {
       this.isLoading.set(true);
       this.createMultipleCategoryMenus();
       return;
     }
-    
+
     // Validação para categoria sem multi-select (modo single)
     if (isCategory && this.selectedCategories().length === 0) {
-      console.warn('⚠️ Nenhuma categoria selecionada');
-      this.alertService.warning('Atenção', 'Por favor, selecione pelo menos uma categoria');
+      this.alertService.warning(
+        'Atenção',
+        'Por favor, selecione pelo menos uma categoria',
+      );
       return;
     }
-    
+
     // Para outros tipos (internal, external), validar o formulário normalmente
     if (this.menuForm.invalid) {
-      console.error('❌ Formulário inválido:', this.menuForm.errors);
-      Object.keys(this.menuForm.controls).forEach(key => {
+      Object.keys(this.menuForm.controls).forEach((key) => {
         const control = this.menuForm.get(key);
         if (control?.invalid) {
-          console.error(`Campo ${key} inválido:`, control.errors);
+          control?.markAsTouched();
         }
-        control?.markAsTouched();
       });
       return;
     }
 
     this.isLoading.set(true);
-    
+
     // Criar menu único (internal, external ou submenu)
     const menuData: Menu = {
       name: formValue.name,
       type: formValue.type,
       order: formValue.order || 1,
-      ...(formValue.type === 'internal' && formValue.routerLink && { routerLink: formValue.routerLink }),
-      ...(formValue.type === 'external' && formValue.externalLink && { externalLink: formValue.externalLink }),
-      ...(formValue.type === 'category' && formValue.slug && { slug: formValue.slug }),
+      ...(formValue.type === 'internal' &&
+        formValue.routerLink && { routerLink: formValue.routerLink }),
+      ...(formValue.type === 'external' &&
+        formValue.externalLink && { externalLink: formValue.externalLink }),
+      ...(formValue.type === 'category' &&
+        formValue.slug && { slug: formValue.slug }),
       // submenu não precisa de campos adicionais, apenas name e type
     };
 
     const menuToEdit = this.menuToEdit();
-    const apiCall = menuToEdit 
+    const apiCall = menuToEdit
       ? this.menuService.update(menuToEdit?.id ?? 0, menuData)
       : this.menuService.create(menuData);
 
@@ -259,8 +283,11 @@ export class MenuFormComponent {
         this.isLoading.set(false);
         console.error('Erro ao salvar menu:', err);
         const action = menuToEdit ? 'atualizar' : 'criar';
-        this.alertService.error('Erro', `Erro ao ${action} menu. Tente novamente.`);
-      }
+        this.alertService.error(
+          'Erro',
+          `Erro ao ${action} menu. Tente novamente.`,
+        );
+      },
     });
   }
 
@@ -268,22 +295,12 @@ export class MenuFormComponent {
     const selectedCats = this.selectedCategories();
     const nextOrder = this.calculateNextOrder();
 
-    console.log('🔄 Criando múltiplos menus de categorias:', {
-      quantidade: selectedCats.length,
-      categorias: selectedCats.map(c => ({ name: c.name, slug: c.slug }))
-    });
-
     // Validar que todas as categorias têm name e slug antes de criar
-    const validCats = selectedCats.filter(cat => {
-      if (!cat.name || !cat.slug) {
-        console.error('❌ Categoria inválida (sem name ou slug):', cat);
-        return false;
-      }
-      return true;
+    const validCats = selectedCats.filter((cat) => {
+      return !!(cat.name && cat.slug);
     });
 
     if (validCats.length === 0) {
-      console.error('❌ Nenhuma categoria válida para criar menus');
       this.isLoading.set(false);
       return;
     }
@@ -292,20 +309,19 @@ export class MenuFormComponent {
     const menusData = validCats.map((category, index) => ({
       name: String(category.name).trim(),
       slug: String(category.slug).trim(),
-      order: nextOrder + index
+      order: nextOrder + index,
     }));
 
     // Usar o novo endpoint batch para criar todos os menus de uma vez
     this.menuService.createCategoryMenus(menusData).subscribe({
       next: (menus) => {
-        console.log('✅ Menus criados com sucesso:', menus);
         this.isLoading.set(false);
         const count = menus.length;
         this.alertService.success(
-          'Sucesso', 
-          count === 1 
-            ? 'Menu criado com sucesso!' 
-            : `${count} menus criados com sucesso!`
+          'Sucesso',
+          count === 1
+            ? 'Menu criado com sucesso!'
+            : `${count} menus criados com sucesso!`,
         );
         // Emitir o último menu criado (ou poderia emitir todos)
         if (menus.length > 0) {
@@ -319,10 +335,13 @@ export class MenuFormComponent {
         console.error('Detalhes do erro:', {
           error: err,
           categorias: selectedCats,
-          quantidade: selectedCats.length
+          quantidade: selectedCats.length,
         });
-        this.alertService.error('Erro', 'Erro ao criar menus. Tente novamente.');
-      }
+        this.alertService.error(
+          'Erro',
+          'Erro ao criar menus. Tente novamente.',
+        );
+      },
     });
   }
 
@@ -340,8 +359,16 @@ export class MenuFormComponent {
   }
 
   // Getters para validação
-  get nameControl() { return this.menuForm.get('name'); }
-  get routerLinkControl() { return this.menuForm.get('routerLink'); }
-  get externalLinkControl() { return this.menuForm.get('externalLink'); }
-  get categoryIdControl() { return this.menuForm.get('categoryId'); }
+  get nameControl() {
+    return this.menuForm.get('name');
+  }
+  get routerLinkControl() {
+    return this.menuForm.get('routerLink');
+  }
+  get externalLinkControl() {
+    return this.menuForm.get('externalLink');
+  }
+  get categoryIdControl() {
+    return this.menuForm.get('categoryId');
+  }
 }

@@ -2,7 +2,7 @@ import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { EMPTY, Observable } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { environment } from '../../core/env/env';
+import { environment } from '@site-gazeta/env';
 import { isPlatformBrowser } from '@angular/common';
 
 interface TrackViewData {

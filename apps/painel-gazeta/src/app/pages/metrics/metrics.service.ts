@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DateRange, Granularity, KpiMetric, LogEvent, TopNewsItem } from './models';
 import type { ChartData } from 'chart.js';
-import { environment } from '../../core/env/env';
+import { environment } from '@site-gazeta/env';
 
 interface KpiResponse {
   kpis: KpiMetric[];
@@ -157,8 +157,8 @@ export class MetricsService {
     referer?: string;
     sessionId?: string;
     duration?: number;
-  }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/track-view`, data);
+  }): Observable<{ success: boolean; message?: string }> {
+    return this.http.post<{ success: boolean; message?: string }>(`${this.apiUrl}/track-view`, data);
   }
 }
 

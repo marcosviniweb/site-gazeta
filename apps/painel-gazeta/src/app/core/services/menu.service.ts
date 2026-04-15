@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../env/env';
+import { environment } from '@site-gazeta/env';
 import { Menu } from '@site-gazeta/models';
 import { Observable } from 'rxjs';
 

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { environment } from '../env/env';
+import { environment } from '@site-gazeta/env';
 import { Observable } from 'rxjs';
 
 // ========== INTERFACES ==========
@@ -39,6 +39,26 @@ export interface UserActivity {
   description?: string;
   ipAddress?: string;
   createdAt: string;
+}
+
+export interface CategoryStats {
+  id: number;
+  name: string;
+  views: number;
+  count: number;
+}
+
+export interface AuthorStats {
+  id: number;
+  name: string;
+  views: number;
+  count: number;
+}
+
+export interface DeviceStats {
+  device: string;
+  count: number;
+  percentage: number;
 }
 
 export interface AnalyticsFilters {
@@ -95,7 +115,7 @@ export class MetricsService {
   /**
    * Obter notícias mais visualizadas
    */
-  getTopNews(limit: number = 10, filters?: AnalyticsFilters): Observable<TopNews[]> {
+  getTopNews(limit = 10, filters?: AnalyticsFilters): Observable<TopNews[]> {
     let params = new HttpParams().set('limit', limit.toString());
     
     if (filters) {
@@ -114,7 +134,7 @@ export class MetricsService {
    * Obter atividades recentes dos usuários
    */
   getUserActivities(
-    limit: number = 20, 
+    limit = 20, 
     userId?: number
   ): Observable<UserActivity[]> {
     let params = new HttpParams().set('limit', limit.toString());
@@ -139,7 +159,7 @@ export class MetricsService {
   /**
    * Obter estatísticas por categoria
    */
-  getCategoryStats(filters?: AnalyticsFilters): Observable<any[]> {
+  getCategoryStats(filters?: AnalyticsFilters): Observable<CategoryStats[]> {
     let params = new HttpParams();
     
     if (filters) {
@@ -151,13 +171,13 @@ export class MetricsService {
       });
     }
 
-    return this.http.get<any[]>(`${this.apiUrl}/categories/stats`, { params });
+    return this.http.get<CategoryStats[]>(`${this.apiUrl}/categories/stats`, { params });
   }
 
   /**
    * Obter estatísticas por autor
    */
-  getAuthorStats(filters?: AnalyticsFilters): Observable<any[]> {
+  getAuthorStats(filters?: AnalyticsFilters): Observable<AuthorStats[]> {
     let params = new HttpParams();
     
     if (filters) {
@@ -169,13 +189,13 @@ export class MetricsService {
       });
     }
 
-    return this.http.get<any[]>(`${this.apiUrl}/authors/stats`, { params });
+    return this.http.get<AuthorStats[]>(`${this.apiUrl}/authors/stats`, { params });
   }
 
   /**
    * Obter estatísticas de dispositivos
    */
-  getDeviceStats(filters?: AnalyticsFilters): Observable<any[]> {
+  getDeviceStats(filters?: AnalyticsFilters): Observable<DeviceStats[]> {
     let params = new HttpParams();
     
     if (filters) {
@@ -187,7 +207,7 @@ export class MetricsService {
       });
     }
 
-    return this.http.get<any[]>(`${this.apiUrl}/devices/stats`, { params });
+    return this.http.get<DeviceStats[]>(`${this.apiUrl}/devices/stats`, { params });
   }
 }
 

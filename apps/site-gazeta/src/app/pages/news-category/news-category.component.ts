@@ -3,7 +3,7 @@ import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { ApiService } from '../../core/service/api.service';
 import { AnalyticsService } from '../../core/service/analytics.service';
 import { SessionService } from '../../core/service/session.service';
-import { Category, News, PaginatedResponse, PaginationMeta } from '@site-gazeta/models';
+import { Category, News } from '@site-gazeta/models';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { MoreNewsComponent } from '@site-gazeta/more-news';
@@ -24,33 +24,35 @@ export class NewsCategoryComponent implements OnInit {
 
   protected isLoading = signal<boolean>(true);
   protected imageLoadingState = signal<Record<number, boolean>>({});
-  protected paginationMeta = signal<PaginationMeta | null>(null);
+  protected paginationMeta = signal<any>(null);
   protected currentPage = signal<number>(1);
-
 
   private emphasisNews = computed(() => {
     return this.news()
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )
       .slice(0, 3);
   });
-
 
   protected featuredNews = computed(() => {
     const emphasisList = this.emphasisNews();
     return emphasisList.length > 0 ? emphasisList[0] : null;
   });
 
-
   protected secondaryNews = computed(() => {
     return this.emphasisNews().slice(1, 3);
   });
 
-
   protected moreNews = computed(() => {
-    const emphasisIds = this.emphasisNews().map(news => news.id);
+    const emphasisIds = this.emphasisNews().map((news) => news.id);
     return this.news()
-      .filter(news => !emphasisIds.includes(news.id))
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .filter((news) => !emphasisIds.includes(news.id))
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
   });
 
   ngOnInit(): void {
@@ -58,9 +60,9 @@ export class NewsCategoryComponent implements OnInit {
   }
 
   getSlug() {
-     this.router.params.subscribe(async (params) => {
+    this.router.params.subscribe(async (params) => {
       const slug = params['slug'];
-      if(slug){
+      if (slug) {
         this.prepareForCategoryChange();
         this.getCategories(slug);
       }
@@ -77,7 +79,7 @@ export class NewsCategoryComponent implements OnInit {
 
   getCategories(slug: string) {
     firstValueFrom(this.apiService.getCategoryBySlug(slug)).then((category) => {
-      if(category){
+      if (category) {
         this.category.set(category);
         this.getNewsForCategory(category);
         this.trackCategoryView(slug);
@@ -89,21 +91,15 @@ export class NewsCategoryComponent implements OnInit {
     });
   }
 
-  getNewsForCategory(category: Category, page = 1) {
+  getNewsForCategory(category: Category) {
     if (category) {
-      this.apiService.getNewsForCategory(category.id as number, { page, limit: 12 })
-        .subscribe((response: PaginatedResponse<News>) => {
-          const newNews = response.data;
+      this.apiService
+        .getNewsForCategory(category.id as number)
+        .subscribe((newNews: News[]) => {
           this.initializeImageLoading(newNews);
-          
-          if (page === 1) {
-            this.news.set(newNews);
-          } else {
-            this.news.update(current => [...current, ...newNews]);
-          }
-
-          this.paginationMeta.set(response.meta);
-          this.currentPage.set(response.meta.page);
+          this.news.set(newNews);
+          this.paginationMeta.set(null);
+          this.currentPage.set(1);
 
           setTimeout(() => {
             this.isLoading.set(false);
@@ -113,11 +109,8 @@ export class NewsCategoryComponent implements OnInit {
   }
 
   loadMore() {
-    const category = this.category();
-    const meta = this.paginationMeta();
-    if (category && meta && meta.page < meta.lastPage) {
-      this.getNewsForCategory(category, meta.page + 1);
-    }
+    // Este método não é mais necessário pois não há paginação
+    // Mantido para compatibilidade se for usado no template
   }
 
   protected isImageLoading(newsId: number | null | undefined): boolean {
@@ -147,19 +140,31 @@ export class NewsCategoryComponent implements OnInit {
     }));
   }
 
-  private initializeImageLoading(newsItems: News[]): void {
-    const loadingState = newsItems.reduce<Record<number, boolean>>((state, item) => {
-      state[item.id] = true;
-      return state;
-    }, {});
+  private initializeImageLoading(newsItems: News[] | undefined): void {
+    if (!newsItems || !Array.isArray(newsItems)) {
+      return;
+    }
+    const loadingState = newsItems.reduce<Record<number, boolean>>(
+      (state, item) => {
+        state[item.id] = true;
+        return state;
+      },
+      {},
+    );
     this.imageLoadingState.set(loadingState);
   }
 
   private trackCategoryView(slug: string): void {
     const sessionId = this.sessionService.getSessionId();
-    this.analyticsService.trackPageView(`/category/${slug}`, sessionId).subscribe({
-      next: () => { /* View tracked successfully */ },
-      error: (err) => { console.error('Analytics tracking failed', err); }
-    });
+    this.analyticsService
+      .trackPageView(`/category/${slug}`, sessionId)
+      .subscribe({
+        next: () => {
+          /* View tracked successfully */
+        },
+        error: (err) => {
+          console.error('Analytics tracking failed', err);
+        },
+      });
   }
 }

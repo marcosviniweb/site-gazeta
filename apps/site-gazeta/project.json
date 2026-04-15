@@ -48,8 +48,8 @@
           "outputHashing": "all",
           "fileReplacements": [
             {
-              "replace": "apps/site-gazeta/src/app/core/env/env.ts",
-              "with": "apps/site-gazeta/src/app/core/env/environment.production.ts"
+              "replace": "environments/env.ts",
+              "with": "environments/environment.production.ts"
             }
           ]
         },
@@ -59,8 +59,8 @@
           "sourceMap": true,
           "fileReplacements": [
             {
-              "replace": "apps/site-gazeta/src/app/core/env/env.ts",
-              "with": "apps/site-gazeta/src/app/core/env/environment.development.ts"
+              "replace": "environments/env.ts",
+              "with": "environments/environment.development.ts"
             }
           ]
         }

@@ -25,6 +25,8 @@ import {
   CreateTopGazetaConfigDto,
   CreateSectionOrderDto,
   CreateSocialMediaConfigDto,
+  MaintenanceConfig,
+  CarouselConfig,
 } from './config.model';
 import { HomeData } from './homeData.model';
 import { PaginatedResponse, PaginationMeta, PaginationParams } from './pagination.model';
@@ -57,4 +59,6 @@ export {
   PaginatedResponse,
   PaginationMeta,
   PaginationParams,
+  MaintenanceConfig,
+  CarouselConfig,
 };

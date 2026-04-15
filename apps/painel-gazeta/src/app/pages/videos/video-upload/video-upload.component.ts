@@ -1,6 +1,20 @@
-import { Component, inject, signal, effect, input, output, OnInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  effect,
+  input,
+  output,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { VideoService } from '../../../core/services/video.service';
 import { Video, Category } from '@site-gazeta/models';
 import { CategoryService } from '../../../core/services/category.service';
@@ -12,7 +26,13 @@ import { MatIconModule } from '@angular/material/icon';
 @Component({
   selector: 'app-video-upload',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, VideoFilesComponent, VideoRelatedNewsComponent, MatIconModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    VideoFilesComponent,
+    VideoRelatedNewsComponent,
+    MatIconModule,
+  ],
   templateUrl: './video-upload.component.html',
   styleUrl: './video-upload.component.scss',
 })
@@ -49,7 +69,6 @@ export class VideoUploadComponent implements OnInit, OnDestroy {
   tagInput = signal<string>('');
   tagInputVisible = signal<boolean>(false);
 
-
   constructor() {
     this.initForm();
 
@@ -83,7 +102,7 @@ export class VideoUploadComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Erro ao carregar categorias:', err);
-      }
+      },
     });
   }
 
@@ -92,8 +111,8 @@ export class VideoUploadComponent implements OnInit, OnDestroy {
       title: video.title,
       featured: video.featured || false,
       tags: video.tags || [],
-      categoryId: video.categories?.map(cat => cat.id) || [],
-      description: video.description || ''
+      categoryId: video.categories?.map((cat) => cat.id) || [],
+      description: video.description || '',
     });
 
     // Carregar categorias selecionadas
@@ -117,12 +136,12 @@ export class VideoUploadComponent implements OnInit, OnDestroy {
 
   // Métodos para Categorias
   toggleCategoryDropdown(): void {
-    this.categoryDropdownOpen.update(open => !open);
+    this.categoryDropdownOpen.update((open) => !open);
   }
 
   selectCategory(category: Category): void {
     const current = this.selectedCategories();
-    if (!current.find(c => c.id === category.id)) {
+    if (!current.find((c) => c.id === category.id)) {
       this.selectedCategories.set([...current, category]);
       this.updateFormCategories([...current, category]);
     }
@@ -130,19 +149,23 @@ export class VideoUploadComponent implements OnInit, OnDestroy {
   }
 
   removeCategory(categoryId: number): void {
-    const newSelected = this.selectedCategories().filter(c => c.id !== categoryId);
+    const newSelected = this.selectedCategories().filter(
+      (c) => c.id !== categoryId,
+    );
     this.selectedCategories.set(newSelected);
     this.updateFormCategories(newSelected);
   }
 
   private updateFormCategories(categories: Category[]): void {
-    const categoryIds = categories.map(cat => cat.id as number);
+    const categoryIds = categories.map((cat) => cat.id as number);
     this.uploadForm.patchValue({ categoryId: categoryIds });
   }
 
   getAvailableCategories(): Category[] {
-    const selectedIds = this.selectedCategories().map(cat => cat.id);
-    return this.availableCategories().filter(cat => !selectedIds.includes(cat.id));
+    const selectedIds = this.selectedCategories().map((cat) => cat.id);
+    return this.availableCategories().filter(
+      (cat) => !selectedIds.includes(cat.id),
+    );
   }
 
   // Métodos para Tags
@@ -171,7 +194,7 @@ export class VideoUploadComponent implements OnInit, OnDestroy {
   }
 
   removeTag(tag: string): void {
-    const newTags = this.tags().filter(t => t !== tag);
+    const newTags = this.tags().filter((t) => t !== tag);
     this.tags.set(newTags);
     this.uploadForm.patchValue({ tags: newTags });
   }
@@ -206,7 +229,6 @@ export class VideoUploadComponent implements OnInit, OnDestroy {
   }
 
   submitForm(): void {
-    console.log('called', this.videoToEdit())
     // Validar formulário
     if (this.uploadForm.invalid) {
       this.uploadForm.markAllAsTouched();
@@ -226,7 +248,7 @@ export class VideoUploadComponent implements OnInit, OnDestroy {
     // Criar FormData
     const formData = new FormData();
     formData.append('title', this.uploadForm.get('title')?.value);
-    
+
     // Adicionar categorias
     const categoryIds = this.uploadForm.get('categoryId')?.value || [];
     if (categoryIds.length > 0) {
@@ -274,7 +296,7 @@ export class VideoUploadComponent implements OnInit, OnDestroy {
 
     // Simular progresso (você pode implementar progresso real com HttpClient)
     this.progressInterval = setInterval(() => {
-      this.uploadProgress.update(p => Math.min(p + 10, 90));
+      this.uploadProgress.update((p) => Math.min(p + 10, 90));
     }, 200);
 
     const apiCall = videoToEdit
@@ -302,8 +324,11 @@ export class VideoUploadComponent implements OnInit, OnDestroy {
         this.isUploading.set(false);
         this.uploadProgress.set(0);
         console.error('Erro ao fazer upload do vídeo:', err);
-        this.alertService.error('Erro', 'Erro ao fazer upload do vídeo. Tente novamente.');
-      }
+        this.alertService.error(
+          'Erro',
+          'Erro ao fazer upload do vídeo. Tente novamente.',
+        );
+      },
     });
   }
 
@@ -330,8 +355,12 @@ export class VideoUploadComponent implements OnInit, OnDestroy {
   }
 
   // Getters para validação
-  get titleControl() { return this.uploadForm.get('title'); }
-  get featuredControl() { return this.uploadForm.get('featured'); }
+  get titleControl() {
+    return this.uploadForm.get('title');
+  }
+  get featuredControl() {
+    return this.uploadForm.get('featured');
+  }
 
   get isFormValid(): boolean {
     // Título deve estar válido

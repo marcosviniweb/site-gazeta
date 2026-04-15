@@ -19,13 +19,11 @@
     <lib-news-category-grid></lib-news-category-grid>
   </section>
 
-  @defer (on viewport(highPh)) {
+  
     <section class="home-block" appScrollReveal="right">
       <lib-news-highligths></lib-news-highligths>
     </section>
-  } @placeholder {
-    <div #highPh class="loading-container loading-container--highlights"></div>
-  }
+
 
   @if (centerAd()['728x90']) {
     <section class="home-block" appScrollReveal="left">
@@ -70,13 +68,7 @@
     <div #mostViewedPh class="loading-container loading-container--most-viewed"></div>
   }
 
-  <!-- @defer (on viewport) {
-    <lib-news-cluster ></lib-news-cluster>
-  }@placeholder {
-    <div class="loading-container">
-      <div class="loading-spinner"></div>
-    </div>
-  } -->
+ 
 
   @defer (on viewport(moreNewsPh)) {
     <section class="home-block home-block--more-news" appScrollReveal="right">

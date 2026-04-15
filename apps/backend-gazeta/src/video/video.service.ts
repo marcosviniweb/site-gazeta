@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, Logger, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Logger,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateVideoDto } from './dto/create-video.dto';
 import { UpdateVideoDto } from './dto/update-video.dto';
@@ -21,7 +26,7 @@ export class VideoService {
     private prisma: PrismaService,
     private videoProcessingService: VideoProcessingService,
     private videoMetadataService: VideoMetadataService,
-    private videoOptimizerService: VideoOptimizerService
+    private videoOptimizerService: VideoOptimizerService,
   ) {}
 
   async create(createVideoDto: CreateVideoDto): Promise<VideoResponseDto> {
@@ -46,7 +51,7 @@ export class VideoService {
    */
   private async manageFeaturedVideos(excludeVideoId?: number): Promise<void> {
     const MAX_FEATURED = 3;
-    
+
     // Buscar todos os vídeos em destaque, ordenados por data de criação (mais antigo primeiro)
     const featuredVideos = await this.prisma.video.findMany({
       where: {
@@ -65,9 +70,9 @@ export class VideoService {
       // Se há 3 e vou adicionar 1, preciso remover 1 (o mais antigo)
       const videosToRemove = featuredVideos.length - MAX_FEATURED + 1;
       const videosToRemoveFeatured = featuredVideos.slice(0, videosToRemove);
-      
+
       if (videosToRemoveFeatured.length > 0) {
-        const idsToUpdate = videosToRemoveFeatured.map(v => v.id);
+        const idsToUpdate = videosToRemoveFeatured.map((v) => v.id);
         await this.prisma.video.updateMany({
           where: {
             id: { in: idsToUpdate },
@@ -76,9 +81,9 @@ export class VideoService {
             featured: false,
           },
         });
-        
+
         this.logger.log(
-          `Removido destaque de ${idsToUpdate.length} vídeo(s) antigo(s) (IDs: ${idsToUpdate.join(', ')}) para manter apenas ${MAX_FEATURED} em destaque`
+          `Removido destaque de ${idsToUpdate.length} vídeo(s) antigo(s) (IDs: ${idsToUpdate.join(', ')}) para manter apenas ${MAX_FEATURED} em destaque`,
         );
       }
     }
@@ -88,36 +93,45 @@ export class VideoService {
     videoFile: UploadedFile,
     thumbnailFile: UploadedFile | undefined,
     data: UploadVideoDto,
-    baseUrlFromRequest?: string
+    baseUrlFromRequest?: string,
   ): Promise<VideoResponseDto> {
     // Validar formato do vídeo
     if (!this.isValidVideoFormat(videoFile)) {
-      throw new BadRequestException('Formato de vídeo não suportado. Apenas MP4 é aceito.');
+      throw new BadRequestException(
+        'Formato de vídeo não suportado. Apenas MP4 é aceito.',
+      );
     }
 
     const timestamp = Date.now();
     const randomId = Math.random().toString(36).substring(2, 15);
-    const sanitizedVideoName = sanitizeFileName(this.ensureMp4Extension(videoFile.originalname));
+    const sanitizedVideoName = sanitizeFileName(
+      this.ensureMp4Extension(videoFile.originalname),
+    );
     const videoFilename = `${timestamp}_${randomId}_${sanitizedVideoName}`;
-    
+
     // Salvar vídeo
-    const videoPath = await this.videoProcessingService.saveVideo(videoFile, videoFilename);
-    
+    const videoPath = await this.videoProcessingService.saveVideo(
+      videoFile,
+      videoFilename,
+    );
+
     // Otimizar vídeo para streaming progressivo (em background, não bloqueia resposta)
     this.optimizeVideoForStreaming(videoPath).catch((error) => {
-      this.logger.warn(`Não foi possível otimizar vídeo para streaming: ${error.message}`);
+      this.logger.warn(
+        `Não foi possível otimizar vídeo para streaming: ${error.message}`,
+      );
     });
-    
+
     // Gerar URL pública do vídeo
     const resolvedBaseUrl = baseUrlFromRequest || process.env.BASE_URL || '';
     const videoUrl = this.buildPublicUrl(videoPath, resolvedBaseUrl);
-    
+
     // Processar thumbnail se fornecido
     let thumbnailUrl: string | undefined;
     if (thumbnailFile) {
       const thumbnailPath = await this.videoProcessingService.saveThumbnail(
         thumbnailFile,
-        videoFilename
+        videoFilename,
       );
       thumbnailUrl = this.buildPublicUrl(thumbnailPath, resolvedBaseUrl);
     }
@@ -126,14 +140,18 @@ export class VideoService {
     let effectiveDuration = data.duration;
     if (!effectiveDuration) {
       try {
-        effectiveDuration = await this.videoMetadataService.getDurationString(videoPath);
+        effectiveDuration =
+          await this.videoMetadataService.getDurationString(videoPath);
       } catch (e) {
-        this.logger.warn(`Não foi possível calcular a duração via ffprobe: ${e?.message || e}`);
+        this.logger.warn(
+          `Não foi possível calcular a duração via ffprobe: ${e?.message || e}`,
+        );
       }
     }
 
     // Preparar tags como JSON string
-    const tagsJson = data.tags && data.tags.length > 0 ? JSON.stringify(data.tags) : null;
+    const tagsJson =
+      data.tags && data.tags.length > 0 ? JSON.stringify(data.tags) : null;
 
     // Se o vídeo será marcado como destaque, gerenciar a regra de apenas 3 em destaque
     if (data.featured === true) {
@@ -151,19 +169,22 @@ export class VideoService {
         tags: tagsJson,
         description: data.description,
         newsSlug: data.newsSlug,
-        videoCategories: data.categoryId && data.categoryId.length > 0 ? {
-          create: data.categoryId.map(categoryId => ({
-            categoryId
-          }))
-        } : undefined,
+        videoCategories:
+          data.categoryId && data.categoryId.length > 0
+            ? {
+                create: data.categoryId.map((categoryId) => ({
+                  categoryId,
+                })),
+              }
+            : undefined,
       },
       include: {
         videoCategories: {
           include: {
-            category: true
-          }
-        }
-      }
+            category: true,
+          },
+        },
+      },
     });
 
     return this.formatResponse(video);
@@ -175,15 +196,20 @@ export class VideoService {
   private async optimizeVideoForStreaming(videoPath: string): Promise<void> {
     try {
       // Verificar se já está otimizado
-      const isOptimized = await this.videoOptimizerService.isOptimizedForStreaming(videoPath);
+      const isOptimized =
+        await this.videoOptimizerService.isOptimizedForStreaming(videoPath);
       if (isOptimized) {
         this.logger.log(`Vídeo já está otimizado: ${videoPath}`);
         return;
       }
 
       // Otimizar (move moov atom para o início)
-      await this.videoOptimizerService.optimizeForProgressiveStreaming(videoPath);
-      this.logger.log(`Vídeo otimizado para streaming progressivo: ${videoPath}`);
+      await this.videoOptimizerService.optimizeForProgressiveStreaming(
+        videoPath,
+      );
+      this.logger.log(
+        `Vídeo otimizado para streaming progressivo: ${videoPath}`,
+      );
     } catch (error) {
       this.logger.error(`Erro ao otimizar vídeo: ${error.message}`);
       // Não lança erro para não interromper o upload
@@ -196,12 +222,14 @@ export class VideoService {
   private isValidVideoFormat(file: UploadedFile): boolean {
     const validMimeTypes = ['video/mp4', 'video/x-m4v', 'video/quicktime'];
     const validExtensions = ['.mp4', '.m4v', '.mov'];
-    
-    const hasValidMimeType = validMimeTypes.includes(file.mimetype.toLowerCase());
-    const hasValidExtension = validExtensions.some(ext => 
-      file.originalname.toLowerCase().endsWith(ext)
+
+    const hasValidMimeType = validMimeTypes.includes(
+      file.mimetype.toLowerCase(),
     );
-    
+    const hasValidExtension = validExtensions.some((ext) =>
+      file.originalname.toLowerCase().endsWith(ext),
+    );
+
     return hasValidMimeType || hasValidExtension;
   }
 
@@ -230,8 +258,8 @@ export class VideoService {
     if (query?.categoryId) {
       whereCondition.videoCategories = {
         some: {
-          categoryId: query.categoryId
-        }
+          categoryId: query.categoryId,
+        },
       };
     }
 
@@ -243,7 +271,7 @@ export class VideoService {
       const dateStr = query.date;
       whereCondition.createdAt = {
         gte: new Date(`${dateStr}T00:00:00.000Z`),
-        lte: new Date(`${dateStr}T23:59:59.999Z`)
+        lte: new Date(`${dateStr}T23:59:59.999Z`),
       };
     }
 
@@ -253,13 +281,16 @@ export class VideoService {
   /**
    * Constrói array dinâmico de ordenação para vídeos
    */
-  private buildOrderByCondition(query?: VideoQueryDto, defaultFeaturedFirst = false): any[] {
+  private buildOrderByCondition(
+    query?: VideoQueryDto,
+    defaultFeaturedFirst = false,
+  ): any[] {
     const orderBy: any[] = [];
 
     if (query?.views) {
       orderBy.push({ views: query.views });
     }
-    
+
     if (query?.order) {
       orderBy.push({ createdAt: query.order });
     }
@@ -287,25 +318,25 @@ export class VideoService {
         include: {
           videoCategories: {
             include: {
-              category: true
-            }
-          }
+              category: true,
+            },
+          },
         },
         orderBy,
         skip,
-        take: limit
+        take: limit,
       }),
-      this.prisma.video.count({ where: whereCondition })
+      this.prisma.video.count({ where: whereCondition }),
     ]);
 
     return {
-      data: videos.map(video => this.formatResponse(video)),
+      data: videos.map((video) => this.formatResponse(video)),
       meta: {
         total,
         page,
         limit,
-        lastPage: Math.ceil(total / limit)
-      }
+        lastPage: Math.ceil(total / limit),
+      },
     };
   }
 
@@ -317,16 +348,16 @@ export class VideoService {
       include: {
         videoCategories: {
           include: {
-            category: true
-          }
-        }
+            category: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
       },
     });
 
-    return videos.map(video => this.formatResponse(video));
+    return videos.map((video) => this.formatResponse(video));
   }
 
   async findLatest(): Promise<VideoResponseDto[]> {
@@ -337,9 +368,9 @@ export class VideoService {
       include: {
         videoCategories: {
           include: {
-            category: true
-          }
-        }
+            category: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -347,10 +378,12 @@ export class VideoService {
       take: 6,
     });
 
-    return videos.map(video => this.formatResponse(video));
+    return videos.map((video) => this.formatResponse(video));
   }
 
-  async findVideosByCategory(excludeIds?: number[]): Promise<VideoResponseDto[]> {
+  async findVideosByCategory(
+    excludeIds?: number[],
+  ): Promise<VideoResponseDto[]> {
     const where: any = {
       featured: false, // Exclui vídeos em destaque
     };
@@ -367,16 +400,16 @@ export class VideoService {
       include: {
         videoCategories: {
           include: {
-            category: true
-          }
-        }
+            category: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
       },
     });
 
-    return videos.map(video => this.formatResponse(video));
+    return videos.map((video) => this.formatResponse(video));
   }
 
   async findOne(id: number): Promise<VideoResponseDto> {
@@ -385,10 +418,10 @@ export class VideoService {
       include: {
         videoCategories: {
           include: {
-            category: true
-          }
-        }
-      }
+            category: true,
+          },
+        },
+      },
     });
 
     if (!video) {
@@ -398,7 +431,10 @@ export class VideoService {
     return this.formatResponse(video);
   }
 
-  async update(id: number, updateVideoDto: UpdateVideoDto): Promise<VideoResponseDto> {
+  async update(
+    id: number,
+    updateVideoDto: UpdateVideoDto,
+  ): Promise<VideoResponseDto> {
     const existingVideo = await this.findVideoById(id);
 
     const updatedVideo = await this.prisma.video.update({
@@ -406,10 +442,19 @@ export class VideoService {
       data: {
         title: updateVideoDto.title ?? existingVideo.title,
         url: updateVideoDto.url ?? existingVideo.url,
-        thumbnail: updateVideoDto.thumbnail !== undefined ? updateVideoDto.thumbnail : existingVideo.thumbnail,
+        thumbnail:
+          updateVideoDto.thumbnail !== undefined
+            ? updateVideoDto.thumbnail
+            : existingVideo.thumbnail,
         duration: updateVideoDto.duration ?? existingVideo.duration,
-        description: updateVideoDto.description !== undefined ? updateVideoDto.description : existingVideo.description,
-        newsSlug: updateVideoDto.newsSlug !== undefined ? updateVideoDto.newsSlug : existingVideo.newsSlug,
+        description:
+          updateVideoDto.description !== undefined
+            ? updateVideoDto.description
+            : existingVideo.description,
+        newsSlug:
+          updateVideoDto.newsSlug !== undefined
+            ? updateVideoDto.newsSlug
+            : existingVideo.newsSlug,
       },
     });
 
@@ -421,7 +466,7 @@ export class VideoService {
     videoFile?: UploadedFile,
     thumbnailFile?: UploadedFile,
     data?: UploadVideoDto,
-    baseUrlFromRequest?: string
+    baseUrlFromRequest?: string,
   ): Promise<VideoResponseDto> {
     const existingVideo = await this.findVideoById(id);
 
@@ -440,29 +485,41 @@ export class VideoService {
     if (videoFile) {
       // Validar formato do vídeo
       if (!this.isValidVideoFormat(videoFile)) {
-        throw new BadRequestException('Formato de vídeo não suportado. Apenas MP4 é aceito.');
+        throw new BadRequestException(
+          'Formato de vídeo não suportado. Apenas MP4 é aceito.',
+        );
       }
 
       const timestamp = Date.now();
       const randomId = Math.random().toString(36).substring(2, 15);
-      const sanitizedVideoName = sanitizeFileName(this.ensureMp4Extension(videoFile.originalname));
+      const sanitizedVideoName = sanitizeFileName(
+        this.ensureMp4Extension(videoFile.originalname),
+      );
       newVideoFilename = `video_${timestamp}_${randomId}_${sanitizedVideoName}`;
 
-      const newVideoPath = await this.videoProcessingService.saveVideo(videoFile, newVideoFilename);
+      const newVideoPath = await this.videoProcessingService.saveVideo(
+        videoFile,
+        newVideoFilename,
+      );
       newVideoRelPath = newVideoPath.replace(/\\/g, '/');
       newVideoUrl = this.buildPublicUrl(newVideoPath, resolvedBaseUrl);
 
       // Otimizar vídeo para streaming progressivo (em background)
       this.optimizeVideoForStreaming(newVideoPath).catch((error) => {
-        this.logger.warn(`Não foi possível otimizar vídeo para streaming: ${error.message}`);
+        this.logger.warn(
+          `Não foi possível otimizar vídeo para streaming: ${error.message}`,
+        );
       });
 
       // Recalcular duração se não enviada
       if (!data?.duration) {
         try {
-          effectiveDuration = await this.videoMetadataService.getDurationString(newVideoPath);
+          effectiveDuration =
+            await this.videoMetadataService.getDurationString(newVideoPath);
         } catch (e) {
-          this.logger.warn(`Não foi possível calcular a duração via ffprobe: ${e?.message || e}`);
+          this.logger.warn(
+            `Não foi possível calcular a duração via ffprobe: ${e?.message || e}`,
+          );
         }
       }
 
@@ -470,15 +527,22 @@ export class VideoService {
       if (existingVideo.url) {
         const oldRel = this.urlToRelativePath(existingVideo.url);
         // Só deletar se o caminho antigo for diferente do novo
-        oldVideoPathToDelete = newVideoRelPath && oldRel === newVideoRelPath ? undefined : oldRel;
+        oldVideoPathToDelete =
+          newVideoRelPath && oldRel === newVideoRelPath ? undefined : oldRel;
       }
     }
 
     // Atualizar thumbnail se enviado
     if (thumbnailFile) {
       // Se não trocou o vídeo, derivar o nome base a partir do URL existente
-      const filenameForThumbnail = newVideoFilename || this.extractFilenameFromUrl(existingVideo.url) || `video_${Date.now()}.mp4`;
-      const thumbnailPath = await this.videoProcessingService.saveThumbnail(thumbnailFile, filenameForThumbnail);
+      const filenameForThumbnail =
+        newVideoFilename ||
+        this.extractFilenameFromUrl(existingVideo.url) ||
+        `video_${Date.now()}.mp4`;
+      const thumbnailPath = await this.videoProcessingService.saveThumbnail(
+        thumbnailFile,
+        filenameForThumbnail,
+      );
       newThumbRelPath = thumbnailPath.replace(/\\/g, '/');
       newThumbnailUrl = this.buildPublicUrl(thumbnailPath, resolvedBaseUrl);
 
@@ -486,7 +550,8 @@ export class VideoService {
       if (existingVideo.thumbnail) {
         const oldRel = this.urlToRelativePath(existingVideo.thumbnail);
         // Se o caminho novo for igual ao antigo, não deletar (foi overwrite no mesmo arquivo)
-        oldThumbPathToDelete = newThumbRelPath && oldRel === newThumbRelPath ? undefined : oldRel;
+        oldThumbPathToDelete =
+          newThumbRelPath && oldRel === newThumbRelPath ? undefined : oldRel;
       }
     }
 
@@ -507,20 +572,24 @@ export class VideoService {
       url: newVideoUrl,
       thumbnail: finalThumbnailUrl,
       duration: effectiveDuration,
-      description: data?.description !== undefined ? data.description : existingVideo.description,
-      newsSlug: data?.newsSlug !== undefined ? data.newsSlug : existingVideo.newsSlug,
+      description:
+        data?.description !== undefined
+          ? data.description
+          : existingVideo.description,
+      newsSlug:
+        data?.newsSlug !== undefined ? data.newsSlug : existingVideo.newsSlug,
     };
 
     // Atualizar featured se fornecido
     if (data && 'featured' in data) {
       const newFeaturedValue = data.featured;
       const wasFeatured = existingVideo.featured;
-      
+
       // Se está marcando como destaque e não estava antes, gerenciar a regra
       if (newFeaturedValue === true && !wasFeatured) {
         await this.manageFeaturedVideos(id);
       }
-      
+
       updateData.featured = newFeaturedValue;
     }
 
@@ -533,15 +602,15 @@ export class VideoService {
     if (data && data.categoryId !== undefined) {
       // Deletar categorias existentes
       await this.prisma.videoCategory.deleteMany({
-        where: { videoId: id }
+        where: { videoId: id },
       });
 
       // Criar novas categorias se houver
       if (data.categoryId && data.categoryId.length > 0) {
         updateData.videoCategories = {
-          create: data.categoryId.map(categoryId => ({
-            categoryId
-          }))
+          create: data.categoryId.map((categoryId) => ({
+            categoryId,
+          })),
         };
       }
     }
@@ -552,19 +621,25 @@ export class VideoService {
       include: {
         videoCategories: {
           include: {
-            category: true
-          }
-        }
-      }
+            category: true,
+          },
+        },
+      },
     });
 
     // Deletar arquivos antigos substituídos
     try {
       if (oldVideoPathToDelete || oldThumbPathToDelete) {
-        await this.videoProcessingService.deleteVideoFiles(oldVideoPathToDelete, oldThumbPathToDelete);
+        await this.videoProcessingService.deleteVideoFiles(
+          oldVideoPathToDelete,
+          oldThumbPathToDelete,
+        );
       }
     } catch (error) {
-      this.logger.error(`Erro ao deletar arquivos substituídos do vídeo ${id}:`, error);
+      this.logger.error(
+        `Erro ao deletar arquivos substituídos do vídeo ${id}:`,
+        error,
+      );
     }
 
     return this.formatResponse(updatedVideo);
@@ -586,11 +661,14 @@ export class VideoService {
     // Deletar arquivos físicos
     try {
       const videoPath = this.urlToRelativePath(existingVideo.url);
-      const thumbnailPath = existingVideo.thumbnail 
+      const thumbnailPath = existingVideo.thumbnail
         ? this.urlToRelativePath(existingVideo.thumbnail)
         : undefined;
-      
-      await this.videoProcessingService.deleteVideoFiles(videoPath, thumbnailPath);
+
+      await this.videoProcessingService.deleteVideoFiles(
+        videoPath,
+        thumbnailPath,
+      );
     } catch (error) {
       this.logger.error(`Erro ao deletar arquivos de vídeo ${id}:`, error);
       // Não interrompe a exclusão do registro no banco
@@ -606,7 +684,10 @@ export class VideoService {
   private buildPublicUrl(filePath: string, baseUrl: string): string {
     const relativePath = filePath.replace(/\\/g, '/');
     if (baseUrl) {
-      return this.videoProcessingService.generatePublicUrl(relativePath, baseUrl);
+      return this.videoProcessingService.generatePublicUrl(
+        relativePath,
+        baseUrl,
+      );
     }
     return `/${relativePath}`;
   }
@@ -641,7 +722,10 @@ export class VideoService {
   /**
    * Atualiza o destaque de múltiplos vídeos (Bulk)
    */
-  async bulkToggleFeatured(ids: number[], featured: boolean): Promise<{ count: number }> {
+  async bulkToggleFeatured(
+    ids: number[],
+    featured: boolean,
+  ): Promise<{ count: number }> {
     // Se está ativando destaque, precisamos gerenciar o limite de 3
     if (featured) {
       // Como é bulk, simplificamos: removemos destaque de TODOS os antigos que não estão na lista nova
@@ -649,9 +733,9 @@ export class VideoService {
       // Vou apenas aplicar o updateMany e depois rodar o manageFeaturedVideos para limpar excessos.
       const result = await this.prisma.video.updateMany({
         where: { id: { in: ids } },
-        data: { featured }
+        data: { featured },
       });
-      
+
       await this.manageFeaturedVideos();
       return { count: result.count };
     }
@@ -659,7 +743,7 @@ export class VideoService {
     // Se está desativando, apenas faz o updateMany
     const result = await this.prisma.video.updateMany({
       where: { id: { in: ids } },
-      data: { featured }
+      data: { featured },
     });
 
     return { count: result.count };
@@ -683,9 +767,12 @@ export class VideoService {
 
   private normalizeUrl(url: string | null | undefined): string | null {
     if (!url) return null;
-    const match = url.match(/^[^/]+,\s*(https?:\/\/.*)$/i);
-    if (match) return match[1].trim();
-    return url.replace(/\\/g, '/');
+    let normalized = url.replace(/\\/g, '/');
+    const match = normalized.match(/^(https?,?\s*)+,\s*(https?:\/\/.*)$/i);
+    if (match) return match[2].trim();
+    normalized = normalized.replace(/^https,?\s+/i, 'https://');
+    normalized = normalized.replace(/^http,?\s+/i, 'http://');
+    return normalized;
   }
 
   private formatResponse(video: any): VideoResponseDto {
@@ -693,13 +780,15 @@ export class VideoService {
     let tags: string[] | undefined;
     if (video.tags) {
       try {
-        tags = typeof video.tags === 'string' ? JSON.parse(video.tags) : video.tags;
+        tags =
+          typeof video.tags === 'string' ? JSON.parse(video.tags) : video.tags;
       } catch {
         tags = Array.isArray(video.tags) ? video.tags : [];
       }
     }
 
-    const categories = video.videoCategories?.map((vc: any) => vc.category) || [];
+    const categories =
+      video.videoCategories?.map((vc: any) => vc.category) || [];
 
     return {
       id: video.id,
@@ -718,4 +807,3 @@ export class VideoService {
     };
   }
 }
-

@@ -5,8 +5,10 @@
       <div class="image-preview-container">
         <div class="image-preview" [class.has-image]="featuredImage()">
           @if (featuredImage(); as featured) {
-            <img [src]="isEdit() ? featured.imgSize?.medium :featured.preview"
-                 alt="Imagem de destaque selecionada" />
+            <img
+              [src]="featured.preview || featured.imgSize?.medium || ''"
+              alt="Imagem de destaque selecionada"
+            />
           } @else {
             <div class="image-placeholder">
               <mat-icon>image</mat-icon>
@@ -25,7 +27,10 @@
           Adicionar Foto
         </button>
       </div>
-      <small class="g-field-hint">Adicione fotos que serão exibidos no carrossel da notícia. A primeira foto será automaticamente definida como imagem de destaque.</small>
+      <small class="g-field-hint"
+        >Adicione fotos que serão exibidos no carrossel da notícia. A primeira
+        foto será automaticamente definida como imagem de destaque.</small
+      >
 
       @if (selectedMediaIndex() !== null) {
         <div class="media-edit-card">
@@ -33,7 +38,7 @@
             <mat-icon>edit</mat-icon>
             <h5>Editar Metadados</h5>
           </header>
-          
+
           <div class="g-form-row">
             <div class="g-form-group">
               <label for="mediaAuthor">Autor da Foto</label>
@@ -61,8 +66,12 @@
             <button type="button" class="btn-confirm" (click)="saveMediaInfo()">
               <mat-icon>check</mat-icon> Salvar
             </button>
-            <button type="button" class="btn-cancel" (click)="cancelMediaEdit()">
-               Cancelar
+            <button
+              type="button"
+              class="btn-cancel"
+              (click)="cancelMediaEdit()"
+            >
+              Cancelar
             </button>
           </div>
         </div>
@@ -84,18 +93,30 @@
             tabindex="0"
           >
             @if (media.type === 'photo') {
-              <button type="button" class="featured-star"
-                   [class.active]="media.emphasis"
-                   (click)="toggleFeatured($index, $event)"
-                   title="Alternar Destaque">
-                <mat-icon>{{ media.emphasis ? 'star' : 'star_border' }}</mat-icon>
+              <button
+                type="button"
+                class="featured-star"
+                [class.active]="media.emphasis"
+                (click)="toggleFeatured($index, $event)"
+                title="Alternar Destaque"
+              >
+                <mat-icon>{{
+                  media.emphasis ? 'star' : 'star_border'
+                }}</mat-icon>
               </button>
 
               <div class="photo-preview">
-                <img [src]="media.imgSize ? media.imgSize.medium : media.preview"
-                     [alt]="'Foto ' + ($index + 1)" />
+                <img
+                  [src]="media.preview || media.imgSize?.medium || ''"
+                  [alt]="'Foto ' + ($index + 1)"
+                />
 
-                <button type="button" class="remove-media-btn" (click)="removeMedia($index, $event)" title="Remover">
+                <button
+                  type="button"
+                  class="remove-media-btn"
+                  (click)="removeMedia($index, $event)"
+                  title="Remover"
+                >
                   <mat-icon>delete</mat-icon>
                 </button>
 
@@ -109,7 +130,7 @@
                   @if (media.date) {
                     <div class="info-item">
                       <mat-icon>calendar_today</mat-icon>
-                      <span>{{ media.date | date:'dd/MM/yyyy' }}</span>
+                      <span>{{ media.date | date: 'dd/MM/yyyy' }}</span>
                     </div>
                   }
                 </div>
@@ -118,7 +139,10 @@
               <div class="video-preview">
                 <div class="video-thumbnail">
                   @if (media.thumbnail) {
-                    <img [src]="media.thumbnail" [alt]="'Vídeo ' + ($index + 1)" />
+                    <img
+                      [src]="media.thumbnail"
+                      [alt]="'Vídeo ' + ($index + 1)"
+                    />
                   } @else {
                     <div class="video-placeholder">
                       <mat-icon>play_circle_filled</mat-icon>
@@ -129,10 +153,16 @@
                   </div>
                 </div>
                 <div class="video-info">
-                  <p class="video-title">{{ media.title || 'Vídeo do YouTube' }}</p>
+                  <p class="video-title">
+                    {{ media.title || 'Vídeo do YouTube' }}
+                  </p>
                   <small class="video-url">{{ media.url }}</small>
                 </div>
-                <button type="button" class="remove-media-btn" (click)="removeMedia($index, $event)">
+                <button
+                  type="button"
+                  class="remove-media-btn"
+                  (click)="removeMedia($index, $event)"
+                >
                   <mat-icon>delete</mat-icon>
                 </button>
               </div>
@@ -149,7 +179,6 @@
     accept="image/*"
     multiple
     (change)="onPhotosSelected($event)"
-    style="display: none;"
+    style="display: none"
   />
 </div>
-

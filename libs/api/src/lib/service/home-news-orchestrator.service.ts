@@ -1,17 +1,47 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, of, forkJoin } from 'rxjs';
 import { map, switchMap, tap, shareReplay, catchError } from 'rxjs/operators';
-import { Category, News, PaginatedResponse } from '@site-gazeta/models';
-import { ApiConfigService, HomeCategoryGridItem, HomeHighlightItem } from './api-config.service';
+import { Category, News } from '@site-gazeta/models';
+import {
+  ApiConfigService,
+  HomeCategoryGridItem,
+  HomeHighlightItem,
+} from './api-config.service';
+
+// TTL de 5 minutos para cache (em ms)
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+
+interface HomeCategoryConfig {
+  primary: {
+    categories: Category[];
+  };
+  secondary: {
+    categories: Category[];
+  };
+}
 
 /**
  * Serviço responsável por orquestrar o carregamento das listagens de notícias da Home Page.
  * Padrão BFF (Backend for Frontend) em memória.
  * Evita a "Race Condition" de chamadas assíncronas concorrentes garantindo que
  * o filtro de exclusões ocorra em RAM e de forma hierárquica.
+ *
+ * Arquitetura de performance:
+ * 1. Cache da config (1 requisição para PRIMARY + SECONDARY)
+ * 2. ForkJoin paralelo - todas as categorias em paralelo (ordem preservada pelo array)
+ * 3. Cache TTL de 5 minutos para todas as seções
+ * 4. Reutilização da config cacheada
+ *
+ * O SSR hydration é tratado automaticamente pelo provideClientHydration()
+ * com withHttpTransferCacheOptions() no app.config.ts
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class HomeNewsOrchestratorService {
   private apiConfigService = inject(ApiConfigService);
@@ -19,91 +49,157 @@ export class HomeNewsOrchestratorService {
   // Armazenamento central dos IDs das notícias já alocadas na Home para evitar duplicatas.
   private globalExcludedIds = new Set<number>();
 
-  // Caches de Observables (ShareReplay) garantem que requisições múltiplas de 
-  // um mesmo componente usem o mesmo fluxo já resolvido na memória.
+  // ✅ Cache da CONFIG (1x para PRIMARY + SECONDARY)
+  private homeConfigCache$?: Observable<HomeCategoryConfig>;
+  private homeConfigCacheEntry?: CacheEntry<HomeCategoryConfig>;
+
+  // ✅ Caches de notícias com TTL
   private carouselCache$?: Observable<News[]>;
+  private carouselCacheEntry?: CacheEntry<News[]>;
   private gridCache$?: Observable<HomeCategoryGridItem[]>;
+  private gridCacheEntry?: CacheEntry<HomeCategoryGridItem[]>;
   private highlightsCache$?: Observable<HomeHighlightItem[]>;
+  private highlightsCacheEntry?: CacheEntry<HomeHighlightItem[]>;
+
+  /**
+   * Verifica se cache ainda é válido
+   */
+  private isCacheValid<T>(entry: CacheEntry<T> | undefined): boolean {
+    if (!entry) return false;
+    return Date.now() - entry.timestamp < CACHE_TTL_MS;
+  }
+
+  /**
+   * Obtem a config cacheada (chamada UNA para PRIMARY + SECONDARY)
+   */
+  private getHomeConfig(): Observable<HomeCategoryConfig> {
+    if (
+      this.homeConfigCacheEntry &&
+      this.isCacheValid(this.homeConfigCacheEntry)
+    ) {
+      return of(this.homeConfigCacheEntry.data);
+    }
+
+    this.homeConfigCache$ = this.apiConfigService.getHomeCategoryConfig().pipe(
+      tap((config) => {
+        this.homeConfigCacheEntry = { data: config, timestamp: Date.now() };
+      }),
+      shareReplay(1),
+    );
+    return this.homeConfigCache$;
+  }
 
   /**
    * Passo 1 da Hierarquia: Notícias Principais (Carousel/Hero)
+   * ✅ Com cache TTL
    */
   getCarouselNews(): Observable<News[]> {
-    if (!this.carouselCache$) {
-      this.carouselCache$ = this.apiConfigService.getNewsFeatured().pipe(
-        tap(news => this.registerIds(news)),
-        shareReplay(1)
-      );
+    if (this.carouselCacheEntry && this.isCacheValid(this.carouselCacheEntry)) {
+      return of(this.carouselCacheEntry.data);
     }
+
+    this.carouselCache$ = this.apiConfigService.getNewsFeatured().pipe(
+      tap((news) => {
+        this.registerIds(news);
+        this.carouselCacheEntry = { data: news, timestamp: Date.now() };
+      }),
+      shareReplay(1),
+    );
     return this.carouselCache$;
   }
 
   /**
    * Passo 2 da Hierarquia: Categoria Grid (Abaixo do Carousel)
-   * Observação: O Grid precisa ignorar o que já foi pro Carousel.
+   * ✅ Utiliza config cacheada + forkJoin paralelo + cache TTL
    */
   getCategoryGrid(): Observable<HomeCategoryGridItem[]> {
-    if (!this.gridCache$) {
-      this.gridCache$ = this.apiConfigService.getHomeCategoryConfig().pipe(
-        switchMap(config => {
-          console.log('Orchestrator: Processing Category Grid', config?.primary?.categories?.length);
-          if (!config || !config.primary || !config.primary.categories) return of([]);
-          return forkJoin(
-            config.primary.categories.map((category: Category) =>
-              this.fetchAndFilterNews(category.id as number)
-                .pipe(map((news) => ({ category, news })))
-            )
-          );
-        }),
-        tap(grid => console.log('Orchestrator: Grid Loaded', grid.length)),
-        catchError(err => {
-          console.error('Orchestrator Error: getCategoryGrid failed', err);
-          return of([]);
-        }),
-        shareReplay(1)
-      );
+    if (this.gridCacheEntry && this.isCacheValid(this.gridCacheEntry)) {
+      return of(this.gridCacheEntry.data);
     }
+
+    this.gridCache$ = this.getHomeConfig().pipe(
+      switchMap((config) => {
+        if (!config?.primary?.categories?.length) {
+          return of([]);
+        }
+
+        // ✅ FORKJOIN paralelo - mantém ordem do array original
+        return forkJoin(
+          config.primary.categories.map((category: Category) =>
+            this.fetchAndFilterNews(category.id as number).pipe(
+              map((news) => ({ category, news })),
+            ),
+          ),
+        );
+      }),
+      map(
+        (items) =>
+          (Array.isArray(items) ? items : []) as HomeCategoryGridItem[],
+      ),
+      tap((items) => {
+        this.gridCacheEntry = { data: items, timestamp: Date.now() };
+      }),
+      catchError((err) => {
+        console.error('Orchestrator Error: getCategoryGrid failed', err);
+        return of([]);
+      }),
+      shareReplay(1),
+    );
     return this.gridCache$;
   }
 
   /**
    * Passo 3 da Hierarquia: Categoria Secundária (Highlights)
+   * ✅ Utiliza a MESMA config cacheada + forkJoin paralelo + cache TTL
    */
   getHighlights(): Observable<HomeHighlightItem[]> {
-    if (!this.highlightsCache$) {
-      this.highlightsCache$ = this.apiConfigService.getHomeCategoryConfig().pipe(
-        switchMap(config => {
-          console.log('Orchestrator: Processing Highlights', config?.secondary?.categories?.length);
-          if (!config || !config.secondary || !config.secondary.categories) return of([]);
-          return forkJoin(
-            config.secondary.categories.map((category: Category) =>
-              this.fetchAndFilterNews(category.id as number, 5) // Limitado a 5 por escopo anterior
-                .pipe(map((news) => ({ category, news })))
-            )
-          );
-        }),
-        tap(highlights => console.log('Orchestrator: Highlights Loaded', highlights.length)),
-        catchError(err => {
-          console.error('Orchestrator Error: getHighlights failed', err);
-          return of([]);
-        }),
-        shareReplay(1)
-      );
+    if (
+      this.highlightsCacheEntry &&
+      this.isCacheValid(this.highlightsCacheEntry)
+    ) {
+      return of(this.highlightsCacheEntry.data);
     }
+
+    this.highlightsCache$ = this.getHomeConfig().pipe(
+      switchMap((config) => {
+        if (!config?.secondary?.categories?.length) {
+          return of([]);
+        }
+
+        // ✅ REUTILIZA a config cacheada (não faz nova chamada)
+        return forkJoin(
+          config.secondary.categories.map((category: Category) =>
+            this.fetchAndFilterNews(category.id as number, 5).pipe(
+              map((news) => ({ category, news })),
+            ),
+          ),
+        );
+      }),
+      map(
+        (items) => (Array.isArray(items) ? items : []) as HomeHighlightItem[],
+      ),
+      tap((items) => {
+        this.highlightsCacheEntry = { data: items, timestamp: Date.now() };
+      }),
+      catchError((err) => {
+        console.error('Orchestrator Error: getHighlights failed', err);
+        return of([]);
+      }),
+      shareReplay(1),
+    );
     return this.highlightsCache$;
   }
 
   /**
-   * Traz as últimas notícias mais gerais, filtrando tudo o que os cabeçalhos 
+   * Traz as últimas notícias mais gerais, filtrando tudo o que os cabeçalhos
    * acima já carregaram e registraram no exclude global.
    */
   getFilteredMoreNews(): Observable<News[]> {
     const excludes = Array.from(this.globalExcludedIds).join(',');
-    
-    // Reutiliza o método getNews da lib passando exclude
+
     return this.apiConfigService.getNews({ exclude: excludes }).pipe(
-      map(response => response.data),
-      catchError(() => of([]))
+      map((response) => response.data),
+      catchError(() => of([])),
     );
   }
 
@@ -112,24 +208,31 @@ export class HomeNewsOrchestratorService {
    * @param categoryId ID da categoria a puxar
    * @param limit Limite máximo de amostragem após filtro
    */
-  private fetchAndFilterNews(categoryId: number, limit?: number): Observable<News[]> {
+  private fetchAndFilterNews(
+    categoryId: number,
+    limit?: number,
+  ): Observable<News[]> {
     const localExcludes = Array.from(this.globalExcludedIds).join(',');
 
-    return this.apiConfigService.getNewsForCategory(categoryId, { exclude: localExcludes }).pipe(
-      map(response => response.data),
-      tap(news => {
-        console.log(`Orchestrator: Fetched ${news?.length} news for Category ${categoryId} (Excludes: ${this.globalExcludedIds.size})`);
-        this.registerIds(news);
-      }),
-      map(news => {
-        const safeNews = news || [];
-        return limit ? safeNews.slice(0, limit) : safeNews;
-      }),
-      catchError(err => {
-        console.error(`Orchestrator Error: fetchAndFilterNews failed for Category ${categoryId}`, err);
-        return of([]);
-      })
-    );
+    return this.apiConfigService
+      .getNewsForCategory(categoryId, { exclude: localExcludes })
+      .pipe(
+        map((response) => response.data),
+        tap((news) => {
+          this.registerIds(news);
+        }),
+        map((news) => {
+          const safeNews = news || [];
+          return limit ? safeNews.slice(0, limit) : safeNews;
+        }),
+        catchError((err) => {
+          console.error(
+            `Orchestrator Error: fetchAndFilterNews failed for Category ${categoryId}`,
+            err,
+          );
+          return of([]);
+        }),
+      );
   }
 
   /**
@@ -137,7 +240,7 @@ export class HomeNewsOrchestratorService {
    */
   private registerIds(newsItems: News[]): void {
     if (!newsItems || newsItems.length === 0) return;
-    newsItems.forEach(n => {
+    newsItems.forEach((n) => {
       if (n && n.id) this.globalExcludedIds.add(n.id);
     });
   }
@@ -147,8 +250,13 @@ export class HomeNewsOrchestratorService {
    */
   resetStore(): void {
     this.globalExcludedIds.clear();
+    this.homeConfigCache$ = undefined;
+    this.homeConfigCacheEntry = undefined;
     this.carouselCache$ = undefined;
+    this.carouselCacheEntry = undefined;
     this.gridCache$ = undefined;
+    this.gridCacheEntry = undefined;
     this.highlightsCache$ = undefined;
+    this.highlightsCacheEntry = undefined;
   }
 }

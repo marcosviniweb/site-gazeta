@@ -1,4 +1,12 @@
-import { Component, inject, OnDestroy, OnInit, signal, ViewChild, computed } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+  ViewChild,
+  computed,
+} from '@angular/core';
 
 import { TextEditorComponent } from '@site-gazeta/text-editor';
 import {
@@ -10,13 +18,25 @@ import {
 import { MultiSelectComponent } from '@site-gazeta/multi-select';
 import { NewsMidiaComponent } from './news-midia/news-midia.component';
 import { NewsMedia, NewsVideo, Category, News } from '@site-gazeta/models';
-import { FormValidatorComponent, FormValidatorService } from '@site-gazeta/form-validator';
-import { concatMap,  first,  firstValueFrom,  from, Subject,   takeUntil, toArray, tap } from 'rxjs';
+import {
+  FormValidatorComponent,
+  FormValidatorService,
+} from '@site-gazeta/form-validator';
+import {
+  concatMap,
+  first,
+  firstValueFrom,
+  from,
+  Subject,
+  takeUntil,
+  toArray,
+  tap,
+} from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NewsService } from '../../core/services/news.service';
 import { CategoryService } from '../../core/services/category.service';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { environment } from '../../core/env/env';
+import { environment } from '@site-gazeta/env';
 import { AlertService } from '@site-gazeta/alert';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -30,8 +50,8 @@ import { MatIconModule } from '@angular/material/icon';
     FormValidatorComponent,
     RouterModule,
     MultiSelectComponent,
-    MatIconModule
-],
+    MatIconModule,
+  ],
   providers: [FormValidatorService],
   templateUrl: './news.component.html',
   styleUrl: './news.component.scss',
@@ -51,16 +71,24 @@ export class NewsComponent implements OnInit, OnDestroy {
   urlDisplay = signal<string>('');
   displayError = signal<{ [key: string]: string } | null>({});
   availableCategories = signal<Category[]>([]);
-  isEdit = signal<boolean>(false)
-  isLoadingEdit = signal<boolean>(false)
-  editNewsTitle = signal<string>('')
+  isEdit = signal<boolean>(false);
+  isLoadingEdit = signal<boolean>(false);
+  editNewsTitle = signal<string>('');
   newsId: number | undefined = undefined;
-  exportEditNewsMedia = signal<{newsMedia:NewsMedia[], newsVideos:NewsVideo[]}| null>(null)
-  isSavingNews = signal<boolean>(false)
-  isUploadingMedia = signal<boolean>(false)
-  mediaUploadProgress = signal<{ current: number; total: number }>({ current: 0, total: 0 })
+  exportEditNewsMedia = signal<{
+    newsMedia: NewsMedia[];
+    newsVideos: NewsVideo[];
+  } | null>(null);
+  isSavingNews = signal<boolean>(false);
+  isUploadingMedia = signal<boolean>(false);
+  mediaUploadProgress = signal<{ current: number; total: number }>({
+    current: 0,
+    total: 0,
+  });
   headerSubtitle = computed(() => {
-    return this.isEdit() ? 'Atualize os dados da publicação' : 'Preencha os dados para publicar';
+    return this.isEdit()
+      ? 'Atualize os dados da publicação'
+      : 'Preencha os dados para publicar';
   });
 
   headerTitle = computed(() => {
@@ -87,7 +115,9 @@ export class NewsComponent implements OnInit, OnDestroy {
   });
 
   // Signal que observa as mudanças do formulário para reatividade dos computed
-  formValue = toSignal(this.form.valueChanges, { initialValue: this.form.value });
+  formValue = toSignal(this.form.valueChanges, {
+    initialValue: this.form.value,
+  });
 
   // Computed: contagem de campos preenchidos por aba
   infoFieldsStatus = computed(() => {
@@ -131,7 +161,6 @@ export class NewsComponent implements OnInit, OnDestroy {
     content: {
       required: 'Conteúdo é obrigatório',
     },
-
   };
 
   statusOptions = [
@@ -140,58 +169,63 @@ export class NewsComponent implements OnInit, OnDestroy {
   ];
 
   async ngOnInit() {
-    await this.checkEdit()
+    await this.checkEdit();
     this.getCategories();
-    this.formValidator.InitValidation(this.form, this.errorMessage)
-    .pipe(takeUntil(this.destroy$))
-    .subscribe((errorMessages) => {
-      this.displayError.set(errorMessages);
-    });
-    this.form.get('slug')?.valueChanges
-    .pipe(takeUntil(this.destroy$))
-    .subscribe((value) => {
-      if(value){
-        this.formatedSlug(value);
-      }
-    });
+    this.formValidator
+      .InitValidation(this.form, this.errorMessage)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((errorMessages) => {
+        this.displayError.set(errorMessages);
+      });
+    this.form
+      .get('slug')
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((value) => {
+        if (value) {
+          this.formatedSlug(value);
+        }
+      });
   }
-  async checkEdit(){
-   return firstValueFrom(this.activeRouter.params)
-    .then((param)=>{
-      const newsId = param['id']
-      if(newsId){
-        this.isEdit.set(true)
-        this.isLoadingEdit.set(true)
-        this.newsId = Number(newsId)
-        firstValueFrom(this.newsService.getById(newsId))
-        .then((resp)=>{
-          console.log(resp);
-          const news = resp as News;
-          this.editNewsTitle.set(news.title || '')
-          this.form.patchValue({
-            ...resp,
-            // Formata a data de validade para YYYY-MM-DD se existir
-            validity: news.validity ? news.validity.split('T')[0] : null
-          });
-          this.exportEditNewsMedia.set({newsMedia:news.mediaNews,newsVideos:news.videoNews})
-          this.isLoadingEdit.set(false)
-        })
-        .catch(err => {
-          this.isLoadingEdit.set(false)
-          throw err
-        })
-      }
-    })
-    .catch(error=> {
-      throw error
-    })
+  async checkEdit() {
+    return firstValueFrom(this.activeRouter.params)
+      .then((param) => {
+        const newsId = param['id'];
+        if (newsId) {
+          this.isEdit.set(true);
+          this.isLoadingEdit.set(true);
+          this.newsId = Number(newsId);
+          firstValueFrom(this.newsService.getById(newsId))
+            .then((resp) => {
+              const news = resp as News;
+              this.editNewsTitle.set(news.title || '');
+              this.form.patchValue({
+                ...resp,
+                // Formata a data de validade para YYYY-MM-DD se existir
+                validity: news.validity ? news.validity.split('T')[0] : null,
+              });
+              this.exportEditNewsMedia.set({
+                newsMedia: news.mediaNews,
+                newsVideos: news.videoNews,
+              });
+              this.isLoadingEdit.set(false);
+            })
+            .catch((err) => {
+              this.isLoadingEdit.set(false);
+              throw err;
+            });
+        }
+      })
+      .catch((error) => {
+        throw error;
+      });
   }
-  getCategories(){
-    this.categoryService.getActive()
-    .pipe(first())
-    .subscribe((categories) => {
-      this.availableCategories.set(categories as Category[]);
-    });
+  getCategories() {
+    this.categoryService
+      .getActive()
+      .pipe(first())
+      .subscribe((categories) => {
+        this.availableCategories.set(categories as Category[]);
+      });
   }
 
   onSubmit() {
@@ -217,22 +251,22 @@ export class NewsComponent implements OnInit, OnDestroy {
       status: formValue.status as string,
     };
 
-    if(this.isEdit()){
-      this.newsService.update(this.newsId as number, newsData as News)
-      .subscribe({
-        next: (res) => {
-          // Após salvar a notícia, atualiza o destaque usando a nova lógica
-          this.handleEmphasisUpdate(res.id, isEmphasisValue, formValue);
-        },
-        error: (err) => {
-          this.isSavingNews.set(false);
-          this.alertService.error('Erro', 'Erro ao editar notícia!');
-          throw err;
-        }
-      });
-    }else{
-      this.newsService.create(newsData as News)
-      .subscribe({
+    if (this.isEdit()) {
+      this.newsService
+        .update(this.newsId as number, newsData as News)
+        .subscribe({
+          next: (res) => {
+            // Após salvar a notícia, atualiza o destaque usando a nova lógica
+            this.handleEmphasisUpdate(res.id, isEmphasisValue, formValue);
+          },
+          error: (err) => {
+            this.isSavingNews.set(false);
+            this.alertService.error('Erro', 'Erro ao editar notícia!');
+            throw err;
+          },
+        });
+    } else {
+      this.newsService.create(newsData as News).subscribe({
         next: (res) => {
           // Após criar a notícia, atualiza o destaque usando a nova lógica
           this.handleEmphasisUpdate(res.id, isEmphasisValue, formValue);
@@ -241,12 +275,16 @@ export class NewsComponent implements OnInit, OnDestroy {
           this.isSavingNews.set(false);
           this.alertService.error('Erro', 'Erro ao criar notícia!');
           throw err;
-        }
+        },
       });
     }
   }
 
-  private handleEmphasisUpdate(newsId: number, isEmphasisValue: boolean, formValue: Record<string, unknown>) {
+  private handleEmphasisUpdate(
+    newsId: number,
+    isEmphasisValue: boolean,
+    formValue: Record<string, unknown>,
+  ) {
     // Atualizar newsId imediatamente para evitar deletar imagens no OnDestroy
     this.newsId = newsId;
 
@@ -257,7 +295,7 @@ export class NewsComponent implements OnInit, OnDestroy {
         if (emphasisResult.removedEmphasis) {
           this.alertService.info(
             'Limite de destaques atingido',
-            `A notícia "${emphasisResult.removedEmphasis.title}" foi removida dos destaques para adicionar a nova.`
+            `A notícia "${emphasisResult.removedEmphasis.title}" foi removida dos destaques para adicionar a nova.`,
           );
         }
 
@@ -268,17 +306,18 @@ export class NewsComponent implements OnInit, OnDestroy {
         // Se falhar a atualização do destaque, ainda processa as mídias
         console.error('Erro ao atualizar destaque:', err);
         this.processMediaUpload(formValue, newsId);
-      }
+      },
     });
   }
 
-
-  private processMediaUpload(formValue: Record<string, unknown>, newsId: number) {
-    const newsMedia = formValue['newsMidia'] as NewsMedia[]
-    const midias: FormData[] = []
+  private processMediaUpload(
+    formValue: Record<string, unknown>,
+    newsId: number,
+  ) {
+    const newsMedia = formValue['newsMidia'] as NewsMedia[];
+    const midias: FormData[] = [];
     const seenFiles = new Set<string>();
 
-    console.log(newsMedia)
     newsMedia.forEach((media) => {
       if (media.file) {
         const fileKey = `${media.file.name}_${media.file.size}_${media.file.lastModified}_${media.file.type}`;
@@ -296,40 +335,42 @@ export class NewsComponent implements OnInit, OnDestroy {
         formMidia.append('file', media.file as File);
         midias.push(formMidia);
       }
-    })
+    });
 
     if (midias.length > 0) {
       this.isUploadingMedia.set(true);
       this.mediaUploadProgress.set({ current: 0, total: midias.length });
 
       from(midias)
-      .pipe(
-        concatMap((midia, index) => {
-          return this.newsService.uploadMedia(midia).pipe(
-            tap(() => {
-              this.mediaUploadProgress.set({ current: index + 1, total: midias.length });
-            })
-          );
-        }),
-        toArray() // junta os resultados em um array
-      )
-      .subscribe({
-        next: (res) => {
-          console.log(res);
-          this.isUploadingMedia.set(false);
-          this.isSavingNews.set(false);
-          this.alertService.success('Sucesso', 'Notícia salva com sucesso!');
-          this.onReset();
-          this.newsMidiaComponent?.resetMedia();
-          this.checkEdit();
-        },
-        error: (err) => {
-          this.isUploadingMedia.set(false);
-          this.isSavingNews.set(false);
-          this.alertService.error('Erro', 'Erro ao salvar mídia de notícia!');
-          throw err;
-        }
-      });
+        .pipe(
+          concatMap((midia, index) => {
+            return this.newsService.uploadMedia(midia).pipe(
+              tap(() => {
+                this.mediaUploadProgress.set({
+                  current: index + 1,
+                  total: midias.length,
+                });
+              }),
+            );
+          }),
+          toArray(), // junta os resultados em um array
+        )
+        .subscribe({
+          next: (res) => {
+            this.isUploadingMedia.set(false);
+            this.isSavingNews.set(false);
+            this.alertService.success('Sucesso', 'Notícia salva com sucesso!');
+            this.onReset();
+            this.newsMidiaComponent?.resetMedia();
+            this.checkEdit();
+          },
+          error: (err) => {
+            this.isUploadingMedia.set(false);
+            this.isSavingNews.set(false);
+            this.alertService.error('Erro', 'Erro ao salvar mídia de notícia!');
+            throw err;
+          },
+        });
     } else {
       this.isSavingNews.set(false);
       this.alertService.success('Sucesso', 'Notícia salva com sucesso!');
@@ -351,8 +392,8 @@ export class NewsComponent implements OnInit, OnDestroy {
     this.urlDisplay.set(urlValue);
   }
   setSlug() {
-   const title = this.form.get('title')?.value as string
-   this.formatedSlug(title)
+    const title = this.form.get('title')?.value as string;
+    this.formatedSlug(title);
   }
 
   formatedSlug(value?: string) {
@@ -386,9 +427,7 @@ export class NewsComponent implements OnInit, OnDestroy {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onReady(editor: any): void {
-    console.log(editor);
-  }
+  onReady(editor: any): void {}
 
   onReset() {
     this.form.reset({
@@ -398,13 +437,12 @@ export class NewsComponent implements OnInit, OnDestroy {
       isEmphasis: false,
       newsMidia: [],
       newsVideo: [],
-      categoryId: []
+      categoryId: [],
     });
     this.isSavingNews.set(false);
     this.isUploadingMedia.set(false);
     this.activeTab = 'info';
   }
-
 
   // Método melhorado para obter data e hora atual
   private getCurrentDateTime(): string {

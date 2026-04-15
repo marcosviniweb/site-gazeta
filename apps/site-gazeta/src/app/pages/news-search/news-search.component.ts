@@ -1,7 +1,16 @@
-import { Component, computed, effect, inject, input, OnDestroy, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  OnDestroy,
+  signal,
+  DestroyRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/service/api.service';
-import { map } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { News } from '@site-gazeta/models';
 import { MoreNewsComponent } from '@site-gazeta/more-news';
 import { NewsManagerService } from '../../core/service/news-manager.service';
@@ -15,46 +24,68 @@ import { NewsManagerService } from '../../core/service/news-manager.service';
 export class NewsSearchComponent implements OnDestroy {
   private apiService = inject(ApiService);
   private newsManagerService = inject(NewsManagerService);
+  private destroyRef = inject(DestroyRef);
+
   query = input<string>('');
   filteredNews = signal<News[]>([]);
   isLoading = signal<boolean>(false);
+  error = signal<string | null>(null);
   private searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
   // Computed que sempre retorna uma string válida para o template
   safeQuery = computed(() => this.query() ?? '');
-  queryLength = computed(()=> this.query().length > 1?true :false)
+  queryLength = computed(() => this.query().length >= 2);
+
   constructor() {
-    effect(() => {
-      const query = this.query() ?? '';
-      this.getNewsByQuery(query);
-    });
+    // Effect que reage a mudanças na query com cleanup adequado
+    // biome-ignore lint/complexity/noExplicitAny: API response typing
+    effect(
+      () => {
+        const query = this.query() ?? '';
+
+        // Cleanup: cancelar timeout anterior
+        if (this.searchTimeout) {
+          clearTimeout(this.searchTimeout);
+          this.searchTimeout = null;
+        }
+
+        // Debounce da busca
+        this.searchTimeout = setTimeout(() => {
+          this.getNewsByQuery(query);
+        }, 300);
+      },
+      { allowSignalWrites: true },
+    );
   }
 
-  getNewsByQuery(query: string): void {
-    // Limpa lista atual
+  private getNewsByQuery(query: string): void {
+    // Limpa lista atual e erro
     this.filteredNews.set([]);
+    this.error.set(null);
 
-
-    // Limpa timeout anterior se existir
-    if (this.searchTimeout) {
-      clearTimeout(this.searchTimeout);
-      this.searchTimeout = null;
+    // Valida se query é válido (mínimo 2 caracteres)
+    if (query.length < 2) {
+      this.filteredNews.set([]);
+      return;
     }
 
-    // Valida se query é válido
-    if(query.length >= 1){
-      this.isLoading.set(true)
-      this.searchTimeout = setTimeout(() => {
-      this.apiService.getBySearch(query, 20).pipe()
-      .subscribe((response) => {
-        this.filteredNews.set(response.data);
-        this.isLoading.set(false);
-        this.searchTimeout = null;
+    this.isLoading.set(true);
+
+    this.apiService
+      .getBySearch(query, 20)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.filteredNews.set(response.data);
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          this.error.set('Erro ao buscar notícias. Tente novamente.');
+          this.isLoading.set(false);
+          console.error('Search error:', err);
+        },
       });
-      }, 3000);
-    }
   }
-
 
   ngOnDestroy(): void {
     if (this.searchTimeout) {
