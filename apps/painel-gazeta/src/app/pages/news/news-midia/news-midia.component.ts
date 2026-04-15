@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { NewsMedia, NewsVideo } from '@site-gazeta/models';
 import { NewsService } from '../../../core/services/news.service';
 import { firstValueFrom } from 'rxjs';
@@ -21,7 +22,7 @@ import { MatIconModule } from '@angular/material/icon';
 interface MediaItem {
   type: 'photo' | 'video';
   file?: File; // só para novas
-  preview?: string; // só para novas
+  preview?: string | SafeUrl; // só para novas
   url?: string; // para vídeos
   thumbnail?: string; // para vídeos
   title?: string; // para vídeos
@@ -47,6 +48,7 @@ interface MediaItem {
 })
 export class NewsMidiaComponent implements OnInit {
   private alertService = inject(AlertService);
+  private sanitizer = inject(DomSanitizer);
   
   @ViewChild('photoInput') photoInput!: ElementRef<HTMLInputElement>;
   //medias da noticia para edição
@@ -125,10 +127,11 @@ export class NewsMidiaComponent implements OnInit {
       filesArray.forEach((file) => {
         const reader = new FileReader();
         reader.onload = (e) => {
+          const dataUrl = e.target?.result as string;
           const newMedia: MediaItem = {
             type: 'photo',
             file: file,
-            preview: e.target?.result as string,
+            preview: this.sanitizer.bypassSecurityTrustUrl(dataUrl),
             author: '',
             date: '',
             emphasis: this.shouldSetAsFirstFeatured(),

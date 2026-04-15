@@ -11,7 +11,15 @@ module.exports = {
       compiler: 'tsc',
       main: './src/main.ts',
       tsConfig: './tsconfig.app.json',
-      assets: ['./src/assets'],
+      assets: [
+        './src/assets',
+        // Engines e runtime do Prisma (binaryTargets Linux + Windows); necessário no deploy.
+        {
+          glob: '**/*',
+          input: 'apps/backend-gazeta/generated/prisma',
+          output: 'generated/prisma',
+        },
+      ],
       optimization: false,
       outputHashing: 'none',
       generatePackageJson: true,

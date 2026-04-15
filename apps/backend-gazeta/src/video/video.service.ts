@@ -681,6 +681,13 @@ export class VideoService {
     return { count };
   }
 
+  private normalizeUrl(url: string | null | undefined): string | null {
+    if (!url) return null;
+    const match = url.match(/^[^/]+,\s*(https?:\/\/.*)$/i);
+    if (match) return match[1].trim();
+    return url.replace(/\\/g, '/');
+  }
+
   private formatResponse(video: any): VideoResponseDto {
     // Converter tags de JSON para array de strings
     let tags: string[] | undefined;
@@ -692,14 +699,13 @@ export class VideoService {
       }
     }
 
-    // Extrair categorias se existirem
     const categories = video.videoCategories?.map((vc: any) => vc.category) || [];
 
     return {
       id: video.id,
       title: video.title,
-      url: video.url,
-      thumbnail: video.thumbnail,
+      url: this.normalizeUrl(video.url) ?? video.url,
+      thumbnail: this.normalizeUrl(video.thumbnail) ?? undefined,
       duration: video.duration,
       views: video.views || 0,
       featured: video.featured || false,

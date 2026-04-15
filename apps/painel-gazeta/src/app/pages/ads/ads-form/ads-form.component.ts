@@ -6,6 +6,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Ads } from '@site-gazeta/models';
 import { AlertService } from '@site-gazeta/alert';
 import { MatIconModule } from '@angular/material/icon';
@@ -22,7 +23,7 @@ import { AdsService } from '../../../core/services/ads.service';
 interface FormState {
   selectedFile: File | null;
   selectedFileName: string;
-  imagePreviewUrl: string | null;
+  imagePreviewUrl: string | SafeUrl | null;
   isSubmitting: boolean;
 }
 
@@ -37,6 +38,7 @@ export class AdsFormComponent  {
   private fb = inject(NonNullableFormBuilder);
   private adsService = inject(AdsService);
   private alertService = inject(AlertService);
+  private sanitizer = inject(DomSanitizer);
 
   // Inputs
   adToEdit = input<Ads | null>(null);
@@ -272,11 +274,12 @@ export class AdsFormComponent  {
     // Criar preview da imagem
     const reader = new FileReader();
     reader.onload = (e: ProgressEvent<FileReader>) => {
+      const dataUrl = e.target?.result as string;
       this.state.update(state => ({
         ...state,
         selectedFile: file,
         selectedFileName: file.name,
-        imagePreviewUrl: e.target?.result as string,
+        imagePreviewUrl: this.sanitizer.bypassSecurityTrustUrl(dataUrl),
       }));
     };
     reader.readAsDataURL(file);

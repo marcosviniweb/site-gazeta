@@ -253,17 +253,23 @@ export class MediaService {
     return media;
   }
 
+  private normalizeUrl(url: string): string {
+    if (!url) return url;
+    const match = url.match(/^[^/]+,\s*(https?:\/\/.*)$/i);
+    if (match) return match[1].trim();
+    return url.replace(/\\/g, '/');
+  }
+
   private formatResponse(media: any): MediaResponseDto {
     // Parse imgSize se for string JSON
     let imgSize = media.imgSize;
     if (typeof imgSize === 'string' && imgSize) {
       try {
         imgSize = JSON.parse(imgSize);
-        // Normalizar URLs (substituir backslashes por forward slashes)
         if (imgSize && typeof imgSize === 'object') {
           Object.keys(imgSize).forEach(key => {
             if (typeof imgSize[key] === 'string') {
-              imgSize[key] = imgSize[key].replace(/\\/g, '/');
+              imgSize[key] = this.normalizeUrl(imgSize[key]);
             }
           });
         }
@@ -272,10 +278,9 @@ export class MediaService {
         imgSize = null;
       }
     } else if (imgSize && typeof imgSize === 'object') {
-      // Se já é objeto, normalizar URLs também
       Object.keys(imgSize).forEach(key => {
         if (typeof imgSize[key] === 'string') {
-          imgSize[key] = imgSize[key].replace(/\\/g, '/');
+          imgSize[key] = this.normalizeUrl(imgSize[key]);
         }
       });
     }

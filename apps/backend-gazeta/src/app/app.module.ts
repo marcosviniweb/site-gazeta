@@ -1,10 +1,19 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
+/** Produção: NODE_ENV, APP_ENV ou flag explícita (útil se o processo subir sem NODE_ENV=production). */
+function useProductionEnvFiles(): boolean {
+  return (
+    process.env.NODE_ENV === 'production' ||
+    process.env.APP_ENV === 'production' ||
+    process.env.USE_PRODUCTION_ENV === 'true' ||
+    process.env.USE_PRODUCTION_ENV === '1'
+  );
+}
+
 /** Arquivos .env em ordem: os últimos da lista sobrescrevem os anteriores (Nest/dotenv). */
 function configEnvFilePaths(): string[] {
-  const isProd = process.env.NODE_ENV === 'production';
-  if (isProd) {
+  if (useProductionEnvFiles()) {
     return [
       'apps/backend-gazeta/.env',
       'apps/backend-gazeta/.env.production',

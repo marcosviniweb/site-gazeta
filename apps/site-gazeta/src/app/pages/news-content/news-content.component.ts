@@ -2,7 +2,7 @@ import { Component, signal, computed, OnInit, OnDestroy, inject, PLATFORM_ID } f
 import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { Ads, News, NewsMedia } from '@site-gazeta/models';
 import { ApiService } from '../../core/service/api.service';
 import { AnalyticsService } from '../../core/service/analytics.service';
@@ -51,6 +51,15 @@ export class NewsContentComponent implements OnInit, OnDestroy {
     const html = this.news()?.content ?? '';
     return this.sanitizer.bypassSecurityTrustHtml(html);
   });
+
+  getSafeVideoUrl(url: string): SafeResourceUrl {
+    const embedUrl = url
+      .replace('https://www.youtube.com/watch?v=', 'https://www.youtube.com/embed/')
+      .replace('https://youtu.be/', 'https://www.youtube.com/embed/')
+      .replace('http://www.youtube.com/watch?v=', 'https://www.youtube.com/embed/')
+      .replace('http://youtu.be/', 'https://www.youtube.com/embed/');
+    return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+  }
 
   emphasisMedia = computed(() => {
     const currentNews = this.news();

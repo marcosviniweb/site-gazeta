@@ -1,5 +1,6 @@
 import { Component, signal, input, output, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { AlertService } from '@site-gazeta/alert';
 import { MatIconModule } from '@angular/material/icon';
 import { Video } from '@site-gazeta/models';
@@ -13,6 +14,7 @@ import { Video } from '@site-gazeta/models';
 })
 export class VideoFilesComponent {
   private alertService = inject(AlertService);
+  private sanitizer = inject(DomSanitizer);
 
   // Inputs
   videoToEdit = input<Video| null>(null);
@@ -27,11 +29,13 @@ export class VideoFilesComponent {
   // Signals
   selectedVideoFile = signal<File | null>(null);
   selectedThumbnailFile = signal<File | null>(null);
-  videoPreviewUrl = signal<string | null>(null);
-  thumbnailPreviewUrl = signal<string | null>(null);
+  videoPreviewUrl = signal<SafeUrl | null>(null);
+  thumbnailPreviewUrl = signal<SafeUrl | null>(null);
   isDraggingVideo = signal(false);
   isDraggingThumbnail = signal(false);
   isExtractingThumbnail = signal(false);
+
+  private videoObjectUrl: string | null = null;
 
   // Formatos aceitos
   readonly acceptedVideoFormats = '.mp4,.avi,.mov,.webm,.mkv';
@@ -47,15 +51,15 @@ export class VideoFilesComponent {
 
       // Se não há arquivo selecionado, usar URL do vídeo existente
       if (!this.selectedVideoFile() && videoUrl) {
-        this.videoPreviewUrl.set(videoUrl);
+        this.videoPreviewUrl.set(this.sanitizer.bypassSecurityTrustUrl(videoUrl));
       }
 
       // Apenas definir thumbnail preview URL se:
       // 1. Não há arquivo de thumbnail selecionado E
       // 2. Há uma thumbnail URL do servidor E
       // 3. A preview atual está vazia ou é diferente da URL do servidor
-      if (!this.selectedThumbnailFile() && thumbnailUrl && this.thumbnailPreviewUrl() !== thumbnailUrl) {
-        this.thumbnailPreviewUrl.set(thumbnailUrl);
+      if (!this.selectedThumbnailFile() && thumbnailUrl) {
+        this.thumbnailPreviewUrl.set(this.sanitizer.bypassSecurityTrustUrl(thumbnailUrl));
       }
     });
   }
@@ -103,9 +107,14 @@ export class VideoFilesComponent {
 
     this.selectedVideoFile.set(file);
 
-    // Criar preview
-    const url = URL.createObjectURL(file);
-    this.videoPreviewUrl.set(url);
+    // Revogar URL anterior se existir
+    if (this.videoObjectUrl) {
+      URL.revokeObjectURL(this.videoObjectUrl);
+    }
+
+    // Criar preview com URL segura
+    this.videoObjectUrl = URL.createObjectURL(file);
+    this.videoPreviewUrl.set(this.sanitizer.bypassSecurityTrustUrl(this.videoObjectUrl));
 
     // Extrair thumbnail automaticamente se não houver thumbnail selecionada
     if (!this.selectedThumbnailFile() && !this.thumbnailUrl()) {
@@ -117,21 +126,18 @@ export class VideoFilesComponent {
   }
 
   removeVideo(): void {
-    const previewUrl = this.videoPreviewUrl();
-    if (previewUrl && !this.videoUrl()) {
-      URL.revokeObjectURL(previewUrl);
+    if (this.videoObjectUrl && !this.videoUrl()) {
+      URL.revokeObjectURL(this.videoObjectUrl);
+      this.videoObjectUrl = null;
     }
     this.selectedVideoFile.set(null);
-    this.videoPreviewUrl.set(this.videoUrl() || null);
+    const existingUrl = this.videoUrl();
+    this.videoPreviewUrl.set(existingUrl ? this.sanitizer.bypassSecurityTrustUrl(existingUrl) : null);
     
     // Remover thumbnail extraída automaticamente se não for uma thumbnail existente
     if (this.selectedThumbnailFile() && !this.thumbnailUrl()) {
-      const thumbnailUrl = this.thumbnailPreviewUrl();
-      if (thumbnailUrl && !this.thumbnailUrl()) {
-        URL.revokeObjectURL(thumbnailUrl);
-      }
       this.selectedThumbnailFile.set(null);
-      this.thumbnailPreviewUrl.set(this.thumbnailUrl() || null);
+      this.thumbnailPreviewUrl.set(null);
       this.thumbnailFileSelected.emit(null);
     }
     
@@ -181,10 +187,11 @@ export class VideoFilesComponent {
 
     this.selectedThumbnailFile.set(file);
 
-    // Criar preview
+    // Criar preview com URL segura
     const reader = new FileReader();
     reader.onload = (e) => {
-      this.thumbnailPreviewUrl.set(e.target?.result as string);
+      const dataUrl = e.target?.result as string;
+      this.thumbnailPreviewUrl.set(this.sanitizer.bypassSecurityTrustUrl(dataUrl));
     };
     reader.readAsDataURL(file);
 
@@ -227,9 +234,9 @@ export class VideoFilesComponent {
         // Atualizar thumbnail
         this.selectedThumbnailFile.set(thumbnailFile);
 
-        // Criar preview
-        const thumbnailUrl = URL.createObjectURL(thumbnailBlob);
-        this.thumbnailPreviewUrl.set(thumbnailUrl);
+        // Criar preview com URL segura
+        const thumbnailObjectUrl = URL.createObjectURL(thumbnailBlob);
+        this.thumbnailPreviewUrl.set(this.sanitizer.bypassSecurityTrustUrl(thumbnailObjectUrl));
 
         // Notificar componente pai
         this.thumbnailFileSelected.emit(thumbnailFile);

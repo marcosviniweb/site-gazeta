@@ -36,7 +36,8 @@ export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
 
   private getBaseUrl(req: Request): string {
-    const forwardedProto = (req.headers['x-forwarded-proto'] as string) || undefined;
+    const rawProto = req.headers['x-forwarded-proto'] as string;
+    const forwardedProto = rawProto ? rawProto.split(',')[0].trim() : undefined;
     const forwardedHost = (req.headers['x-forwarded-host'] as string) || undefined;
     const host = forwardedHost || req.get('host') || '';
     const protocol = forwardedProto || (req.protocol || 'http');
