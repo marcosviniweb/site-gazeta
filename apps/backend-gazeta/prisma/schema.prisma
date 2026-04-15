@@ -1,6 +1,9 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  provider      = "prisma-client-js"
+  output        = "../generated/prisma"
+  // native = engine do SO onde rodou `prisma generate` (ex.: Windows no dev).
+  // debian-* = servidores Linux comuns ao fazer deploy de artefatos gerados no Windows.
+  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
