@@ -9,6 +9,32 @@
       (input)="onDateChange($any($event.target).value)" 
     />
   </div>
+
+  <div class="filter-group">
+    <label for="filter-month">Mês</label>
+    <select 
+      id="filter-month" 
+      [value]="filterMonth() ?? ''" 
+      (change)="onMonthChange($any($event.target).value)">
+      <option value="">Todos</option>
+      @for (month of months(); track month.value) {
+        <option [value]="month.value">{{ month.label }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <label for="filter-year">Ano</label>
+    <select 
+      id="filter-year" 
+      [value]="filterYear() ?? ''" 
+      (change)="onYearChange($any($event.target).value)">
+      <option value="">Todos</option>
+      @for (year of years(); track year) {
+        <option [value]="year">{{ year }}</option>
+      }
+    </select>
+  </div>
   
   <div class="filter-group">
     <label for="filter-order">Ordem</label>

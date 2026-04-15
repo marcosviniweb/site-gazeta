@@ -23,4 +23,6 @@ export interface PaginationParams {
   isEmphasis?: boolean;
   featured?: boolean;
   includeTrash?: boolean;
+  month?: number;
+  year?: number;
 }

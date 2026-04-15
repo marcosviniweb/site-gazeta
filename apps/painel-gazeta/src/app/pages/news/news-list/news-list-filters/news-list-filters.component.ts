@@ -22,6 +22,8 @@ export class NewsListFiltersComponent implements OnInit {
   filterCategory = input<number | null>(null);
   filterSearch = input<string>('');
   filterEmphasis = input<boolean | null>(null);
+  filterMonth = input<number | null>(null);
+  filterYear = input<number | null>(null);
 
   // Outputs - eventos de mudança
   filterDateChange = output<string>();
@@ -30,12 +32,40 @@ export class NewsListFiltersComponent implements OnInit {
   filterCategoryChange = output<number | null>();
   filterSearchChange = output<string>();
   filterEmphasisChange = output<boolean | null>();
+  filterMonthChange = output<number | null>();
+  filterYearChange = output<number | null>();
 
   // Signals
   categories = signal<Category[]>([]);
+  months = signal<{ value: number, label: string }[]>([
+    { value: 1, label: 'Janeiro' },
+    { value: 2, label: 'Fevereiro' },
+    { value: 3, label: 'Março' },
+    { value: 4, label: 'Abril' },
+    { value: 5, label: 'Maio' },
+    { value: 6, label: 'Junho' },
+    { value: 7, label: 'Julho' },
+    { value: 8, label: 'Agosto' },
+    { value: 9, label: 'Setembro' },
+    { value: 10, label: 'Outubro' },
+    { value: 11, label: 'Novembro' },
+    { value: 12, label: 'Dezembro' }
+  ]);
+  years = signal<number[]>([]);
 
   ngOnInit(): void {
     this.loadCategories();
+    this.generateYears();
+  }
+
+  generateYears(): void {
+    const currentYear = new Date().getFullYear();
+    const startYear = 2023;
+    const yearsList = [];
+    for (let i = currentYear; i >= startYear; i--) {
+      yearsList.push(i);
+    }
+    this.years.set(yearsList);
   }
 
   loadCategories(): void {
@@ -50,6 +80,14 @@ export class NewsListFiltersComponent implements OnInit {
 
   onDateChange(value: string): void {
     this.filterDateChange.emit(value);
+  }
+
+  onMonthChange(value: string): void {
+    this.filterMonthChange.emit(value ? Number(value) : null);
+  }
+
+  onYearChange(value: string): void {
+    this.filterYearChange.emit(value ? Number(value) : null);
   }
 
   onOrderChange(value: string): void {

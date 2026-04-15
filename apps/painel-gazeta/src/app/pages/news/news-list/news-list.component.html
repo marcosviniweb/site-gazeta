@@ -50,12 +50,16 @@
         [filterCategory]="filterCategory()"
         [filterSearch]="filterSearch()"
         [filterEmphasis]="filterEmphasis()"
+        [filterMonth]="filterMonth()"
+        [filterYear]="filterYear()"
         (filterDateChange)="setFilterDate($event)"
         (filterViewsChange)="setFilterViews($event)"
         (filterOrderChange)="setFilterOrder($event)"
         (filterCategoryChange)="setFilterCategory($event)"
         (filterSearchChange)="setFilterSearch($event)"
         (filterEmphasisChange)="setFilterEmphasis($event)"
+        (filterMonthChange)="setFilterMonth($event)"
+        (filterYearChange)="setFilterYear($event)"
       >
       </app-news-list-filters>
 

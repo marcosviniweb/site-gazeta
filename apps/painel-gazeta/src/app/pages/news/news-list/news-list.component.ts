@@ -71,6 +71,8 @@ export class NewsListComponent implements OnInit, OnDestroy {
   filterEmphasis = signal<boolean | null>(null);
   filterDate = signal<string>('');
   filterViews = signal<'asc' | 'desc' | ''>('');
+  filterMonth = signal<number | null>(null);
+  filterYear = signal<number | null>(null);
 
   // Stream para busca com debounce
   private searchSubject = new Subject<string>();
@@ -111,6 +113,8 @@ export class NewsListComponent implements OnInit, OnDestroy {
       search: this.filterSearch() || undefined,
       categoryId: this.filterCategory() ?? undefined,
       date: this.filterDate() || undefined,
+      month: this.filterMonth() ?? undefined,
+      year: this.filterYear() ?? undefined,
       order: this.filterOrder() || undefined,
       views: this.filterViews() || undefined,
       isEmphasis: this.filterEmphasis() ?? undefined,
@@ -352,6 +356,31 @@ export class NewsListComponent implements OnInit, OnDestroy {
 
   setFilterDate(date: string): void {
     this.filterDate.set(date);
+    // Se selecionou uma data específica, limpa mês e ano para evitar conflitos
+    if (date) {
+      this.filterMonth.set(null);
+      this.filterYear.set(null);
+    }
+    this.currentPage.set(1);
+    this.loadNews();
+  }
+
+  setFilterMonth(month: number | null): void {
+    this.filterMonth.set(month);
+    // Se selecionou um mês, limpa a data específica
+    if (month) {
+      this.filterDate.set('');
+    }
+    this.currentPage.set(1);
+    this.loadNews();
+  }
+
+  setFilterYear(year: number | null): void {
+    this.filterYear.set(year);
+    // Se selecionou um ano, limpa a data específica
+    if (year) {
+      this.filterDate.set('');
+    }
     this.currentPage.set(1);
     this.loadNews();
   }

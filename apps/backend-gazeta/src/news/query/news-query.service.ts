@@ -128,6 +128,28 @@ export class NewsQueryService {
         gte: new Date(`${dateStr}T00:00:00.000Z`),
         lte: new Date(`${dateStr}T23:59:59.999Z`)
       };
+    } else if (query?.year) {
+      // Filtro por Ano e opcionalmente Mês
+      const year = query.year;
+      const month = query.month; // 1-12
+
+      if (month) {
+        // Mês específico do ano
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+        whereCondition.createdAt = {
+          gte: startDate,
+          lte: endDate
+        };
+      } else {
+        // Ano inteiro
+        const startDate = new Date(year, 0, 1);
+        const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+        whereCondition.createdAt = {
+          gte: startDate,
+          lte: endDate
+        };
+      }
     }
 
     return whereCondition;

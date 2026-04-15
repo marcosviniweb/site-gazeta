@@ -52,6 +52,28 @@ export class NewsQueryDto {
   date?: string;
 
   @ApiProperty({
+    description: 'Mês de criação (1-12).',
+    example: 10,
+    required: false,
+    type: Number
+  })
+  @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsNumber()
+  month?: number;
+
+  @ApiProperty({
+    description: 'Ano de criação (ex: 2024).',
+    example: 2024,
+    required: false,
+    type: Number
+  })
+  @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsNumber()
+  year?: number;
+
+  @ApiProperty({
     description: 'Ordenação pela data de criação. Use "asc" ou "desc".',
     enum: ['asc', 'desc'],
     required: false

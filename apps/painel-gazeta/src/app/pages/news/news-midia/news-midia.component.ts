@@ -308,7 +308,7 @@ export class NewsMidiaComponent implements OnInit {
           author: midia.author,
           date: midia.date,
           emphasis: midia.emphasis as boolean,
-          imgSize: midia.imgSize ? [midia.imgSize] : undefined,
+          imgSize: midia.imgSize,
         });
       }
       if (midia.type === 'video') {
