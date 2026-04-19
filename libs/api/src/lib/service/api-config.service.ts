@@ -20,6 +20,7 @@ import {
   SocialMediaConfig,
   PaginatedResponse,
   PaginationParams,
+  NewsMedia,
 } from '@site-gazeta/models';
 import { LIBRARY_CONFIG } from '../config/api-config';
 import { toHttpParams } from '../util/api-params.util';
@@ -65,7 +66,7 @@ export class ApiConfigService {
     )
       .then((response) => {
         const news = Array.isArray(response) ? response : response.data;
-        this.$newsFeatured.next(news);
+        this.$newsFeatured.next(this.normalizeNewsMedia(news));
       })
       .catch((err) => {
         console.error('API Error: getNewsFeatured failed', err);
@@ -128,7 +129,7 @@ export class ApiConfigService {
           // 2. Caso seja um objeto paginado, validar se tem .data e normalizar meta se necessário
           if (response && typeof response === 'object') {
             return {
-              data: response.data || [],
+              data: this.normalizeNewsMedia(response.data || []),
               meta: {
                 total: response.meta?.total ?? response.meta?.totalItems ?? 0,
                 page: response.meta?.page ?? response.meta?.currentPage ?? 1,
@@ -171,7 +172,7 @@ export class ApiConfigService {
     )
       .then((response) => {
         const news = Array.isArray(response) ? response : response.data;
-        this.$latestNews.next(news);
+        this.$latestNews.next(this.normalizeNewsMedia(news));
       })
       .catch((err) => {
         console.error('API Error: getLatestNews failed', err);
@@ -185,7 +186,7 @@ export class ApiConfigService {
     return this.httpClient
       .get<News[] | PaginatedResponse<News>>(`${this.apiUrl}/news/most-viewed`)
       .pipe(
-        map((response) => (Array.isArray(response) ? response : response.data)),
+        map((response) => this.normalizeNewsMedia(Array.isArray(response) ? response : response.data)),
         catchError((err) => {
           console.error('API Error: getMostViewedNews failed', err);
           return of([]);
@@ -237,7 +238,12 @@ export class ApiConfigService {
     const httpParams = toHttpParams(params);
     return this.httpClient.get<PaginatedResponse<News>>(`${this.apiUrl}/news`, {
       params: httpParams,
-    });
+    }).pipe(
+      map(response => ({
+        ...response,
+        data: this.normalizeNewsMedia(response.data)
+      }))
+    );
   }
 
   getCategories(): Observable<Category[]> {
@@ -299,6 +305,8 @@ export class ApiConfigService {
   getRelatedNews(newsId: number): Observable<News[]> {
     return this.httpClient.get<News[]>(
       `${this.apiUrl}/news/related-news/${newsId}`,
+    ).pipe(
+      map(news => this.normalizeNewsMedia(news))
     );
   }
 
@@ -306,5 +314,45 @@ export class ApiConfigService {
     return this.httpClient.get<SocialMediaConfig>(
       `${this.apiUrl}/config/social-media`,
     );
+  }
+
+  /**
+   * Normaliza o array de mídias para garantir que a mídia com destaque (emphasis: true)
+   * seja sempre a primeira (posição 0) e que exista pelo menos um fallback seguro.
+   */
+  private normalizeNewsMedia(newsItems: News[]): News[] {
+    return (newsItems || []).map((news) => {
+      const mediaList = news.mediaNews ? [...news.mediaNews] : [];
+      let emphasisMedia = mediaList.find((m) => m.emphasis && m.imgSize);
+
+      if (!emphasisMedia) {
+        emphasisMedia = mediaList.find((m) => m.imgSize);
+      }
+
+      if (emphasisMedia) {
+        return {
+          ...news,
+          mediaNews: [
+            emphasisMedia,
+            ...mediaList.filter((m) => m !== emphasisMedia),
+          ],
+        };
+      }
+
+      const placeholderMedia = {
+        emphasis: true,
+        imgSize: {
+          small: '',
+          medium: '',
+          original: '',
+          superSmall: '',
+        },
+      } as NewsMedia;
+
+      return {
+        ...news,
+        mediaNews: [placeholderMedia],
+      };
+    });
   }
 }

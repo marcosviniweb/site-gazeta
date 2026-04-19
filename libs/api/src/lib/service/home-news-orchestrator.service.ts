@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, of, forkJoin } from 'rxjs';
 import { map, switchMap, tap, shareReplay, catchError } from 'rxjs/operators';
-import { Category, News, PaginatedResponse, PaginationParams } from '@site-gazeta/models';
+import { Category, News, PaginatedResponse, PaginationParams, NewsMedia } from '@site-gazeta/models';
 import {
   ApiConfigService,
   HomeCategoryGridItem,
@@ -99,6 +99,7 @@ export class HomeNewsOrchestratorService {
     }
 
     this.carouselCache$ = this.apiConfigService.getNewsFeatured().pipe(
+      map(news => this.normalizeNewsMedia(news)),
       tap((news) => {
         this.registerIds(news);
         this.carouselCacheEntry = { data: news, timestamp: Date.now() };
@@ -198,6 +199,10 @@ export class HomeNewsOrchestratorService {
     const excludes = Array.from(this.globalExcludedIds).join(',');
 
     return this.apiConfigService.getNews({ ...params, exclude: excludes }).pipe(
+      map(response => ({
+        ...response,
+        data: this.normalizeNewsMedia(response.data)
+      })),
       catchError(() => of({ data: [], meta: { total: 0, page: 1, limit: 10, lastPage: 0 } })),
     );
   }
@@ -216,7 +221,7 @@ export class HomeNewsOrchestratorService {
     return this.apiConfigService
       .getNewsForCategory(categoryId, { exclude: localExcludes })
       .pipe(
-        map((response) => response.data),
+        map((response) => this.normalizeNewsMedia(response.data)),
         tap((news) => {
           this.registerIds(news);
         }),
@@ -232,6 +237,46 @@ export class HomeNewsOrchestratorService {
           return of([]);
         }),
       );
+  }
+
+  /**
+   * Normaliza o array de mídias para garantir que a mídia com destaque (emphasis: true)
+   * seja sempre a primeira (posição 0) e que exista pelo menos um fallback seguro.
+   */
+  private normalizeNewsMedia(newsItems: News[]): News[] {
+    return (newsItems || []).map(news => {
+      const mediaList = news.mediaNews ? [...news.mediaNews] : [];
+      let emphasisMedia = mediaList.find(m => m.emphasis && m.imgSize);
+
+      if (!emphasisMedia) {
+        emphasisMedia = mediaList.find(m => m.imgSize);
+      }
+
+      if (emphasisMedia) {
+        return {
+          ...news,
+          mediaNews: [
+            emphasisMedia,
+            ...mediaList.filter(m => m !== emphasisMedia)
+          ]
+        };
+      }
+
+      const placeholderMedia = {
+        emphasis: true,
+        imgSize: {
+          small: '',
+          medium: '',
+          original: '',
+          superSmall: ''
+        }
+      } as NewsMedia;
+
+      return {
+        ...news,
+        mediaNews: [placeholderMedia]
+      };
+    });
   }
 
   /**
