@@ -9,6 +9,7 @@ import {
   SectionOrderConfigMap,
   PaginatedResponse,
   PaginationParams,
+  NewsMedia,
 } from '@site-gazeta/models';
 import { map, Observable } from 'rxjs';
 import { environment } from '@site-gazeta/env';
@@ -120,7 +121,12 @@ export class ApiService {
       .get<
         PaginatedResponse<News>
       >(`${this.apiUrl}/news`, { params: httpParams })
-      .pipe();
+      .pipe(
+        map(response => ({
+          ...response,
+          data: this.normalizeNewsMedia(response.data)
+        }))
+      );
   }
 
   getNewsById(id: number) {
@@ -162,7 +168,10 @@ export class ApiService {
     return this.http
       .get<News | PaginatedResponse<News>>(`${this.apiUrl}/news/slug/${slug}`)
       .pipe(
-        map((response) => ('data' in response ? response.data[0] : response)),
+        map((response) => {
+          const news = 'data' in response ? response.data : [response];
+          return this.normalizeNewsMedia(news)[0];
+        }),
       );
   }
 
@@ -183,18 +192,19 @@ export class ApiService {
       .pipe(
         map((response): PaginatedResponse<News> => {
           if (Array.isArray(response)) {
+            const normalized = this.normalizeNewsMedia(response);
             return {
-              data: response,
+              data: normalized,
               meta: {
-                total: response.length,
+                total: normalized.length,
                 page: 1,
-                limit: response.length,
+                limit: normalized.length,
                 lastPage: 1,
               },
             };
           }
           return {
-            data: response.data ?? [],
+            data: this.normalizeNewsMedia(response.data ?? []),
             meta: response.meta,
           };
         }),
@@ -209,7 +219,10 @@ export class ApiService {
         News[] | PaginatedResponse<News>
       >(`${this.apiUrl}/news/related-news/${newsId}`)
       .pipe(
-        map((response) => (Array.isArray(response) ? response : response.data)),
+        map((response) => {
+          const news = Array.isArray(response) ? response : response.data;
+          return this.normalizeNewsMedia(news);
+        }),
       );
   }
 
@@ -223,7 +236,10 @@ export class ApiService {
         News[] | PaginatedResponse<News>
       >(`${this.apiUrl}/news/category/${categoryId}`, { params: httpParams })
       .pipe(
-        map((response) => (Array.isArray(response) ? response : response.data)),
+        map((response) => {
+          const news = Array.isArray(response) ? response : response.data;
+          return this.normalizeNewsMedia(news);
+        }),
       );
   }
 
@@ -241,21 +257,62 @@ export class ApiService {
       .pipe(
         map((response): PaginatedResponse<News> => {
           if (Array.isArray(response)) {
+            const normalized = this.normalizeNewsMedia(response);
             return {
-              data: response,
+              data: normalized,
               meta: {
-                total: response.length,
+                total: normalized.length,
                 page: 1,
                 limit,
-                lastPage: Math.ceil(response.length / limit) || 1,
+                lastPage: Math.ceil(normalized.length / limit) || 1,
               },
             };
           }
           return {
-            data: response.data ?? [],
+            data: this.normalizeNewsMedia(response.data ?? []),
             meta: response.meta,
           };
         }),
       );
+  }
+
+  /**
+   * Normaliza o array de mídias para garantir que a mídia com destaque (emphasis: true)
+   * seja sempre a primeira (posição 0) e que exista pelo menos um fallback seguro.
+   */
+  private normalizeNewsMedia(newsItems: News[]): News[] {
+    return (newsItems || []).map((news) => {
+      const mediaList = news.mediaNews ? [...news.mediaNews] : [];
+      let emphasisMedia = mediaList.find((m) => m.emphasis && m.imgSize);
+
+      if (!emphasisMedia) {
+        emphasisMedia = mediaList.find((m) => m.imgSize);
+      }
+
+      if (emphasisMedia) {
+        return {
+          ...news,
+          mediaNews: [
+            emphasisMedia,
+            ...mediaList.filter((m) => m !== emphasisMedia),
+          ],
+        };
+      }
+
+      const placeholderMedia = {
+        emphasis: true,
+        imgSize: {
+          small: '',
+          medium: '',
+          original: '',
+          superSmall: '',
+        },
+      } as NewsMedia;
+
+      return {
+        ...news,
+        mediaNews: [placeholderMedia],
+      };
+    });
   }
 }

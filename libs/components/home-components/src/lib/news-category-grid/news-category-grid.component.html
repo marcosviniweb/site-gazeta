@@ -42,7 +42,7 @@
         @if (categoryData.secondary.length > 0) {
           <div class="secondary-cards">
             @for (news of categoryData.secondary; track news.id) {
-              <article class="news-card secondary-card" [style.--category-color]="categoryData.category.color" [routerLink]="['/news', categoryData.featured.slug]">
+              <article class="news-card secondary-card" [style.--category-color]="categoryData.category.color" [routerLink]="['/news', news.slug]">
                 <div class="card-image" >
                   <img
                     [ngSrc]="news.mediaNews[0].imgSize!.small"
