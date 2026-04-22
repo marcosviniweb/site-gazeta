@@ -54,14 +54,37 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({
     transform: true,
     exceptionFactory: (errors) => {
-      const result = errors.map((error) => ({
-        property: error.property,
-        message: error.constraints[Object.keys(error.constraints)[0]] || errorMessage.required,
-      }));
+      const result = errors.map((error) => {
+        let message = errorMessage.required;
+
+        // Tenta obter mensagem das constraints
+        if (error.constraints && Object.keys(error.constraints).length > 0) {
+          message = error.constraints[Object.keys(error.constraints)[0]];
+        }
+
+        // Se houver erros aninhados (validação de objetos dentro de arrays), mostrar detalhes
+        if (error.children && error.children.length > 0) {
+          const childErrors = error.children.map((child: any) => {
+            let childMsg = errorMessage.required;
+            if (child.constraints && Object.keys(child.constraints).length > 0) {
+              childMsg = child.constraints[Object.keys(child.constraints)[0]];
+            }
+            return `${child.property}: ${childMsg}`;
+          });
+          message = `${error.property} - ${childErrors.join(', ')}`;
+        }
+
+        return {
+          property: error.property,
+          message
+        };
+      });
+
       return {
         statusCode: 400,
         message: result[0].message,
-        error: 'Bad Request'
+        error: 'Bad Request',
+        details: result
       };
     },
   }));
