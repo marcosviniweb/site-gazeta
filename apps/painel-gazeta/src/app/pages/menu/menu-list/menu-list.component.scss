@@ -22,7 +22,7 @@
     gap: 0.8rem;
     color: var(--accent-blue);
     
-    .material-icons { font-size: 24px; }
+    mat-icon { font-size: 24px; width: 24px; height: 24px; }
     h3 { margin: 0; font-weight: 800; font-size: 1.2rem; }
   }
 
@@ -38,7 +38,7 @@
     gap: 0.4rem;
     font-size: 0.75rem;
     color: var(--text-muted);
-    .material-icons { font-size: 16px; }
+    mat-icon { font-size: 16px; width: 16px; height: 16px; }
   }
 }
 
@@ -110,7 +110,7 @@
       gap: 0.3rem;
       font-size: 0.75rem;
       color: var(--text-muted);
-      .material-icons { font-size: 14px; }
+      mat-icon { font-size: 14px; width: 14px; height: 14px; }
     }
   }
 }
@@ -164,7 +164,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  .material-icons { font-size: 18px; }
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
 }
 
 // ─── Dicas e Rodapé ───────────────────────────────
@@ -180,8 +180,100 @@
   font-size: 0.8rem;
   margin-top: 1rem;
 
-  .material-icons { font-size: 18px; color: var(--accent-blue); }
+  mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--accent-blue); }
   p { margin: 0; font-style: italic; }
+}
+
+// ─── Badges de Tipo ──────────────────────────────────
+.g-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+
+  &.mini { font-size: 0.65rem; padding: 0.15rem 0.5rem; }
+  &.accent { background: rgba(var(--accent-blue-rgb), 0.1); color: var(--accent-blue); }
+  &.light { background: var(--light); color: var(--text-muted); border: 1px solid var(--border); }
+
+  &.badge-internal { background: rgba(var(--accent-blue-rgb), 0.1); color: var(--accent-blue); }
+  &.badge-external { background: rgba(255, 193, 7, 0.2); color: #b8860b; }
+  &.badge-category { background: rgba(40, 167, 69, 0.12); color: #1a7a3a; }
+  &.badge-submenu { background: rgba(108, 92, 231, 0.1); color: #6c5ce7; }
+}
+
+// ─── Chips de Submenus ───────────────────────────────
+.submenu-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.submenu-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.45rem;
+  background: rgba(var(--accent-blue-rgb), 0.08);
+  color: var(--accent-blue);
+  border-radius: 10px;
+  font-size: 0.65rem;
+  font-weight: 500;
+
+  &.more {
+    background: var(--light);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+}
+
+// ─── Empty State Acionável ───────────────────────────
+.g-empty-state-actionable {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--text-muted);
+
+  .empty-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+    opacity: 0.4;
+  }
+
+  p { font-size: 0.9rem; margin: 0; }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+  }
+}
+
+// ─── Preview de Subitens no Modal de Exclusão ────────
+.submenu-preview-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-size: 0.8rem;
+    color: var(--text);
+    padding: 0.1rem 0;
+  }
 }
 
 // ─── Animações ─────────────────────────────────────
@@ -190,3 +282,27 @@
   to { transform: rotate(360deg); }
 }
 .spinning { animation: spin 1s linear infinite; }
+
+// ─── Drag and Drop (Estilos Específicos) ───────────────
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  opacity: 0.9;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.5;
+  border: 2px dashed var(--accent-blue);
+  background: rgba(var(--accent-blue-rgb), 0.05);
+}
+
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+// Opacidade nos outros itens durante o drag (aplicado na lista container)
+.cdk-drop-list-dragging .menu-item-row:not(.cdk-drag-placeholder) {
+  opacity: 0.7;
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}

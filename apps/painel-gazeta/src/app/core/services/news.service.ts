@@ -80,10 +80,38 @@ export class NewsService {
   }
 
   /**
-   * Deletar notícia
+   * Deletar notícia (Mover para lixeira)
    */
-  delete(id: number): Observable<{ message: string }> {
-    return this.http.delete<{ message: string }>(`${this.apiUrl}/${id}`);
+  delete(id: number): Observable<News> {
+    return this.moveToTrash(id);
+  }
+
+  /**
+   * Mover para lixeira
+   */
+  moveToTrash(id: number): Observable<News> {
+    return this.http.patch<News>(`${this.apiUrl}/${id}/trash`, {});
+  }
+
+  /**
+   * Restaurar notícia da lixeira
+   */
+  restore(id: number): Observable<News> {
+    return this.http.patch<News>(`${this.apiUrl}/${id}/restore`, {});
+  }
+
+  /**
+   * Listar notícias na lixeira
+   */
+  getTrash(): Observable<News[]> {
+    return this.http.get<News[]>(`${this.apiUrl}/trash`);
+  }
+
+  /**
+   * Excluir permanentemente
+   */
+  permanentDelete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}/permanent`);
   }
 
   // ========== MEDIA ==========
@@ -94,6 +122,16 @@ export class NewsService {
   uploadMedia(body: FormData): Observable<NewsMedia> {
     return this.http.post<NewsMedia>(
       `${environment.apiUrl}/media/upload`,
+      body,
+    );
+  }
+
+  /**
+   * Upload múltiplo de mídias para notícia
+   */
+  uploadMultipleMedia(body: FormData): Observable<NewsMedia[]> {
+    return this.http.post<NewsMedia[]>(
+      `${environment.apiUrl}/media/upload-multiple`,
       body,
     );
   }
@@ -141,7 +179,7 @@ export class NewsService {
   /**
    * Adicionar vídeo à notícia
    */
-  addVideo(body: FormData): Observable<NewsVideo> {
+  addVideo(body: Partial<NewsVideo>): Observable<NewsVideo> {
     return this.http.post<NewsVideo>(`${environment.apiUrl}/news-videos`, body);
   }
 
@@ -172,59 +210,19 @@ export class NewsService {
   }
 
   /**
-   * Atualizar destaque da notícia com limite de 6
-   * Se tentar marcar uma 7ª notícia como destaque, remove o destaque da mais antiga
+   * Atualizar destaque da notícia com limite de 6 (Lógica centralizada no backend)
    */
   updateEmphasis(
     newsId: number,
     isEmphasis: boolean,
   ): Observable<{ updatedNews: News; removedEmphasis?: News }> {
-    // Se está removendo destaque, apenas atualiza
-    if (!isEmphasis) {
-      return this.update(newsId, { isEmphasis: false }).pipe(
-        map((updatedNews) => ({ updatedNews })),
+    return this.http
+      .patch<any>(`${this.apiUrl}/${newsId}/emphasis`, { isEmphasis })
+      .pipe(
+        map((res) => ({
+          updatedNews: res,
+          removedEmphasis: res.removedEmphasis,
+        })),
       );
-    }
-
-    // Se está adicionando destaque, primeiro verifica quantos já existem
-    // Usamos o endpoint de destaques para ter a lista completa deles (limite de 6)
-    return this.getFeatured().pipe(
-      // Se já tem 6 ou mais, remove o mais antigo
-      switchMap((featured: News[]) => {
-        if (featured.length >= 6) {
-          // Encontra a notícia mais antiga com destaque
-          const oldestEmphasis = featured.reduce(
-            (oldest: News, current: News) => {
-              const oldestDate = new Date(
-                oldest.published || oldest.createdAt,
-              ).getTime();
-              const currentDate = new Date(
-                current.published || current.createdAt,
-              ).getTime();
-              return currentDate < oldestDate ? current : oldest;
-            },
-          );
-
-          // Remove o destaque da mais antiga
-          return this.update(oldestEmphasis.id, { isEmphasis: false }).pipe(
-            switchMap(() => {
-              // Adiciona destaque à nova notícia
-              return this.update(newsId, { isEmphasis: true });
-            }),
-            map((updatedNews: News) => ({
-              updatedNews,
-              removedEmphasis: oldestEmphasis,
-            })),
-          );
-        } else {
-          // Ainda tem espaço, apenas adiciona o destaque
-          return this.update(newsId, { isEmphasis: true }).pipe(
-            map((updatedNews: News) => ({
-              updatedNews,
-            })),
-          );
-        }
-      }),
-    );
   }
 }

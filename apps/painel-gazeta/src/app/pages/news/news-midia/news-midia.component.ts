@@ -20,24 +20,20 @@ import { AlertService } from '@site-gazeta/alert';
 import { MatIconModule } from '@angular/material/icon';
 
 interface MediaItem {
-  type: 'photo' | 'video';
-  file?: File; // só para novas
-  preview?: string | SafeUrl; // só para novas
-  url?: string; // para vídeos
-  thumbnail?: string; // para vídeos
-  title?: string; // para vídeos
+  type: 'photo';
+  file?: File;
+  preview?: string | SafeUrl;
   author?: string;
   date?: string;
   emphasis?: boolean;
-  id?: number; // para existentes
+  id?: number;
   imgSize?: {
-    // para existentes
     original: string;
     small: string;
     medium: string;
     superSmall: string;
   };
-  isNew?: boolean; // flag para diferenciar
+  isNew?: boolean;
 }
 
 @Component({
@@ -51,19 +47,19 @@ export class NewsMidiaComponent implements OnInit {
   private sanitizer = inject(DomSanitizer);
 
   @ViewChild('photoInput') photoInput!: ElementRef<HTMLInputElement>;
-  //medias da noticia para edição
   newsMedia = input<NewsMedia[]>();
-  newsVideo = input<NewsVideo[]>();
+  newsVideo = input<NewsVideo[]>(); // Mantido para compatibilidade com o pai, ignorado na UI de midia.
   isEdit = signal<boolean>(false);
   private newsService = inject(NewsService);
+  
   previewMidias = signal<MediaItem[]>([]);
   selectedMediaIndex = signal<number | null>(null);
   editingMedia = signal<Partial<MediaItem>>({});
+  
   formValue = output<{ newsVideo: NewsVideo[]; newsMedia: NewsMedia[] }>();
+  
   featuredImage = computed(() =>
-    this.previewMidias().find(
-      (media) => media.type === 'photo' && media.emphasis,
-    ),
+    this.previewMidias().find((media) => media.emphasis),
   );
 
   selectedMedia = computed(() => {
@@ -72,90 +68,98 @@ export class NewsMidiaComponent implements OnInit {
   });
 
   hasMidias = computed(() => this.previewMidias().length > 0);
+  isDragging = signal<boolean>(false);
+
   private inputsPopulated = false;
+
   constructor() {
-    // Effect só para exportação - sempre roda quando há mudança
     effect(() => {
       this.exportMidias();
       this.checkEditNewsMedia();
     });
 
-    // Effect separado - só para inputs iniciais
     effect(() => {
-      // Só depende dos inputs!
       const media = this.newsMedia();
-      const videos = this.newsVideo();
-      if (!this.inputsPopulated && (media?.length || videos?.length)) {
+      if (!this.inputsPopulated && media?.length) {
         this.inputsPopulated = true;
         this.populateMediaFromInputs();
       }
     });
   }
+
   privewChange = computed(() => this.exportMidias());
+
   addPhoto() {
     this.photoInput.nativeElement.click();
   }
 
   checkEditNewsMedia() {
-    if (this.newsMedia() || this.newsVideo()) {
+    if (this.newsMedia()) {
       return this.isEdit.set(true);
     }
     return;
   }
-  addVideo() {
-    const videoUrl = prompt('Digite a URL do vídeo do YouTube:');
-    if (videoUrl && this.isValidYouTubeUrl(videoUrl)) {
-      const videoId = this.extractYouTubeId(videoUrl);
-      const newVideo: MediaItem = {
-        type: 'video',
-        url: videoUrl,
-        thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-        title: 'Vídeo do YouTube',
-        emphasis: false,
-      };
 
-      this.previewMidias.update((midias) => [...midias, newVideo]);
-    } else if (videoUrl) {
-      this.alertService.warning(
-        'Atenção',
-        'Por favor, insira uma URL válida do YouTube.',
-      );
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(true);
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(false);
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(false);
+
+    if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+      this.processFiles(event.dataTransfer.files);
     }
   }
 
   onPhotosSelected(event: Event) {
     const input = event.target as HTMLInputElement;
-    const files = input.files;
-
-    if (files && files.length > 0) {
-      const filesArray = Array.from(files);
-
-      filesArray.forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const dataUrl = e.target?.result as string;
-          const newMedia: MediaItem = {
-            type: 'photo',
-            file: file,
-            preview: this.sanitizer.bypassSecurityTrustUrl(dataUrl),
-            author: '',
-            date: '',
-            emphasis: this.shouldSetAsFirstFeatured(),
-          };
-
-          this.previewMidias.update((midias) => [...midias, newMedia]);
-        };
-        reader.readAsDataURL(file);
-      });
+    if (input.files && input.files.length > 0) {
+      this.processFiles(input.files);
     }
     input.value = '';
+  }
+
+  private processFiles(files: FileList) {
+    const filesArray = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (filesArray.length === 0) {
+       this.alertService.warning('Atenção', 'Apenas arquivos de imagem são permitidos.');
+       return;
+    }
+
+    filesArray.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        const newMedia: MediaItem = {
+          type: 'photo',
+          file: file,
+          preview: this.sanitizer.bypassSecurityTrustUrl(dataUrl),
+          author: '',
+          date: '',
+          emphasis: this.shouldSetAsFirstFeatured(),
+        };
+
+        this.previewMidias.update((midias) => [...midias, newMedia]);
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   ngOnInit() {
     this.populateMediaFromInputs();
   }
 
-  // Popula o array interno ao receber dados da API
   populateMediaFromInputs() {
     const existingNew = this.previewMidias().filter((m) => m.file || m.isNew);
     const mediaItems: MediaItem[] = [...existingNew];
@@ -174,29 +178,28 @@ export class NewsMidiaComponent implements OnInit {
         });
       }
     }
-    if (this.newsVideo()) {
-      for (const video of this.newsVideo() ?? []) {
-        mediaItems.push({
-          ...video,
-          type: 'video',
-          isNew: false,
-        });
-      }
-    }
     this.previewMidias.set(mediaItems);
   }
 
-  // Remover mídia (diferencia nova de existente)
   removeMedia(index: number, event?: Event) {
-    const conf = confirm(`Tem certeza que deseja remover a mídia?`);
+    if (event) event.stopPropagation();
+    
+    const conf = confirm(`Tem certeza que deseja remover esta foto?`);
     if (!conf) return;
 
-    if (event) event.stopPropagation();
     const media = this.previewMidias()[index];
     if (media.id) {
       this.deleteMediaFromApi(media.id);
     }
-    this.previewMidias.update((midias) => midias.filter((_, i) => i !== index));
+    
+    this.previewMidias.update((midias) => {
+        const updated = midias.filter((_, i) => i !== index);
+        // Se deletou o destaque e sobrou fotos, destaca a primeira
+        if (media.emphasis && updated.length > 0) {
+            updated[0].emphasis = true;
+        }
+        return updated;
+    });
 
     const currentSelected = this.selectedMediaIndex();
     if (currentSelected === index) {
@@ -207,34 +210,23 @@ export class NewsMidiaComponent implements OnInit {
     }
   }
 
-  selectMedia(index: number) {
+  selectMedia(index: number, event?: Event) {
+    if (event) event.stopPropagation();
     const media = this.previewMidias()[index];
-    if (media.type === 'photo') {
-      this.selectedMediaIndex.set(index);
-      this.editingMedia.set({ ...media });
-    }
+    this.selectedMediaIndex.set(index);
+    this.editingMedia.set({ ...media });
   }
 
   toggleFeatured(index: number, event: Event) {
     event.stopPropagation();
-
-    const media = this.previewMidias()[index];
-    if (media.type === 'photo') {
-      this.previewMidias.update((midias) =>
-        midias.map((item, i) => ({
-          ...item,
-          emphasis:
-            i === index
-              ? !item.emphasis
-              : item.type === 'photo'
-                ? false
-                : item.emphasis,
-        })),
-      );
-    }
+    this.previewMidias.update((midias) =>
+      midias.map((item, i) => ({
+        ...item,
+        emphasis: i === index, // Apenas um pode ter destaque
+      })),
+    );
   }
 
-  // Salvar edição (diferencia nova de existente)
   saveMediaInfo() {
     const index = this.selectedMediaIndex();
     if (index !== null) {
@@ -249,28 +241,21 @@ export class NewsMidiaComponent implements OnInit {
             : item,
         ),
       );
-      this.cancelMediaEdit();
+      this.alertService.success('Sucesso', 'Metadados salvos');
     }
   }
 
-  // Função para PATCH (API)
   patchMediaInfo(id: number, media: Partial<MediaItem>) {
     const payload: Partial<MediaItem> = {
       emphasis: media.emphasis,
       author: media.author,
       date: media.date,
     };
-    if (media.type === 'photo') {
-      firstValueFrom(this.newsService.updateMedia(id, payload))
-        .catch((error) => {
-          console.error(`Erro ao editar mídia`, error);
-        });
-    } else {
-      firstValueFrom(this.newsService.updateVideo(id, payload))
-        .catch((error) => {
-          console.error(`Erro ao editar vídeo`, error);
-        });
-    }
+    firstValueFrom(this.newsService.updateMedia(id, payload))
+      .catch((error) => {
+        console.error(`Erro ao editar mídia`, error);
+        this.alertService.error('Erro', 'Falha ao atualizar metadados');
+      });
   }
 
   cancelMediaEdit() {
@@ -286,49 +271,26 @@ export class NewsMidiaComponent implements OnInit {
     this.editingMedia.update((media) => ({ ...media, date }));
   }
 
-  private isValidYouTubeUrl(url: string): boolean {
-    return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/.test(url);
-  }
-
-  private extractYouTubeId(url: string): string {
-    const match = url.match(
-      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/,
-    );
-    return match && match[2].length === 11 ? match[2] : '';
-  }
-
   exportMidias() {
     const newsMidias: NewsMedia[] = [];
-    const videoMidias: NewsVideo[] = [];
     this.previewMidias().forEach((midia) => {
-      if (midia.type === 'photo') {
-        newsMidias.push({
-          id: midia.id,
-          file: midia.file,
-          author: midia.author,
-          date: midia.date,
-          emphasis: midia.emphasis as boolean,
-          imgSize: midia.imgSize,
-        });
-      }
-      if (midia.type === 'video') {
-        videoMidias.push({
-          id: midia.id,
-          url: midia.url as string,
-          thumbnail: midia.thumbnail as string,
-          title: midia.title as string,
-          duration: '00:00',
-        });
-      }
+      newsMidias.push({
+        id: midia.id,
+        file: midia.file,
+        author: midia.author,
+        date: midia.date,
+        emphasis: midia.emphasis as boolean,
+        imgSize: midia.imgSize,
+      });
     });
+    
     const formValue = {
-      newsVideo: videoMidias,
+      newsVideo: this.newsVideo() || [], // Repassando os vídeos se vierem da api
       newsMedia: newsMidias,
     };
     this.formValue.emit(formValue);
   }
 
-  // Função para DELETE (API)
   deleteMediaFromApi(id: number) {
     firstValueFrom(this.newsService.deleteMedia(id))
       .catch((error) => {
@@ -338,36 +300,21 @@ export class NewsMidiaComponent implements OnInit {
 
   private shouldSetAsFirstFeatured(): boolean {
     const currentMidias = this.previewMidias();
-    if (currentMidias.length === 0) {
-      return true;
-    }
-
-    const hasFeaturedImage = currentMidias.some(
-      (media) => media.type === 'photo' && media.emphasis,
-    );
-
-    return !hasFeaturedImage;
+    if (currentMidias.length === 0) return true;
+    return !currentMidias.some((media) => media.emphasis);
   }
 
-  // Método para resetar completamente o componente
   resetMedia() {
-    // Limpa todas as mídias
     this.previewMidias.set([]);
-    // Reseta o índice selecionado
     this.selectedMediaIndex.set(null);
-    // Limpa o formulário de edição
     this.editingMedia.set({});
-    // Reseta o input de foto
     if (this.photoInput?.nativeElement) {
       this.photoInput.nativeElement.value = '';
     }
-    // Reseta o estado de edição
     this.isEdit.set(false);
-    // Reseta o flag de population
     this.inputsPopulated = false;
-    // Emite evento vazio para atualizar o formulário principal
     this.formValue.emit({
-      newsVideo: [],
+      newsVideo: this.newsVideo() || [],
       newsMedia: [],
     });
   }

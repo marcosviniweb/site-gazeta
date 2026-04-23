@@ -15,6 +15,42 @@
       </div>
     </div>
 
+    <!-- Navegação de Status (Tabs) -->
+    <nav class="g-status-tabs">
+      <button 
+        type="button" 
+        class="tab-btn" 
+        [class.active]="filterStatus() === 'ACTIVE'"
+        (click)="setFilterStatus('ACTIVE')">
+        <mat-icon>check_circle</mat-icon>
+        Ativas
+      </button>
+      <button 
+        type="button" 
+        class="tab-btn" 
+        [class.active]="filterStatus() === 'INACTIVE'"
+        (click)="setFilterStatus('INACTIVE')">
+        <mat-icon>pause_circle</mat-icon>
+        Inativas
+      </button>
+      <button 
+        type="button" 
+        class="tab-btn danger" 
+        [class.active]="filterStatus() === 'TRASH'"
+        (click)="setFilterStatus('TRASH')">
+        <mat-icon>delete</mat-icon>
+        Lixeira
+      </button>
+      <button 
+        type="button" 
+        class="tab-btn" 
+        [class.active]="filterStatus() === 'all'"
+        (click)="setFilterStatus('all')">
+        <mat-icon>list</mat-icon>
+        Todas
+      </button>
+    </nav>
+
     <div class="g-page-content">
       <!-- Barra de Carregamento e Progresso -->
       @if (isProcessing()) {
@@ -211,12 +247,23 @@
               >
                 <mat-icon>edit</mat-icon>
               </button>
+
+              @if (item.status === 'TRASH') {
+                <button
+                  class="btn-action btn-success"
+                  (click)="restoreItem(item)"
+                  title="Restaurar"
+                >
+                  <mat-icon>restore_from_trash</mat-icon>
+                </button>
+              }
+
               <button
                 class="btn-action btn-delete"
                 (click)="confirmDelete(item)"
-                title="Excluir permanently"
+                [title]="item.status === 'TRASH' ? 'Excluir permanentemente' : 'Mover para lixeira'"
               >
-                <mat-icon>delete</mat-icon>
+                <mat-icon>{{ item.status === 'TRASH' ? 'delete_forever' : 'delete' }}</mat-icon>
               </button>
             </div>
           </div>
@@ -272,12 +319,12 @@
 
       <div class="g-modal-confirm-body">
         <p>
-          Tem certeza que deseja excluir permanentemente a notícia
+          Tem certeza que deseja {{ itemToDelete()?.status === 'TRASH' ? 'excluir permanentemente' : 'mover para a lixeira' }} a notícia
           <strong>"{{ itemToDelete()?.title }}"</strong>?
         </p>
         <div class="warning-highlight danger">
           <mat-icon>warning</mat-icon>
-          <p>Esta ação não pode ser desfeita.</p>
+          <p>{{ itemToDelete()?.status === 'TRASH' ? 'Esta ação não pode ser desfeita.' : 'Você poderá restaurá-la da lixeira mais tarde.' }}</p>
         </div>
       </div>
 
@@ -286,7 +333,7 @@
           Cancelar
         </button>
         <button type="button" class="btn-confirm danger" (click)="deleteItem()">
-          Sim, Excluir
+          {{ itemToDelete()?.status === 'TRASH' ? 'Sim, Excluir' : 'Sim, Mover para Lixeira' }}
         </button>
       </div>
     </div>

@@ -1,28 +1,22 @@
 <div class="submenu-form-container">
-  <!-- Header Interno Moderno -->
-  <header class="g-section-header">
-    <div class="header-icon">
-      <span class="material-icons">account_tree</span>
-    </div>
-    <div class="header-text">
-      <h4>{{ menuForm.get('id')?.value ? 'Editar Subitem' : 'Novo Subitem' }}</h4>
-      <p>Vincular item ao menu: <strong>{{ parentMenu().name }}</strong></p>
-    </div>
-  </header>
 
-  <form [formGroup]="menuForm" (ngSubmit)="submitForm($event)" class="form-card" novalidate>
-    
-    <!-- Tipo de Menu -->
+  <form [formGroup]="menuForm" (ngSubmit)="submitForm($event)" class="g-form-container" novalidate>
+
+    <!-- Tipo de Submenu -->
     <div class="g-form-group">
       <label for="type">Tipo de Submenu <span class="required">*</span></label>
-      <select id="type" formControlName="type">
-        <option value="internal">Página Interna</option>
-        <option value="external">Link Externo</option>
-        <option value="category">Categoria</option>
-      </select>
-      
+      <p-select
+        inputId="type"
+        formControlName="type"
+        [options]="submenuTypeOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecione um tipo"
+        styleClass="w-full">
+      </p-select>
+
       <div class="g-help-text info shadow-none no-margin">
-        <span class="material-icons">info</span>
+        <mat-icon>info</mat-icon>
         @if (selectedType() === 'internal') {
           Link para uma página dentro do site
         } @else if (selectedType() === 'external') {
@@ -39,15 +33,14 @@
       @if (selectedType() !== 'category') {
         <div class="g-form-group">
           <label for="name">Nome do Menu <span class="required">*</span></label>
-          <input 
-            type="text" 
-            id="name" 
+          <input
+            type="text"
+            id="name"
             formControlName="name"
             placeholder="Ex: Sub-página, Link Especial..."
           />
           @if (nameControl?.invalid && nameControl?.touched) {
-            <div class="g-help-text error shadow-none no-margin">
-              <span class="material-icons">error_outline</span>
+            <div class="g-field-error">
               @if (nameControl?.errors?.['required']) { Nome é obrigatório }
               @if (nameControl?.errors?.['minlength']) { Mínimo de 2 caracteres }
             </div>
@@ -55,7 +48,7 @@
         </div>
       }
 
-      <!-- Ordem - Agora integrado ao grid para visual moderno -->
+      <!-- Ordem -->
       <div class="g-form-group">
         <label for="order">Ordem de Exibição <span class="required">*</span></label>
         <input type="number" id="order" formControlName="order" min="1" />
@@ -66,17 +59,19 @@
     @if (selectedType() === 'internal') {
       <div class="g-form-group">
         <label for="routerLink">Rota Interna <span class="required">*</span></label>
-        <select id="routerLink" formControlName="routerLink">
-          <option value="">Selecione uma rota</option>
-          @for (route of internalRoutes; track route.path) {
-            <option [value]="route.path">{{ route.label }} ({{ route.path }})</option>
-          }
-        </select>
+        <p-select
+          inputId="routerLink"
+          formControlName="routerLink"
+          [options]="internalRoutes"
+          optionLabel="label"
+          optionValue="path"
+          placeholder="Selecione uma rota"
+          styleClass="w-full"
+          [filter]="true"
+          filterPlaceholder="Buscar rota...">
+        </p-select>
         @if (routerLinkControl?.invalid && routerLinkControl?.touched) {
-          <div class="g-help-text error shadow-none no-margin">
-            <span class="material-icons">error_outline</span>
-            Selecione uma rota válida
-          </div>
+          <div class="g-field-error">Selecione uma rota válida</div>
         }
       </div>
     }
@@ -85,15 +80,14 @@
     @if (selectedType() === 'external') {
       <div class="g-form-group">
         <label for="externalLink">URL Externa <span class="required">*</span></label>
-        <input 
-          type="url" 
-          id="externalLink" 
+        <input
+          type="url"
+          id="externalLink"
           formControlName="externalLink"
           placeholder="https://exemplo.com"
         />
         @if (externalLinkControl?.invalid && externalLinkControl?.touched) {
-          <div class="g-help-text error shadow-none no-margin">
-            <span class="material-icons">error_outline</span>
+          <div class="g-field-error">
             @if (externalLinkControl?.errors?.['required']) { URL é obrigatória }
             @if (externalLinkControl?.errors?.['pattern']) { URL inválida (use http:// ou https://) }
           </div>
@@ -111,17 +105,14 @@
           [selectedItems]="selectedCategories()"
           (selectedItemsChange)="onCategoriesChange($event)"
         />
-        
+
         @if (selectedCategories().length > 0) {
           <div class="g-field-info success">
-            <span class="material-icons">check_circle</span>
+            <mat-icon>check_circle</mat-icon>
             {{ selectedCategories().length }} categoria(s) selecionada(s)
           </div>
         } @else if (menuForm.get('type')?.touched) {
-          <div class="g-help-text error shadow-none no-margin">
-            <span class="material-icons">error_outline</span>
-            Selecione ao menos uma categoria
-          </div>
+          <div class="g-field-error">Selecione ao menos uma categoria</div>
         }
       </div>
     }
@@ -131,11 +122,14 @@
       <div class="g-crud-footer no-padding border-none">
         <div class="actions-right full-width column-gap">
           <button type="submit" class="btn-primary full-width" [disabled]="isLoading() || menuForm.invalid">
-            <span class="material-icons spinning" *ngIf="isLoading()">sync</span>
-            <span class="material-icons" *ngIf="!isLoading()">save</span>
+            @if (isLoading()) {
+              <mat-icon class="spinning">sync</mat-icon>
+            } @else {
+              <mat-icon>save</mat-icon>
+            }
             {{ menuForm.get('id')?.value ? 'Salvar Alterações' : 'Criar Subitem' }}
           </button>
-          
+
           <button type="button" class="btn-secondary full-width" (click)="onCancel()" [disabled]="isLoading()">
             Cancelar
           </button>

@@ -157,7 +157,9 @@ import {
       :host ::ng-deep .raw-html-embed__preview-content video {
         display: block;
         width: 100%;
-        max-height: min(420px, 70vh);
+        max-width: 100%;
+        aspect-ratio: 16 / 9;
+        object-fit: contain;
         border-radius: 8px;
         background: #0f0f0f;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
@@ -166,7 +168,7 @@ import {
         border-radius: 8px;
         border: 1px solid #e2e6ea;
         overflow: hidden;
-        margin-top: 4px;
+        margin: 8px 0;
       }
     `,
   ],

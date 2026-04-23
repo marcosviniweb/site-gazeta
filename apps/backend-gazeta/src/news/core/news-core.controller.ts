@@ -23,6 +23,7 @@ import { CreateNewsDto } from '../dto/create-news.dto';
 import { UpdateNewsDto } from '../dto/update-news.dto';
 import { NewsResponseDto } from '../dto/news-response.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { ToggleEmphasisDto } from '../dto/toggle-emphasis.dto';
 import { BulkToggleEmphasisDto, BulkDeleteDto } from '../dto/bulk-news.dto';
 import { NewsErrorInterceptor } from '../interceptors/news-error.interceptor';
 
@@ -93,6 +94,20 @@ export class NewsCoreController {
   async remove(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
     await this.newsCoreService.remove(id);
     return { message: 'Notícia excluída com sucesso' };
+  }
+
+  @Patch(':id/emphasis')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Atualizar destaque da notícia' })
+  @ApiParam({ name: 'id', description: 'ID da notícia', type: 'number' })
+  @ApiResponse({ status: 200, description: 'Destaque atualizado com sucesso' })
+  @ApiResponse({ status: 404, description: 'Notícia não encontrada' })
+  async updateEmphasis(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() toggleDto: ToggleEmphasisDto
+  ): Promise<any> {
+    return await this.newsCoreService.updateEmphasis(id, toggleDto.isEmphasis);
   }
 
   @Patch('bulk/emphasis')

@@ -1,5 +1,4 @@
-import { Component, inject, signal, input, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { DragDropModule, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { DragAndDropComponent, DraggableListConfig } from '@site-gazeta/drag-and-drop';
 import { MenuService } from '../../../core/services/menu.service';
@@ -11,9 +10,10 @@ import { MatIconModule } from '@angular/material/icon';
 @Component({
   selector: 'app-menu-list',
   standalone: true,
-  imports: [CommonModule, DragDropModule, DragAndDropComponent, CdkDragHandle, ModalComponent, MatIconModule],
+  imports: [DragDropModule, DragAndDropComponent, CdkDragHandle, ModalComponent, MatIconModule],
   templateUrl: './menu-list.component.html',
   styleUrl: './menu-list.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MenuListComponent {
   private menuService = inject(MenuService);
@@ -22,9 +22,10 @@ export class MenuListComponent {
   // Inputs & Outputs
   menus = input.required<Menu[]>();
   edit = output<Menu>();
-  delete = output<number>();
+  delete = output<void>();
   reorder = output<Menu[]>();
   submenuClick = output<Menu>();
+  createFirst = output<void>();
 
   // Signals
   isReordering = signal(false);
@@ -52,28 +53,17 @@ export class MenuListComponent {
     this.menuService.reorder(orderData).subscribe({
       next: () => {
         this.isReordering.set(false);
+        this.alertService.success('Sucesso', 'Ordem salva com sucesso!');
         this.reorder.emit(menus);
       },
       error: (err) => {
         this.isReordering.set(false);
         console.error('Erro ao reordenar menus:', err);
+        this.alertService.error('Erro', 'Falha ao salvar nova ordem.');
       }
     });
   }
 
-  private moveToSubmenu(menuId: number, parentId: number): void {
-    this.isReordering.set(true);
-    this.menuService.moveToSubmenu(menuId, parentId).subscribe({
-      next: () => {
-        this.isReordering.set(false);
-        this.reorder.emit([]);
-      },
-      error: (err) => {
-        this.isReordering.set(false);
-        console.error('Erro ao mover menu para submenu:', err);
-      }
-    });
-  }
 
   removeFromSubmenu(childId: number): void {
     this.isReordering.set(true);
@@ -115,7 +105,7 @@ export class MenuListComponent {
           : 'Menu deletado com sucesso!';
         
         this.alertService.success('Sucesso', message);
-        this.delete.emit(menu.id ?? 0);
+        this.delete.emit();
         this.cancelDelete();
       },
       error: (err) => {
@@ -124,6 +114,21 @@ export class MenuListComponent {
         this.cancelDelete();
       }
     });
+  }
+
+  getMenuTypeBadgeClass(type?: string): string {
+    const classes: Record<string, string> = {
+      internal: 'g-badge badge-internal mini',
+      externalLink: 'g-badge badge-external mini',
+      external: 'g-badge badge-external mini',
+      category: 'g-badge badge-category mini',
+      submenu: 'g-badge badge-submenu mini',
+    };
+    return classes[type || 'internal'] || 'g-badge badge-internal mini';
+  }
+
+  getSubmenuChips(menu: Menu): string[] {
+    return (menu.children || []).slice(0, 3).map(c => c.name || '');
   }
 
   getMenuTypeLabel(type?: string): string {

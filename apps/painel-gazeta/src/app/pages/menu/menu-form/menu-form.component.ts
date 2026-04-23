@@ -1,74 +1,43 @@
 import {
   Component,
-  inject,
-  signal,
   effect,
   input,
   output,
+  signal,
+  ChangeDetectionStrategy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-import { MenuService } from '../../../core/services/menu.service';
-import { CategoryService } from '../../../core/services/category.service';
-import { Category, Menu } from '@site-gazeta/models';
-import { AlertService } from '@site-gazeta/alert';
+import { ReactiveFormsModule } from '@angular/forms';
+import { Menu } from '@site-gazeta/models';
 import { MultiSelectComponent } from '@site-gazeta/multi-select';
 import { MatIconModule } from '@angular/material/icon';
-type MenuType = 'external' | 'internal' | 'category' | 'submenu';
-
-interface InternalRoute {
-  path: string;
-  label: string;
-}
+import { SelectModule } from 'primeng/select';
+import { MenuFormBase, MenuType } from '../menu-form.base';
 
 @Component({
   selector: 'app-menu-form',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MultiSelectComponent,
     MatIconModule,
+    SelectModule,
   ],
   templateUrl: './menu-form.component.html',
   styleUrl: './menu-form.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MenuFormComponent {
-  private fb = inject(FormBuilder);
-  private menuService = inject(MenuService);
-  private categoryService = inject(CategoryService);
-  private alertService = inject(AlertService);
-
+export class MenuFormComponent extends MenuFormBase {
   // Inputs & Outputs
   menuToEdit = input<Menu | null>(null);
   existingMenus = input<Menu[]>([]);
   saveEvent = output<Menu>();
   cancelEvent = output<void>();
 
-  // Signals
-  menuForm!: FormGroup;
-  selectedType = signal<MenuType>('internal');
-  categories = signal<Category[]>([]);
-  isLoading = signal(false);
   showCategoryDropdown = signal(false);
-  selectedCategories = signal<Category[]>([]); // Para multi-select
-
-  // Rotas internas disponíveis
-  internalRoutes: InternalRoute[] = [
-    { path: '/', label: 'Home' },
-    { path: '/noticias', label: 'Notícias' },
-    { path: '/videos', label: 'Vídeos' },
-    { path: '/sobre', label: 'Sobre' },
-    { path: '/contato', label: 'Contato' },
-  ];
 
   constructor() {
-    this.initForm();
+    super();
+    this.initBaseForm();
     this.loadCategories();
 
     // Effect para atualizar form quando receber menu para editar
@@ -84,96 +53,11 @@ export class MenuFormComponent {
     });
   }
 
-  private initForm(): void {
-    this.menuForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
-      type: ['internal', Validators.required],
-      routerLink: [''],
-      externalLink: [''],
-      categoryId: [null],
-      categoryIds: [[]], // Para multi-select
-      categoryName: [''],
-      slug: [''],
-      order: [1],
-    });
-
-    // Listener para mudanças no tipo
-    this.menuForm.get('type')?.valueChanges.subscribe((type: MenuType) => {
-      this.selectedType.set(type);
-      this.updateValidators(type);
-
-      // Limpar categorias selecionadas quando mudar de tipo
-      if (type !== 'category') {
-        this.selectedCategories.set([]);
-      }
-    });
-  }
-
-  private updateValidators(type: MenuType): void {
-    const routerLinkControl = this.menuForm.get('routerLink');
-    const externalLinkControl = this.menuForm.get('externalLink');
-    const categoryIdControl = this.menuForm.get('categoryId');
-    const nameControl = this.menuForm.get('name');
-
-    // Reset validators
-    routerLinkControl?.clearValidators();
-    externalLinkControl?.clearValidators();
-    categoryIdControl?.clearValidators();
-
-    // Apply validators based on type
-    switch (type) {
-      case 'internal':
-        routerLinkControl?.setValidators([Validators.required]);
-        nameControl?.setValidators([
-          Validators.required,
-          Validators.minLength(2),
-        ]);
-        break;
-      case 'external':
-        externalLinkControl?.setValidators([
-          Validators.required,
-          Validators.pattern(/^https?:\/\/.+/),
-        ]);
-        nameControl?.setValidators([
-          Validators.required,
-          Validators.minLength(2),
-        ]);
-        this.menuForm.patchValue({ name: '' }); // Limpar nome para forçar preenchimento
-        break;
-      case 'category':
-        // Para category, não exigir categoryId pois podemos usar multi-select
-        // A validação será feita no submitForm verificando selectedCategories
-        nameControl?.clearValidators(); // Nome virá das categorias selecionadas
-        break;
-      case 'submenu':
-        // Para submenu (agrupador), apenas o nome é obrigatório
-        nameControl?.setValidators([
-          Validators.required,
-          Validators.minLength(2),
-        ]);
-        break;
-    }
-
-    routerLinkControl?.updateValueAndValidity({ emitEvent: false });
-    externalLinkControl?.updateValueAndValidity({ emitEvent: false });
-    categoryIdControl?.updateValueAndValidity({ emitEvent: false });
-    nameControl?.updateValueAndValidity({ emitEvent: false });
-  }
-
-  private loadCategories(): void {
-    this.categoryService.getActive().subscribe({
-      next: (categories) => this.categories.set(categories),
-      error: (err) => console.error('Erro ao carregar categorias:', err),
-    });
-  }
-
   private calculateNextOrder(): number {
     const menus = this.existingMenus();
     if (!menus || menus.length === 0) {
       return 1;
     }
-
-    // Encontrar a maior ordem existente
     const maxOrder = Math.max(...menus.map((m) => m.order || 1));
     return maxOrder + 1;
   }
@@ -190,47 +74,21 @@ export class MenuFormComponent {
     });
   }
 
-  selectCategory(category: Category): void {
-    // Modo single-select: selecionar uma categoria
-    this.menuForm.patchValue({
-      categoryId: category.id,
-      categoryName: category.name,
-      name: category.name,
-      slug: category.slug,
-    });
-    this.showCategoryDropdown.set(false);
-  }
+  submitForm(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
 
-  toggleCategoryDropdown(): void {
-    this.showCategoryDropdown.update((v) => !v);
-  }
-
-  getSelectedCategory(): Category | null {
-    const categoryId = this.menuForm.get('categoryId')?.value;
-    return this.categories().find((c) => c.id === categoryId) || null;
-  }
-
-  onCategoriesChange(categories: unknown[]): void {
-    // Validar que todas as categorias têm name e slug
-    const validCategories = categories.filter((c: unknown): c is Category => {
-      const isValid = !!(c && (c as Category).name && (c as Category).slug);
-      return isValid;
-    });
-    this.selectedCategories.set(validCategories);
-  }
-
-  submitForm(): void {
     const formValue = this.menuForm.value;
     const isCategory = formValue.type === 'category';
 
-    // Se for tipo category e tiver categorias selecionadas, usar criação em lote
     if (isCategory && this.selectedCategories().length > 0) {
       this.isLoading.set(true);
       this.createMultipleCategoryMenus();
       return;
     }
 
-    // Validação para categoria sem multi-select (modo single)
     if (isCategory && this.selectedCategories().length === 0) {
       this.alertService.warning(
         'Atenção',
@@ -239,7 +97,6 @@ export class MenuFormComponent {
       return;
     }
 
-    // Para outros tipos (internal, external), validar o formulário normalmente
     if (this.menuForm.invalid) {
       Object.keys(this.menuForm.controls).forEach((key) => {
         const control = this.menuForm.get(key);
@@ -252,7 +109,6 @@ export class MenuFormComponent {
 
     this.isLoading.set(true);
 
-    // Criar menu único (internal, external ou submenu)
     const menuData: Menu = {
       name: formValue.name,
       type: formValue.type,
@@ -263,7 +119,6 @@ export class MenuFormComponent {
         formValue.externalLink && { externalLink: formValue.externalLink }),
       ...(formValue.type === 'category' &&
         formValue.slug && { slug: formValue.slug }),
-      // submenu não precisa de campos adicionais, apenas name e type
     };
 
     const menuToEdit = this.menuToEdit();
@@ -295,24 +150,19 @@ export class MenuFormComponent {
     const selectedCats = this.selectedCategories();
     const nextOrder = this.calculateNextOrder();
 
-    // Validar que todas as categorias têm name e slug antes de criar
-    const validCats = selectedCats.filter((cat) => {
-      return !!(cat.name && cat.slug);
-    });
+    const validCats = selectedCats.filter((cat) => !!(cat.name && cat.slug));
 
     if (validCats.length === 0) {
       this.isLoading.set(false);
       return;
     }
 
-    // Preparar dados para criação em lote
     const menusData = validCats.map((category, index) => ({
       name: String(category.name).trim(),
       slug: String(category.slug).trim(),
       order: nextOrder + index,
     }));
 
-    // Usar o novo endpoint batch para criar todos os menus de uma vez
     this.menuService.createCategoryMenus(menusData).subscribe({
       next: (menus) => {
         this.isLoading.set(false);
@@ -323,7 +173,6 @@ export class MenuFormComponent {
             ? 'Menu criado com sucesso!'
             : `${count} menus criados com sucesso!`,
         );
-        // Emitir o último menu criado (ou poderia emitir todos)
         if (menus.length > 0) {
           this.saveEvent.emit(menus[menus.length - 1] as Menu);
         }
@@ -331,12 +180,7 @@ export class MenuFormComponent {
       },
       error: (err) => {
         this.isLoading.set(false);
-        console.error('❌ Erro ao salvar menus de categorias:', err);
-        console.error('Detalhes do erro:', {
-          error: err,
-          categorias: selectedCats,
-          quantidade: selectedCats.length,
-        });
+        console.error('Erro ao salvar menus de categorias:', err);
         this.alertService.error(
           'Erro',
           'Erro ao criar menus. Tente novamente.',
@@ -356,19 +200,5 @@ export class MenuFormComponent {
   onCancel(): void {
     this.resetForm();
     this.cancelEvent.emit();
-  }
-
-  // Getters para validação
-  get nameControl() {
-    return this.menuForm.get('name');
-  }
-  get routerLinkControl() {
-    return this.menuForm.get('routerLink');
-  }
-  get externalLinkControl() {
-    return this.menuForm.get('externalLink');
-  }
-  get categoryIdControl() {
-    return this.menuForm.get('categoryId');
   }
 }

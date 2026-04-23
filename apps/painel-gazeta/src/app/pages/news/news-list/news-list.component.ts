@@ -6,6 +6,7 @@ import {
   inject,
   output,
 } from '@angular/core';
+import { Observable } from 'rxjs';
 import { NewsService } from '../../../core/services/news.service';
 import { CategoryService } from '../../../core/services/category.service';
 import { Category, News } from '@site-gazeta/models';
@@ -470,20 +471,41 @@ export class NewsListComponent implements OnInit, OnDestroy {
     const news = this.itemToDelete();
     if (!news?.id) return;
 
-    this.newsService.delete(news.id).subscribe({
+    // Se já estiver na lixeira, exclui permanentemente. 
+    // Caso contrário, move para a lixeira.
+    const isTrash = news.status === 'TRASH';
+    const request: Observable<News | void> = isTrash
+      ? this.newsService.permanentDelete(news.id)
+      : this.newsService.delete(news.id);
+
+    request.subscribe({
       next: () => {
         this.loadNews();
         this.cancelDelete();
         this.alertService.success(
           'Sucesso',
-          'Notícia excluída permanentemente.',
+          isTrash ? 'Notícia excluída permanentemente.' : 'Notícia movida para a lixeira.',
         );
       },
-      error: (err) => {
+      error: (err: unknown) => {
         console.error('Erro ao excluir notícia:', err);
         this.cancelDelete();
-        this.alertService.error('Erro', 'Falha ao excluir notícia.');
+        this.alertService.error('Erro', 'Falha ao processar solicitação.');
       },
+    });
+  }
+
+  restoreItem(news: News): void {
+    if (!news?.id) return;
+    this.newsService.restore(news.id).subscribe({
+      next: () => {
+        this.loadNews();
+        this.alertService.success('Sucesso', 'Notícia restaurada com sucesso.');
+      },
+      error: (err) => {
+        console.error('Erro ao restaurar notícia:', err);
+        this.alertService.error('Erro', 'Falha ao restaurar notícia.');
+      }
     });
   }
 }

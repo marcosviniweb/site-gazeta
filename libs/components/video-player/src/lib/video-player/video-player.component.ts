@@ -20,8 +20,9 @@ export class VideoPlayerComponent implements AfterViewInit, OnDestroy {
   controls = input<boolean>(true);
   thumbnail = input<string | null >(null);
   preload = input<string>('none');
-  // ViewChild para o elemento de vídeo
+  // ViewChild para o elemento de vídeo principal e background blur
   videoElement = viewChild<ElementRef<HTMLVideoElement>>('videoElement');
+  videoBlurElement = viewChild<ElementRef<HTMLVideoElement>>('videoBlurElement');
 
   // Signals de estado
   isPlaying = signal<boolean>(false);
@@ -219,12 +220,16 @@ export class VideoPlayerComponent implements AfterViewInit, OnDestroy {
           this.hasPlayedOnce.set(true); // Marca que o vídeo já foi reproduzido
           this.showControls.set(true); // Mostra os controles após o primeiro play
           this.startUpdateInterval();
+          
+          // Sincroniza o play do vídeo de fundo
+          this.videoBlurElement()?.nativeElement.play().catch(() => {});
         })
         .catch((error) => {
           console.error('Erro ao reproduzir vídeo:', error);
         });
     } else {
       video.pause();
+      this.videoBlurElement()?.nativeElement.pause(); // Pausa o fundo também
       this.isPlaying.set(false);
       this.stopUpdateInterval();
     }
@@ -256,6 +261,10 @@ export class VideoPlayerComponent implements AfterViewInit, OnDestroy {
     if (!video) return;
 
     video.playbackRate = rate;
+    
+    const blurVideo = this.videoBlurElement()?.nativeElement;
+    if (blurVideo) blurVideo.playbackRate = rate;
+
     this.playbackRate.set(rate);
   }
 
@@ -266,6 +275,10 @@ export class VideoPlayerComponent implements AfterViewInit, OnDestroy {
     const duration = this.duration();
     const newTime = Math.max(0, Math.min(duration, time));
     video.currentTime = newTime;
+    
+    const blurVideo = this.videoBlurElement()?.nativeElement;
+    if (blurVideo) blurVideo.currentTime = newTime;
+
     this.currentTime.set(newTime);
   }
 

@@ -31,6 +31,7 @@ import {
   takeUntil,
   toArray,
   tap,
+  mergeMap,
 } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NewsService } from '../../core/services/news.service';
@@ -196,6 +197,7 @@ export class NewsComponent implements OnInit, OnDestroy {
           this.newsId = Number(newsId);
           firstValueFrom(this.newsService.getById(newsId))
             .then((resp) => {
+              console.log(resp);
               const news = resp as News;
               this.editNewsTitle.set(news.title || '');
               this.form.patchValue({
@@ -249,7 +251,7 @@ export class NewsComponent implements OnInit, OnDestroy {
       isEmphasis: formValue.isEmphasis as boolean,
       validity: formValue.validity as string | null,
       status: formValue.status as string,
-      mediaNews: formValue['newsMidia'] as NewsMedia[],
+      mediaNews: (formValue['newsMidia'] as NewsMedia[]).filter(m => m.imgSize),
       videoNews: formValue['newsVideo'] as NewsVideo[],
     };
 
@@ -285,7 +287,7 @@ export class NewsComponent implements OnInit, OnDestroy {
   private handleEmphasisUpdate(
     newsId: number,
     isEmphasisValue: boolean,
-    formValue: Record<string, unknown>,
+    formValue: Record<string, unknown>
   ) {
     // Atualizar newsId imediatamente para evitar deletar imagens no OnDestroy
     this.newsId = newsId;
@@ -297,7 +299,7 @@ export class NewsComponent implements OnInit, OnDestroy {
         if (emphasisResult.removedEmphasis) {
           this.alertService.info(
             'Limite de destaques atingido',
-            `A notícia "${emphasisResult.removedEmphasis.title}" foi removida dos destaques para adicionar a nova.`,
+            `A notícia "${emphasisResult.removedEmphasis.title}" foi removida dos destaques para adicionar a nova.`
           );
         }
 
@@ -314,7 +316,7 @@ export class NewsComponent implements OnInit, OnDestroy {
 
   private processMediaUpload(
     formValue: Record<string, unknown>,
-    newsId: number,
+    newsId: number
   ) {
     const newsMedia = formValue['newsMidia'] as NewsMedia[];
     const midias: FormData[] = [];
@@ -345,17 +347,17 @@ export class NewsComponent implements OnInit, OnDestroy {
 
       from(midias)
         .pipe(
-          concatMap((midia, index) => {
+          mergeMap((midia) => {
             return this.newsService.uploadMedia(midia).pipe(
               tap(() => {
-                this.mediaUploadProgress.set({
-                  current: index + 1,
-                  total: midias.length,
-                });
+                this.mediaUploadProgress.update((p) => ({
+                  ...p,
+                  current: p.current + 1,
+                }));
               }),
             );
-          }),
-          toArray(), // junta os resultados em um array
+          }, 3), // Upload de até 3 imagens simultaneamente para performance
+          toArray(),
         )
         .subscribe({
           next: () => {
@@ -427,7 +429,6 @@ export class NewsComponent implements OnInit, OnDestroy {
       newsMidia: formValue.newsMedia,
     });
   }
-
 
   onReset() {
     this.form.reset({

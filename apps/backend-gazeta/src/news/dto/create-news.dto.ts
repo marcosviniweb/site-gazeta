@@ -21,13 +21,17 @@ export class CreateNewsMediaDto {
 
   @ApiProperty({ description: 'Tamanhos da imagem', required: false })
   @IsOptional()
-  @IsArray({ message: 'imgSize deve ser um array' })
   imgSize?: Array<{
     original: string;
     small: string;
     medium: string;
     superSmall: string;
-  }>;
+  }> | {
+    original: string;
+    small: string;
+    medium: string;
+    superSmall: string;
+  };
 
   @ApiProperty({ description: 'Autor da mídia (opcional)', example: 'João Fotógrafo', required: false })
   @IsOptional()

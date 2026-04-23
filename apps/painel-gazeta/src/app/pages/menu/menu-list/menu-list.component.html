@@ -55,7 +55,7 @@
               }}</mat-icon>
               <span class="name">{{ item.name }}</span>
             </div>
-            <span class="g-badge light mini">{{
+            <span [class]="getMenuTypeBadgeClass(item.type)">{{
               getMenuTypeLabel(item.type)
             }}</span>
           </div>
@@ -63,7 +63,21 @@
           <div class="meta-info">
             <div class="meta-item">
               <mat-icon class="text-muted xs">link</mat-icon>
-              <span>{{ getMenuDestination(item) }}</span>
+              @if (item.type === 'submenu') {
+                <div class="submenu-chips">
+                  @for (name of getSubmenuChips(item); track name) {
+                    <span class="submenu-chip">{{ name }}</span>
+                  }
+                  @if ((item.children?.length || 0) > 3) {
+                    <span class="submenu-chip more">+{{ (item.children?.length || 0) - 3 }}</span>
+                  }
+                  @if (!item.children?.length) {
+                    <span class="text-muted" style="font-size:0.72rem">Sem subitens</span>
+                  }
+                </div>
+              } @else {
+                <span>{{ getMenuDestination(item) }}</span>
+              }
             </div>
           </div>
         </div>
@@ -117,9 +131,13 @@
 
     <!-- Empty State -->
     <ng-template #emptyTemplate>
-      <div class="g-empty-state mini">
-        <mat-icon>menu_open</mat-icon>
+      <div class="g-empty-state-actionable">
+        <mat-icon class="empty-icon">menu_open</mat-icon>
         <p>Nenhum menu cadastrado ainda.</p>
+        <button type="button" class="btn-primary" (click)="createFirst.emit()">
+          <mat-icon>add</mat-icon>
+          Criar Primeiro Menu
+        </button>
       </div>
     </ng-template>
 
@@ -176,11 +194,21 @@
         ) {
           <div class="warning-highlight danger">
             <mat-icon>report_problem</mat-icon>
-            <p>
-              Atenção: Este item possui
-              <strong>{{ menuToDelete()?.children?.length }} subitens</strong>
-              que também serão removidos!
-            </p>
+            <div>
+              <p>
+                Atenção: Este item possui
+                <strong>{{ menuToDelete()?.children?.length }} subitens</strong>
+                que também serão removidos:
+              </p>
+              <ul class="submenu-preview-list">
+                @for (child of menuToDelete()?.children; track child.id) {
+                  <li>
+                    <mat-icon class="xs">arrow_right</mat-icon>
+                    {{ child.name }}
+                  </li>
+                }
+              </ul>
+            </div>
           </div>
         }
       }

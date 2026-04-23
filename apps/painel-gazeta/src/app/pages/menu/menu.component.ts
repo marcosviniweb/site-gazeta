@@ -1,11 +1,13 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { BehaviorSubject, switchMap, tap, finalize } from 'rxjs';
 import { MenuFormComponent } from './menu-form/menu-form.component';
 import { SubmenuFormComponent } from './submenu-form/submenu-form.component';
 import { MenuListComponent } from './menu-list/menu-list.component';
 import { MenuService } from '../../core/services/menu.service';
 import { Menu } from '@site-gazeta/models';
 import { ModalComponent } from '@site-gazeta/modal';
+import { MatIconModule } from '@angular/material/icon';
 
 interface MenuComponentState {
   menuToEdit: Menu | null;
@@ -16,16 +18,17 @@ interface MenuComponentState {
   selector: 'app-menu',
   standalone: true,
   imports: [
-    CommonModule,
     MenuFormComponent,
     SubmenuFormComponent,
     MenuListComponent,
     ModalComponent,
+    MatIconModule,
   ],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MenuComponent implements OnInit {
+export class MenuComponent {
   private menuService = inject(MenuService);
   // Estado do componente usando signals
   state = signal<MenuComponentState>({
@@ -33,17 +36,31 @@ export class MenuComponent implements OnInit {
     selectedSubmenu: null,
   });
 
+  private refresh$ = new BehaviorSubject<void>(undefined);
+
   // Signals para dados
-  menus = signal<Menu[]>([]);
   isLoading = signal(false);
   isSubmenuModalOpen = signal(false);
+
+  menus = toSignal(
+    this.refresh$.pipe(
+      tap(() => this.isLoading.set(true)),
+      switchMap(() => this.menuService.getAll().pipe(
+        finalize(() => this.isLoading.set(false))
+      ))
+    ),
+    { initialValue: [] }
+  );
+
+  isFormVisible = signal(false);
 
   // Computed signals
   isEdit = computed(() => !!this.state().menuToEdit);
   selectedSubmenu = computed(() => this.state().selectedSubmenu);
 
-  ngOnInit(): void {
-    this.loadMenus();
+  openNewMenuForm(): void {
+    this.state.update((state) => ({ ...state, menuToEdit: null }));
+    this.isFormVisible.set(true);
   }
 
   openSubmenuModal(submenu: Menu): void {
@@ -62,32 +79,18 @@ export class MenuComponent implements OnInit {
     }));
   }
   loadMenus(): void {
-    this.isLoading.set(true);
-    this.menuService.getAll().subscribe({
-      next: (menus) => {
-        this.menus.set(menus);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.error('Erro ao carregar menus:', err);
-        this.isLoading.set(false);
-      },
-    });
+    this.refresh$.next();
   }
 
   handleSave(): void {
     this.loadMenus();
-    this.state.update((state) => ({
-      ...state,
-      menuToEdit: null,
-    }));
+    this.state.update((state) => ({ ...state, menuToEdit: null }));
+    this.isFormVisible.set(false);
   }
 
   handleEdit(menu: Menu): void {
-    this.state.update((state) => ({
-      ...state,
-      menuToEdit: menu,
-    }));
+    this.state.update((state) => ({ ...state, menuToEdit: menu }));
+    this.isFormVisible.set(true);
   }
 
   handleDelete(): void {
@@ -97,21 +100,13 @@ export class MenuComponent implements OnInit {
   }
 
   handleReorder(reorderedMenus: Menu[]): void {
-    // Se receber array vazio, significa que precisa recarregar do backend
-    // (moveu item para/de submenu)
-    if (reorderedMenus.length === 0) {
-      this.loadMenus();
-    } else {
-      // Reordenação simples, atualiza localmente
-      this.menus.set(reorderedMenus);
-    }
+    // Recarrega os menus do backend após qualquer reordenação
+    this.loadMenus();
   }
 
   handleCancel(): void {
-    this.state.update((state) => ({
-      ...state,
-      menuToEdit: null,
-    }));
+    this.state.update((state) => ({ ...state, menuToEdit: null }));
+    this.isFormVisible.set(false);
   }
 
   handleSubmenuSave(): void {

@@ -2,6 +2,39 @@
 @use '../../../../styles/tools' as tools;
 @use '../../../../styles/mixins' as m;
 
+// ─── Cabeçalho de modo: criar vs. editar ──────────────
+.form-mode-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border-radius: var(--radius-lg);
+  background: var(--bg-subtle, #f5f5f5);
+  border: 1px solid var(--border);
+  margin-bottom: 1.2rem;
+  transition: background 0.2s, border-color 0.2s;
+
+  &.edit-mode {
+    background: rgba(var(--accent-blue-rgb), 0.06);
+    border-color: rgba(var(--accent-blue-rgb), 0.25);
+
+    .mode-icon { color: var(--accent-blue); }
+    h3 { color: var(--accent-blue); }
+  }
+
+  .mode-icon {
+    display: flex;
+    align-items: center;
+    color: var(--text-muted);
+    mat-icon { font-size: 1.6rem; width: 1.6rem; height: 1.6rem; }
+  }
+
+  .mode-text {
+    h3 { margin: 0; font-size: 1rem; font-weight: 700; }
+    p  { margin: 0; font-size: 0.78rem; color: var(--text-muted); }
+  }
+}
+
 .g-form-container {
   padding: 0.5rem;
 }

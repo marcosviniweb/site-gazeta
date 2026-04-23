@@ -143,7 +143,21 @@
       <!-- Conteúdo da Notícia -->
       <div class="news-body">
         <div class="container-news-text">
-          <div class="news-text" [innerHTML]="safeNewsContent()"></div>
+          <div class="news-text">
+            @for (block of contentBlocks(); track $index) {
+              @if (block.type === 'html') {
+                <div [innerHTML]="block.safeHtml"></div>
+              } @else if (block.type === 'video') {
+                <div class="inline-video-container">
+                  <lib-video-player
+                    [src]="block.content"
+                    [controls]="true"
+                    preload="metadata"
+                  />
+                </div>
+              }
+            }
+          </div>
           <lib-ads [announcements]="centerAd()['160x600']"></lib-ads>
         </div>
 

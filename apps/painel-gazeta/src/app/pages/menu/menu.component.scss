@@ -31,8 +31,9 @@
   background: #fcfcfc;
   padding: 2rem;
   border-left: 1px solid var(--border);
-  overflow-y: auto; // Formulário também pode ter scroll se for longo
-  
+  overflow-y: auto;
+  animation: slideInRight 0.25s ease;
+
   @include vars.mobile {
     flex: 1;
     width: 100%;
@@ -40,13 +41,11 @@
     border-left: none;
     border-bottom: 1px solid var(--border);
   }
+}
 
-  .sidebar-sticky {
-    // Não é mais estritamente necessário se o pai tem overflow, 
-    // mas mantido para layouts maiores
-    position: sticky;
-    top: 0;
-  }
+@keyframes slideInRight {
+  from { transform: translateX(16px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
 }
 
 .position-relative {

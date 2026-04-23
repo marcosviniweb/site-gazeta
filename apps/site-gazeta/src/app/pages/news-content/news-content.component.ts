@@ -15,9 +15,20 @@ import { ModalComponent } from '@site-gazeta/modal';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AdsComponent } from '@site-gazeta/ads';
 import { MetaTagsService } from '../../core/service/meta-tags.service';
+import { VideoPlayerComponent } from '@site-gazeta/video-player';
+import { parseContentBlocks, ContentBlock } from '../../shared/pipes/content-blocks.pipe';
 @Component({
   selector: 'app-news-content',
-  imports: [CommonModule, RouterModule, RelatedNewsComponent, MoreNewsComponent, GalleryComponent, ModalComponent, AdsComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    RelatedNewsComponent,
+    MoreNewsComponent,
+    GalleryComponent,
+    ModalComponent,
+    AdsComponent,
+    VideoPlayerComponent
+  ],
   templateUrl: './news-content.component.html',
   styleUrl: './news-content.component.scss',
   standalone: true
@@ -50,6 +61,12 @@ export class NewsContentComponent implements OnInit, OnDestroy {
   safeNewsContent = computed<SafeHtml>(() => {
     const html = this.news()?.content ?? '';
     return this.sanitizer.bypassSecurityTrustHtml(html);
+  });
+
+  /** Conteúdo dividido em blocos: texto (html) e vídeos inline (video). */
+  contentBlocks = computed<ContentBlock[]>(() => {
+    const html = this.news()?.content ?? '';
+    return parseContentBlocks(html, this.sanitizer, isPlatformBrowser(this.platformId));
   });
 
   getSafeVideoUrl(url: string): SafeResourceUrl {

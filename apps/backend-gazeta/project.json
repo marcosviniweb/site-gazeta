@@ -19,6 +19,13 @@
         }
       }
     },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/backend-gazeta"],
+      "options": {
+        "jestConfig": "apps/backend-gazeta/jest.config.ts"
+      }
+    },
     "serve": {
       "continuous": true,
       "executor": "@nx/js:node",

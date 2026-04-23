@@ -81,6 +81,7 @@ test.describe('Notícias - Formulário de Criação', () => {
     page,
   }) => {
     const sidebar = page.locator('.g-crud-sidebar');
+    await expect(sidebar).toBeVisible();
 
     // Campo de data/hora de publicação
     await expect(page.locator('#published')).toBeVisible();
@@ -140,6 +141,57 @@ test.describe('Notícias - Formulário de Criação', () => {
       await page.waitForTimeout(200);
       await expect(inactiveBtn.first()).toHaveClass(/active/);
     }
+  });
+
+  // ─── Fluxo Completo E2E ───────────────────────────────────────────
+
+  test('deve executar fluxo completo de criação de notícia', async ({ page }) => {
+    // 1. Preencher Informações Básicas
+    await page.fill('#title', 'Notícia E2E Playwright Completa');
+    await page.fill('#subtitle', 'Subtítulo da notícia gerada por testes automatizados E2E');
+    await page.fill('#author', 'Test Engineer');
+    
+    // Selecionar categoria (se disponível)
+    const categorySelect = page.locator('lib-multi-select');
+    if (await categorySelect.isVisible()) {
+      await categorySelect.click();
+      await page.waitForTimeout(500);
+      const option = page.locator('.g-select-option').first();
+      if (await option.isVisible()) {
+        await option.click();
+      }
+      // Fechar o dropdown clicando fora
+      await page.click('body');
+    }
+    
+    // Validar se o slug foi preenchido
+    await page.click('#subtitle'); // forçar blur
+    await page.waitForTimeout(500);
+    expect(await page.locator('#slug').inputValue()).toBeTruthy();
+
+    // 2. Preencher Conteúdo
+    await page.click('.tab-item:has-text("Conteúdo")');
+    await page.waitForTimeout(500);
+    
+    // O editor (ngx-quill) geralmente usa contenteditable
+    const editor = page.locator('.ql-editor');
+    if (await editor.isVisible()) {
+      await editor.fill('Este é o conteúdo principal da notícia criado através de testes automatizados End-to-End com Playwright.');
+    }
+
+    // 3. Verificar tab de Mídias (vídeo é inserido pelo editor de conteúdo na tab Conteúdo)
+    await page.click('.tab-item:has-text("Mídias")');
+    await page.waitForTimeout(500);
+
+    // 4. Configurar Destaque
+    const emphasisToggle = page.locator('.g-toggle').first();
+    if (await emphasisToggle.isVisible()) {
+      await emphasisToggle.click();
+    }
+
+    // O botão deve estar habilitado
+    const publishBtn = page.locator('button[type="submit"]');
+    await expect(publishBtn).toBeEnabled();
   });
 });
 

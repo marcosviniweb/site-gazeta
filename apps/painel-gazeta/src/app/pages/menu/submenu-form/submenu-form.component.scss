@@ -2,82 +2,38 @@
 
 .submenu-form-container {
   padding: 0.5rem;
-
-  .g-section-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    margin-bottom: 2rem;
-    background: var(--gradient-subtle);
-    border-radius: var(--radius-md);
-    border: 1px solid rgba(10, 128, 196, 0.1);
-
-    .header-icon {
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: white;
-      border-radius: var(--radius-sm);
-      box-shadow: var(--shadow-sm);
-      color: var(--secondary);
-
-      .material-icons {
-        font-size: 24px;
-      }
-    }
-
-    .header-text {
-      h4 {
-        margin: 0;
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: var(--secondary);
-      }
-
-      p {
-        margin: 0;
-        font-size: 0.8rem;
-        color: var(--text-muted);
-      }
-    }
-  }
-
-  .form-card {
-    background: white;
-    border-radius: var(--radius-lg);
-    padding: 1.5rem;
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow-sm);
-    transition: all var(--transition);
-
-    &:hover {
-      box-shadow: var(--shadow-md);
-      border-color: rgba(10, 128, 196, 0.2);
-    }
-  }
-
-  .form-actions {
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--border);
-  }
-
-  .full-width {
-    width: 100% !important;
-    justify-content: center !important;
-  }
-
-  .column-gap {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
 }
 
-// Grid Responsivo
+.g-form-container {
+  padding: 0;
+}
+
+.form-actions {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.full-width {
+  width: 100% !important;
+  justify-content: center !important;
+}
+
+.column-gap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 @include vars.mobile {
   .g-form-row {
     display: flex;

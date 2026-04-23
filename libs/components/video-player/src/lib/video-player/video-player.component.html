@@ -1,5 +1,19 @@
 <div class="video-player-container" [class.fullscreen]="isFullscreen()">
   <div class="video-wrapper" [class.playing]="isPlaying()">
+    <!-- Vídeo de background espelhado para preenchimento com blur -->
+    <video
+      #videoBlurElement
+      class="blur-bg"
+      [src]="src()"
+      [poster]="poster()"
+      [muted]="true"
+      [loop]="loop()"
+      [autoplay]="autoplay()"
+      [preload]="preload()"
+      tabindex="-1"
+      aria-hidden="true"
+    ></video>
+
     <video
       #videoElement
       [src]="src()"

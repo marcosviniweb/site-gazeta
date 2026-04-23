@@ -8,6 +8,14 @@
           <p>Crie e organize os itens do menu de navegação do site</p>
         </div>
       </div>
+      <div class="header-right">
+        @if (!isFormVisible()) {
+          <button type="button" class="btn-primary" (click)="openNewMenuForm()">
+            <mat-icon>add</mat-icon>
+            Novo Menu
+          </button>
+        }
+      </div>
     </header>
 
     <!-- Conteúdo Principal -->
@@ -27,23 +35,24 @@
                 (edit)="handleEdit($event)"
                 (delete)="handleDelete()"
                 (reorder)="handleReorder($event)"
-                (submenuClick)="openSubmenuModal($event)">
+                (submenuClick)="openSubmenuModal($event)"
+                (createFirst)="openNewMenuForm()">
               </app-menu-list>
             </div>
           }
         </section>
 
-        <!-- Coluna: Formulário Lateral -->
-        <aside class="menu-form-sidebar">
-          <div class="sidebar-sticky">
+        <!-- Coluna: Formulário Lateral (condicional) -->
+        @if (isFormVisible()) {
+          <aside class="menu-form-sidebar">
             <app-menu-form
               [menuToEdit]="state().menuToEdit"
               [existingMenus]="menus()"
               (saveEvent)="handleSave()"
               (cancelEvent)="handleCancel()">
             </app-menu-form>
-          </div>
-        </aside>
+          </aside>
+        }
       </div>
     </div>
   </div>
@@ -54,7 +63,7 @@
   <div class="g-modal-form-container">
     <header class="g-modal-header">
       <div class="header-icon">
-        <span class="material-icons">account_tree</span>
+        <mat-icon>account_tree</mat-icon>
       </div>
       <div class="header-text">
         <h3>Gerenciar Submenu</h3>

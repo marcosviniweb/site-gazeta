@@ -256,20 +256,16 @@ $border-radius-lg: 12px;
         font-family: $font-family;
       }
 
-      .news-inline-video,
-      figure.news-inline-video {
-        margin: $spacing-lg 0;
-        max-width: 100%;
-      }
+      // Regras de video legadas removidas para evitar conflito com lib-video-player
+    }
 
-      video {
-        display: block;
-        width: 100%;
-        max-width: 100%;
-        height: auto;
-        border-radius: 4px;
-        background: #000;
-      }
+    .inline-video-container {
+      margin: $spacing-lg 0;
+      width: 100%;
+      max-width: 100%;
+      border-radius: $border-radius;
+      overflow: hidden;
+      --video-player-radius: #{$border-radius};
     }
   }
 

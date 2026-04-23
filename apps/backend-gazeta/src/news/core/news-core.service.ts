@@ -114,7 +114,7 @@ export class NewsCoreService {
 
     // Extrair dados relacionados
     const { categoryId, mediaNews, videoNews, ...newsData } = createNewsDto;
-    let reconciledMediaNews = mediaNews;
+    let reconciledMediaNews = mediaNews?.filter(m => m.imgSize);
 
     // Garantir que apenas uma mídia tenha emphasis: true (exclusividade)
     if (reconciledMediaNews && reconciledMediaNews.length > 0) {
@@ -136,10 +136,10 @@ export class NewsCoreService {
         newsCategories: {
           create: categoryId.map(catId => ({ categoryId: catId }))
         },
-        mediaNews: reconciledMediaNews ? {
+        mediaNews: reconciledMediaNews && reconciledMediaNews.length > 0 ? {
           create: reconciledMediaNews.map(media => ({
             emphasis: media.emphasis ?? false,
-            imgSize: media.imgSize ? (typeof media.imgSize === 'string' ? media.imgSize : JSON.stringify(Array.isArray(media.imgSize) ? media.imgSize[0] : media.imgSize)) : null,
+            imgSize: typeof media.imgSize === 'string' ? media.imgSize : JSON.stringify(Array.isArray(media.imgSize) ? media.imgSize[0] : media.imgSize),
             author: media.author,
             date: media.date
           }))
@@ -153,6 +153,14 @@ export class NewsCoreService {
       },
       include: this.getNewsInclude()
     });
+
+    // Se a notícia foi criada como destaque, tratar o limite
+    let removedEmphasis = null;
+    if (news.isEmphasis) {
+      removedEmphasis = await this.prisma.$transaction(async (tx) => {
+        return await this.handleEmphasisLimit(tx, news.id);
+      });
+    }
 
     console.log('=== NOTÍCIA CRIADA COM SUCESSO - ID:', news.id);
     
@@ -226,7 +234,7 @@ export class NewsCoreService {
     }
 
     const { categoryId, mediaNews, videoNews, ...newsData } = updateNewsDto;
-    let reconciledMediaNews = mediaNews;
+    let reconciledMediaNews = mediaNews?.filter(m => m.imgSize);
 
     // Garantir que apenas uma mídia tenha emphasis: true (exclusividade)
     if (reconciledMediaNews && reconciledMediaNews.length > 0) {
@@ -241,6 +249,12 @@ export class NewsCoreService {
 
     // Atualizar a notícia em transação
     await this.prisma.$transaction(async (tx) => {
+      // Se está ativando o destaque, tratar o limite
+      let removedEmphasis = null;
+      if (newsData.isEmphasis === true && !existingNews.isEmphasis) {
+        removedEmphasis = await this.handleEmphasisLimit(tx, id);
+      }
+
       // Atualizar dados da notícia
       await tx.news.update({
         where: { id },
@@ -259,20 +273,22 @@ export class NewsCoreService {
       }
 
       // Atualizar mídias se fornecidas
-    if (reconciledMediaNews) {
+      if (reconciledMediaNews) {
         await tx.newsMedia.deleteMany({
           where: { newsId: id }
         });
 
-        await tx.newsMedia.createMany({
-          data: reconciledMediaNews.map(media => ({
-            newsId: id,
-            emphasis: media.emphasis ?? false,
-            imgSize: media.imgSize ? (typeof media.imgSize === 'string' ? media.imgSize : JSON.stringify(Array.isArray(media.imgSize) ? media.imgSize[0] : media.imgSize)) : null,
-            author: media.author,
-            date: media.date
-          }))
-        });
+        if (reconciledMediaNews.length > 0) {
+          await tx.newsMedia.createMany({
+            data: reconciledMediaNews.map(media => ({
+              newsId: id,
+              emphasis: media.emphasis ?? false,
+              imgSize: typeof media.imgSize === 'string' ? media.imgSize : JSON.stringify(Array.isArray(media.imgSize) ? media.imgSize[0] : media.imgSize),
+              author: media.author,
+              date: media.date
+            }))
+          });
+        }
       }
 
       // Atualizar vídeos se fornecidos
@@ -441,6 +457,58 @@ export class NewsCoreService {
       }
     }
     return { count };
+  }
+
+  /**
+   * Atualiza o destaque de uma notícia individualmente com controle de limite
+   */
+  async updateEmphasis(id: number, isEmphasis: boolean): Promise<any> {
+    const news = await this.prisma.news.findUnique({ where: { id } });
+    if (!news) throw new NotFoundException('Notícia não encontrada');
+
+    let removedEmphasis = null;
+
+    const updatedNews = await this.prisma.$transaction(async (tx) => {
+      if (isEmphasis && !news.isEmphasis) {
+        removedEmphasis = await this.handleEmphasisLimit(tx, id);
+      }
+
+      return await tx.news.update({
+        where: { id },
+        data: { isEmphasis },
+        include: this.getNewsInclude()
+      });
+    });
+
+    const response = this.formatter.formatNewsResponse(updatedNews);
+    return { ...response, removedEmphasis };
+  }
+
+  /**
+   * Garante que não haja mais de 6 notícias em destaque
+   * Retorna a notícia que perdeu o destaque, se houver
+   */
+  private async handleEmphasisLimit(tx: any, currentNewsId: number): Promise<any | null> {
+    const emphasisCount = await tx.news.count({
+      where: { isEmphasis: true, status: NewsStatus.ACTIVE }
+    });
+
+    if (emphasisCount >= 6) {
+      // Buscar a notícia mais antiga em destaque (exceto a atual)
+      const oldestEmphasis = await tx.news.findFirst({
+        where: { isEmphasis: true, id: { not: currentNewsId }, status: NewsStatus.ACTIVE },
+        orderBy: { createdAt: 'asc' }
+      });
+
+      if (oldestEmphasis) {
+        await tx.news.update({
+          where: { id: oldestEmphasis.id },
+          data: { isEmphasis: false }
+        });
+        return oldestEmphasis;
+      }
+    }
+    return null;
   }
 
   /**

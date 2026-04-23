@@ -42,6 +42,11 @@
 .video-player-wrapper {
   flex: 1;
   min-width: 0; // Permite que o player encolha se necessário
+  --video-player-radius: 10px 0 0 10px;
+
+  @include mobile {
+    --video-player-radius: 10px 10px 0 0;
+  }
 }
 
 .video-list-wrapper {

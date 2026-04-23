@@ -1,184 +1,142 @@
-<div class="midia-content">
-  <div class="media-main-container">
-    <div class="g-form-group featured-image-group">
-      <span class="g-label">Imagem de Destaque</span>
-      <div class="image-preview-container">
-        <div class="image-preview" [class.has-image]="featuredImage()">
-          @if (featuredImage(); as featured) {
-            <img
-              [src]="featured.preview || featured.imgSize?.medium || ''"
-              alt="Imagem de destaque selecionada"
-            />
-          } @else {
-            <div class="image-placeholder">
-              <mat-icon>image</mat-icon>
-              <p>A primeira foto adicionada será automaticamente destacada</p>
-            </div>
-          }
-        </div>
+<div class="midia-workspace" [class.has-sidebar]="selectedMediaIndex() !== null">
+  <!-- Content Gallery Area -->
+  <div class="gallery-section">
+    <div class="gallery-header">
+      <div class="title-area">
+        <h3>Galeria de Fotos</h3>
+        <p class="subtitle">Adicione fotos e gerencie as mídias da notícia.</p>
       </div>
     </div>
 
-    <div class="secondary-media-controls">
-      <span class="g-label">Gerenciamento de Mídias</span>
-      <div class="media-buttons">
-        <button type="button" class="btn-add-photo" (click)="addPhoto()">
-          <mat-icon>photo_camera</mat-icon>
-          Adicionar Foto
-        </button>
-      </div>
-      <small class="g-field-hint"
-        >Adicione fotos que serão exibidos no carrossel da notícia. A primeira
-        foto será automaticamente definida como imagem de destaque.</small
-      >
-
-      @if (selectedMediaIndex() !== null) {
-        <div class="media-edit-card">
-          <header>
-            <mat-icon>edit</mat-icon>
-            <h5>Editar Metadados</h5>
-          </header>
-
-          <div class="g-form-row">
-            <div class="g-form-group">
-              <label for="mediaAuthor">Autor da Foto</label>
-              <input
-                type="text"
-                id="mediaAuthor"
-                [value]="editingMedia().author || ''"
-                (input)="updateEditingAuthor($any($event.target).value)"
-                placeholder="Nome do autor"
-              />
-            </div>
-
-            <div class="g-form-group">
-              <label for="mediaDate">Data da Foto</label>
-              <input
-                type="date"
-                id="mediaDate"
-                [value]="editingMedia().date || ''"
-                (input)="updateEditingDate($any($event.target).value)"
-              />
-            </div>
-          </div>
-
-          <div class="edit-actions">
-            <button type="button" class="btn-confirm" (click)="saveMediaInfo()">
-              <mat-icon>check</mat-icon> Salvar
-            </button>
-            <button
-              type="button"
-              class="btn-cancel"
-              (click)="cancelMediaEdit()"
-            >
-              Cancelar
-            </button>
-          </div>
+    <!-- Dropzone Area -->
+    <div class="dropzone-area"
+         tabindex="0"
+         role="button"
+         [class.dragging]="isDragging()"
+         (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave($event)"
+         (drop)="onDrop($event)"
+         (click)="addPhoto()"
+         (keydown.enter)="addPhoto()">
+         
+      <div class="dropzone-content">
+        <div class="upload-icon-wrapper">
+          <mat-icon>cloud_upload</mat-icon>
         </div>
-      }
+        <p class="upload-text"><strong>Clique para adicionar</strong> ou arraste e solte fotos aqui</p>
+        <span class="upload-hint">PNG, JPG, WEBP (Máx. 5MB)</span>
+      </div>
+      
+      <!-- Input escondido -->
+      <input type="file" #photoInput accept="image/*" multiple (change)="onPhotosSelected($event)" class="hidden-input"/>
     </div>
-  </div>
 
-  @if (hasMidias()) {
-    <div class="secondary-media-viewer">
-      <h4>Mídias Adicionadas</h4>
-      <div class="media-items-container">
+    <!-- Photos Grid -->
+    @if (hasMidias()) {
+      <div class="media-grid">
         @for (media of previewMidias(); track $index) {
-          <div
-            class="media-item"
-            [class.featured]="media.emphasis"
-            [class.selected]="selectedMediaIndex() === $index"
-            (click)="selectMedia($index)"
-            (keydown.enter)="selectMedia($index)"
-            tabindex="0"
-          >
-            @if (media.type === 'photo') {
-              <button
-                type="button"
-                class="featured-star"
-                [class.active]="media.emphasis"
-                (click)="toggleFeatured($index, $event)"
-                title="Alternar Destaque"
-              >
-                <mat-icon>{{
-                  media.emphasis ? 'star' : 'star_border'
-                }}</mat-icon>
-              </button>
+          <div class="media-card"
+               tabindex="0"
+               role="button"
+               [class.featured-card]="media.emphasis"
+               [class.selected-card]="selectedMediaIndex() === $index"
+               (click)="selectMedia($index, $event)"
+               (keydown.enter)="selectMedia($index, $event)">
+            
+            <div class="card-image-wrapper">
+              <img [src]="media.preview || media.imgSize?.medium || ''" [alt]="'Foto ' + ($index + 1)"/>
+              
+              <!-- Tag Destaque -->
+              @if (media.emphasis) {
+                <div class="featured-badge">
+                  <mat-icon>star</mat-icon>
+                  <span>Capa</span>
+                </div>
+              }
 
-              <div class="photo-preview">
-                <img
-                  [src]="media.preview || media.imgSize?.medium || ''"
-                  [alt]="'Foto ' + ($index + 1)"
-                />
-
-                <button
-                  type="button"
-                  class="remove-media-btn"
-                  (click)="removeMedia($index, $event)"
-                  title="Remover"
-                >
-                  <mat-icon>delete</mat-icon>
-                </button>
-
-                <div class="photo-info">
-                  @if (media.author) {
-                    <div class="info-item">
-                      <mat-icon>person</mat-icon>
-                      <span>{{ media.author }}</span>
-                    </div>
+              <!-- Overlays: Actions on Hover -->
+              <div class="card-overlay">
+                <div class="overlay-actions">
+                  @if (!media.emphasis) {
+                    <button type="button" class="action-btn btn-star" (click)="toggleFeatured($index, $event)" title="Tornar Destaque">
+                      <mat-icon>star_border</mat-icon>
+                    </button>
                   }
-                  @if (media.date) {
-                    <div class="info-item">
-                      <mat-icon>calendar_today</mat-icon>
-                      <span>{{ media.date | date: 'dd/MM/yyyy' }}</span>
-                    </div>
-                  }
+                  <button type="button" class="action-btn btn-delete" (click)="removeMedia($index, $event)" title="Remover Foto">
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
                 </div>
               </div>
-            } @else {
-              <div class="video-preview">
-                <div class="video-thumbnail">
-                  @if (media.thumbnail) {
-                    <img
-                      [src]="media.thumbnail"
-                      [alt]="'Vídeo ' + ($index + 1)"
-                    />
-                  } @else {
-                    <div class="video-placeholder">
-                      <mat-icon>play_circle_filled</mat-icon>
-                    </div>
-                  }
-                  <div class="play-overlay">
-                    <mat-icon>play_arrow</mat-icon>
-                  </div>
-                </div>
-                <div class="video-info">
-                  <p class="video-title">
-                    {{ media.title || 'Vídeo do YouTube' }}
-                  </p>
-                  <small class="video-url">{{ media.url }}</small>
-                </div>
-                <button
-                  type="button"
-                  class="remove-media-btn"
-                  (click)="removeMedia($index, $event)"
-                >
-                  <mat-icon>delete</mat-icon>
-                </button>
+            </div>
+
+            <!-- Card Info -->
+            <div class="card-meta">
+              <div class="meta-row" [class.empty]="!media.author && !media.date">
+                @if (media.author || media.date) {
+                  @if (media.author) { <span class="meta-chip"><mat-icon>person</mat-icon> {{ media.author }}</span> }
+                  @if (media.date) { <span class="meta-chip"><mat-icon>event</mat-icon> {{ media.date | date: 'dd/MM/yyyy' }}</span> }
+                } @else {
+                  <span class="meta-empty">Sem metadados</span>
+                }
               </div>
-            }
+            </div>
           </div>
         }
       </div>
-    </div>
-  }
+    } @else {
+      <div class="empty-state">
+        <mat-icon>photo_library</mat-icon>
+        <p>Nenhuma foto adicionada ainda.</p>
+      </div>
+    }
+  </div>
 
-  <input
-    type="file"
-    #photoInput
-    accept="image/*"
-    multiple
-    (change)="onPhotosSelected($event)"
-    style="display: none"
-  />
+  <!-- Sidebar Edit Drawer -->
+  @if (selectedMediaIndex() !== null) {
+    <aside class="edit-sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">
+          <mat-icon>edit_attributes</mat-icon>
+          <h4>Editar Imagem</h4>
+        </div>
+        <button type="button" class="close-btn" (click)="cancelMediaEdit()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="sidebar-content">
+        <div class="preview-miniature">
+           <img [src]="selectedMedia()?.preview || selectedMedia()?.imgSize?.small || selectedMedia()?.imgSize?.medium || ''" alt="Preview selecionado">
+        </div>
+
+        <div class="g-form-group">
+          <label class="g-label" for="mediaAuthor"><mat-icon>person</mat-icon> Autor / Fotógrafo</label>
+          <input
+            type="text"
+            id="mediaAuthor"
+            class="g-input"
+            [value]="editingMedia().author || ''"
+            (input)="updateEditingAuthor($any($event.target).value)"
+            placeholder="Ex: João da Silva / Agência X"
+          />
+        </div>
+
+        <div class="g-form-group mt-4">
+          <label class="g-label" for="mediaDate"><mat-icon>calendar_today</mat-icon> Data da Foto</label>
+          <input
+            type="date"
+            id="mediaDate"
+            class="g-input"
+            [value]="editingMedia().date || ''"
+            (input)="updateEditingDate($any($event.target).value)"
+          />
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button type="button" class="btn-cancel" (click)="cancelMediaEdit()">Cancelar</button>
+        <button type="button" class="btn-save" (click)="saveMediaInfo()"><mat-icon>save</mat-icon> Salvar Alterações</button>
+      </div>
+    </aside>
+  }
 </div>
