@@ -215,7 +215,7 @@ export class MoreNewsComponent implements OnInit{
   }
 
   private preloadNewsImage(newsItem: News): Promise<void> {
-    const imageUrl = newsItem.mediaNews?.[0]?.imgSize?.small || newsItem.mediaNews?.[0]?.imgSize?.original;
+    const imageUrl = this.getImageUrl(newsItem);
 
     if (!imageUrl) {
       return Promise.resolve();
@@ -228,5 +228,34 @@ export class MoreNewsComponent implements OnInit{
       image.onerror = () => resolve();
       image.src = imageUrl;
     });
+  }
+
+  protected getImageUrl(newsItem: News): string {
+    const media = newsItem.mediaNews ?? [];
+    const hasImage = (item: any) => {
+      const imageSizes = Array.isArray(item?.imgSize)
+        ? item.imgSize[0]
+        : item?.imgSize;
+      return Boolean(
+        imageSizes?.small ||
+          imageSizes?.medium ||
+          imageSizes?.original ||
+          imageSizes?.superSmall,
+      );
+    };
+    const displayMedia =
+      media.find((item: any) => item.emphasis && hasImage(item)) ??
+      media.find(hasImage);
+    const imageSizes = Array.isArray(displayMedia?.imgSize)
+      ? displayMedia.imgSize[0]
+      : displayMedia?.imgSize;
+
+    return (
+      imageSizes?.small ||
+      imageSizes?.medium ||
+      imageSizes?.original ||
+      imageSizes?.superSmall ||
+      ''
+    );
   }
 }

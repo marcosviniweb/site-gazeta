@@ -10,8 +10,8 @@
     <div class="news-item-wrapper" [style.animation-delay]="(index * 90) + 'ms'">
       <article class="news-item" [routerLink]="['/news', newsItem.slug]">
         <div class="news-image" [style.background-color]="category()?.color" [class.loading]="isImageLoading(newsItem.id)">
-          @if (newsItem.mediaNews && newsItem.mediaNews.length > 0) {
-          <img [src]="newsItem.mediaNews[0].imgSize?.small || newsItem.mediaNews[0].imgSize?.original"
+          @if (getImageUrl(newsItem)) {
+          <img [src]="getImageUrl(newsItem)"
             [alt]="newsItem.title"
 
             [class.image-hidden]="isImageLoading(newsItem.id)"

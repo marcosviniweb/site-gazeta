@@ -169,24 +169,52 @@ export class NewsCategoryComponent implements OnInit {
     news: News,
     size: 'medium' | 'small' = 'medium',
   ): string {
-    if (!news.mediaNews || news.mediaNews.length === 0) return '';
-    return (
-      news.mediaNews[0].imgSize?.[size] ||
-      news.mediaNews[0].imgSize?.original ||
-      ''
-    );
+    const media = this.getDisplayMedia(news);
+    if (!media) return '';
+
+    const imageSizes = Array.isArray(media.imgSize)
+      ? media.imgSize[0]
+      : media.imgSize;
+
+    return imageSizes?.[size] || imageSizes?.original || '';
+  }
+
+  /**
+   * A news item may contain video/legacy media entries before its photo.
+   * Prefer the featured photo and otherwise use the first media with a usable
+   * image URL instead of assuming that mediaNews[0] is renderable.
+   */
+  private getDisplayMedia(news: News): any | undefined {
+    const media = news.mediaNews ?? [];
+    const hasImage = (item: any) => {
+      const imageSizes = Array.isArray(item?.imgSize)
+        ? item.imgSize[0]
+        : item?.imgSize;
+      return Boolean(
+        imageSizes?.original ||
+          imageSizes?.medium ||
+          imageSizes?.small ||
+          imageSizes?.superSmall,
+      );
+    };
+
+    return media.find((item: any) => item.emphasis && hasImage(item)) ??
+      media.find(hasImage);
   }
 
   private initializeImageLoading(newsItems: News[] | undefined): void {
     if (!newsItems || !Array.isArray(newsItems)) return;
-    const loadingState = newsItems.reduce<Record<number, boolean>>(
-      (state, item) => {
-        state[item.id] = true;
-        return state;
-      },
-      {},
+    this.imageLoadingState.update((currentState) =>
+      newsItems.reduce<Record<number, boolean>>(
+        (state, item) => {
+          if (state[item.id] === undefined) {
+            state[item.id] = true;
+          }
+          return state;
+        },
+        { ...currentState },
+      ),
     );
-    this.imageLoadingState.set(loadingState);
   }
 
   protected getCategoryColor(): string {
