@@ -1,6 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, of, forkJoin } from 'rxjs';
-import { map, switchMap, tap, shareReplay, catchError } from 'rxjs/operators';
+import {
+  map,
+  switchMap,
+  tap,
+  shareReplay,
+  catchError,
+  filter,
+} from 'rxjs/operators';
 import { Category, News, PaginatedResponse, PaginationParams, NewsMedia } from '@site-gazeta/models';
 import {
   ApiConfigService,
@@ -10,6 +17,9 @@ import {
 
 // TTL de 5 minutos para cache (em ms)
 const CACHE_TTL_MS = 5 * 60 * 1000;
+
+/** O carrossel desktop sempre exibe 3 cards lado a lado. */
+const MIN_CAROUSEL_ITEMS = 3;
 
 interface CacheEntry<T> {
   data: T;
@@ -98,15 +108,55 @@ export class HomeNewsOrchestratorService {
       return of(this.carouselCacheEntry.data);
     }
 
-    this.carouselCache$ = this.apiConfigService.getNewsFeatured().pipe(
-      map(news => this.normalizeNewsMedia(news)),
+    if (this.carouselCache$ && !this.carouselCacheEntry) {
+      return this.carouselCache$;
+    }
+
+    this.carouselCacheEntry = undefined;
+    const carousel$ = this.apiConfigService.getNewsFeatured().pipe(
+      filter((featured, index) => featured.length > 0 || index > 0),
+      switchMap((featured) => this.completeCarouselWithLatest(featured)),
+      map((news) => this.normalizeNewsMedia(news)),
       tap((news) => {
         this.registerIds(news);
         this.carouselCacheEntry = { data: news, timestamp: Date.now() };
       }),
       shareReplay(1),
     );
-    return this.carouselCache$;
+    this.carouselCache$ = carousel$;
+    return carousel$;
+  }
+
+  /**
+   * Com menos de 3 destaques o carrossel repetia o mesmo card.
+   * Completa com as últimas notícias e mantém o primeiro destaque no centro.
+   */
+  private completeCarouselWithLatest(featured: News[]): Observable<News[]> {
+    if (featured.length >= MIN_CAROUSEL_ITEMS) {
+      return of(featured);
+    }
+
+    return this.apiConfigService.getRecentNews(MIN_CAROUSEL_ITEMS).pipe(
+      map((latest) => this.mergeCarouselNews(featured, latest)),
+      catchError(() => of(featured)),
+    );
+  }
+
+  private mergeCarouselNews(featured: News[], latest: News[]): News[] {
+    const featuredIds = new Set(featured.map((item) => item.id));
+    const extras = latest.filter((item) => item?.id && !featuredIds.has(item.id));
+
+    if (featured.length === 0) {
+      return extras;
+    }
+
+    const fillers = [...featured.slice(1), ...extras];
+    if (fillers.length === 0) {
+      return featured;
+    }
+
+    const [left, ...right] = fillers;
+    return [left, featured[0], ...right];
   }
 
   /**

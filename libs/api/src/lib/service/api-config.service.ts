@@ -160,6 +160,27 @@ export class ApiConfigService {
       );
   }
 
+  /**
+   * Últimas notícias sob demanda, sem o cache compartilhado do bloco "Últimas".
+   * Usado para completar o carrossel quando há menos de 3 destaques.
+   */
+  getRecentNews(limit: number): Observable<News[]> {
+    return this.httpClient
+      .get<News[] | PaginatedResponse<News>>(
+        `${this.apiUrl}/news/latest-news`,
+        { params: toHttpParams({ limit }) },
+      )
+      .pipe(
+        map((response) =>
+          Array.isArray(response) ? response : response?.data ?? [],
+        ),
+        catchError((err) => {
+          console.error('API Error: getRecentNews failed', err);
+          return of([]);
+        }),
+      );
+  }
+
   getLatestNews(): Observable<News[]> {
     if (this.$latestNews.value.length > 0) {
       return this.$latestNews.asObservable();
